@@ -1,0 +1,107 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Rol {
+  ESTUDIANTE
+  DOCENTE
+  ADMINISTRADOR
+}
+
+enum TipoDesafio {
+  SELECCION_MULTIPLE
+  COMPLETAR_TEXTO
+  ASOCIAR_PAREJAS
+}
+
+model Usuario {
+  id          String   @id @default(uuid())
+  nombre      String
+  correo      String?  @unique
+  pin         String
+  rol         Rol      @default(ESTUDIANTE)
+  avatar      String   @default("default_avatar")
+  puntos      Int      @default(0)
+  experiencia Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progresos   ProgresoEstudiante[]
+  medallas    MedallaEstudiante[]
+}
+
+model Asignatura {
+  id          String   @id @default(uuid())
+  nombre      String   @unique
+  descripcion String?
+  modulos     Modulo[]
+}
+
+model Modulo {
+  id            String      @id @default(uuid())
+  asignaturaId  String
+  asignatura    Asignatura  @relation(fields: [asignaturaId], references: [id], onDelete: Cascade)
+  titulo        String
+  orden         Int
+  nivelMinimo   Int         @default(1)
+  desafios      Desafio[]
+}
+
+model Desafio {
+  id          String      @id @default(uuid())
+  moduloId    String
+  modulo      Modulo      @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  tipo        TipoDesafio
+  pregunta    String
+  recursoUrl  String?
+  puntos      Int         @default(10)
+  orden       Int
+  opciones    Opcion[]
+  progresos   ProgresoEstudiante[]
+}
+
+model Opcion {
+  id          String   @id @default(uuid())
+  desafioId   String
+  desafio     Desafio  @relation(fields: [desafioId], references: [id], onDelete: Cascade)
+  texto       String
+  esCorrecta  Boolean
+}
+
+model ProgresoEstudiante {
+  id            String   @id @default(uuid())
+  usuarioId     String
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  desafioId     String
+  desafio       Desafio  @relation(fields: [desafioId], references: [id], onDelete: Cascade)
+  completado    Boolean  @default(false)
+  intentos      Int      @default(0)
+  puntosGanados Int      @default(0)
+  fecha         DateTime @default(now())
+
+  @@unique([usuarioId, desafioId])
+}
+
+model Medalla {
+  id          String   @id @default(uuid())
+  titulo      String   @unique
+  descripcion String
+  iconoUrl    String
+  criterio    String
+  estudiantes MedallaEstudiante[]
+}
+
+model MedallaEstudiante {
+  id         String   @id @default(uuid())
+  usuarioId  String
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  medallaId  String
+  medalla    Medalla  @relation(fields: [medallaId], references: [id], onDelete: Cascade)
+  ganadaEn   DateTime @default(now())
+
+  @@unique([usuarioId, medallaId])
+}
