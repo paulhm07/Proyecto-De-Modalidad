@@ -1,0 +1,178 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// NOTA: SQLite no soporta tipos `enum` de Prisma, por lo que los enums
+// originales (Rol, TipoDesafio) se han convertido a String. Los valores
+// literales ("ESTUDIANTE", "PADRE", "MAESTRO", "SELECCION_MULTIPLE", ...)
+// se mantienen idénticos para preservar la lógica de los servicios.
+
+model Usuario {
+  id          String   @id @default(uuid())
+  nombre      String
+  correo      String?  @unique
+  pin         String
+  rol         String   @default("ESTUDIANTE") // ESTUDIANTE | PADRE | MAESTRO
+  avatar      String   @default("default_avatar")
+  puntos      Int      @default(0)
+  experiencia Int      @default(0)
+  // Monedero del estudiante: monedas (ganadas por responder) y gemas
+  // (ganadas al completar módulos). Se usan para comprar ropa y
+  // accesorios del avatar en la tienda.
+  monedas     Int      @default(50)
+  gemas       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progresos   ProgresoEstudiante[]
+  medallas    MedallaEstudiante[]
+
+  // Relación padre ↔ hijo (un padre tiene varios hijos estudiantes;
+  // un estudiante puede tener varios padres/tutores vinculados)
+  hijosComoPadre   PadreHijo[] @relation("PadreHijos")
+  padresComoHijo   PadreHijo[] @relation("HijoPadres")
+
+  // Asignaturas creadas/gestionadas por un maestro
+  asignaturas      Asignatura[]
+
+  // Avatar personalizable + artículos comprados en la tienda
+  avatarConfig  AvatarConfig?
+  items         UsuarioItem[]
+}
+
+// Configuración del avatar de un estudiante (1:1 con Usuario).
+// Cada campo guarda la `clave` del artículo equipado en esa categoría.
+// Si no existe aún, se crea con los valores por defecto (artículos gratis).
+model AvatarConfig {
+  usuarioId  String   @id
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  cuerpo     String   @default("cuerpo-claro")
+  ojos       String   @default("ojos-normales")
+  boca       String   @default("boca-sonrisa")
+  cabello    String   @default("cabello-nada")
+  ropa       String   @default("ropa-basica")
+  accesorio  String   @default("accesorio-nada")
+  updatedAt  DateTime @updatedAt
+}
+
+// Catálogo de artículos de la tienda (ropa, accesorios, peinados, etc.).
+// `categoria` ∈ { CUERPO, OJOS, BOCA, CABELLO, ROPA, ACCESORIO }
+// `clave` es el identificador usado por el componente AvatarSVG para renderizar.
+// Un artículo con precioMonedas=0 AND precioGemas=0 se considera gratis.
+model ItemTienda {
+  id             String   @id @default(uuid())
+  categoria      String
+  clave          String   @unique
+  nombre         String
+  descripcion    String?
+  precioMonedas  Int      @default(0)
+  precioGemas    Int      @default(0)
+  raridad        String   @default("COMUN") // COMUN | RARA | EPICA | LEGENDARIA
+  nivelRequerido Int      @default(1)
+  usuarios       UsuarioItem[]
+}
+
+// Artículos que un estudiante ha comprado (puede equiparlos sin volver a pagar).
+model UsuarioItem {
+  id         String    @id @default(uuid())
+  usuarioId  String
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  itemId     String
+  item       ItemTienda @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  compradoEn DateTime  @default(now())
+
+  @@unique([usuarioId, itemId])
+}
+
+// Tabla puente para la relación Padre (Usuario con rol=PADRE) ↔ Hijo (Usuario con rol=ESTUDIANTE)
+model PadreHijo {
+  id        String   @id @default(uuid())
+  padreId   String
+  padre     Usuario  @relation("PadreHijos",  fields: [padreId], references: [id], onDelete: Cascade)
+  hijoId    String
+  hijo      Usuario  @relation("HijoPadres",  fields: [hijoId],  references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([padreId, hijoId])
+}
+
+model Asignatura {
+  id          String   @id @default(uuid())
+  nombre      String   @unique
+  descripcion String?
+  // Maestro que creó/gestiona la asignatura (opcional para mantener retrocompatibilidad
+  // con asignaturas creadas por el seed)
+  maestroId   String?
+  maestro     Usuario? @relation(fields: [maestroId], references: [id], onDelete: SetNull)
+  modulos     Modulo[]
+}
+
+model Modulo {
+  id            String      @id @default(uuid())
+  asignaturaId  String
+  asignatura    Asignatura  @relation(fields: [asignaturaId], references: [id], onDelete: Cascade)
+  titulo        String
+  descripcion   String?
+  orden         Int
+  nivelMinimo   Int         @default(1)
+  desafios      Desafio[]
+}
+
+model Desafio {
+  id          String      @id @default(uuid())
+  moduloId    String
+  modulo      Modulo      @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  tipo        String
+  pregunta    String
+  recursoUrl  String?
+  puntos      Int         @default(10)
+  orden       Int
+  opciones    Opcion[]
+  progresos   ProgresoEstudiante[]
+}
+
+model Opcion {
+  id          String   @id @default(uuid())
+  desafioId   String
+  desafio     Desafio  @relation(fields: [desafioId], references: [id], onDelete: Cascade)
+  texto       String
+  esCorrecta  Boolean
+}
+
+model ProgresoEstudiante {
+  id            String   @id @default(uuid())
+  usuarioId     String
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  desafioId     String
+  desafio       Desafio  @relation(fields: [desafioId], references: [id], onDelete: Cascade)
+  completado    Boolean  @default(false)
+  intentos      Int      @default(0)
+  puntosGanados Int      @default(0)
+  fecha         DateTime @default(now())
+
+  @@unique([usuarioId, desafioId])
+}
+
+model Medalla {
+  id          String   @id @default(uuid())
+  titulo      String   @unique
+  descripcion String
+  iconoUrl    String
+  criterio    String
+  estudiantes MedallaEstudiante[]
+}
+
+model MedallaEstudiante {
+  id         String   @id @default(uuid())
+  usuarioId  String
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  medallaId  String
+  medalla    Medalla  @relation(fields: [medallaId], references: [id], onDelete: Cascade)
+  ganadaEn   DateTime @default(now())
+
+  @@unique([usuarioId, medallaId])
+}
