@@ -1,0 +1,160 @@
+{
+  "modulo": 3,
+  "titulo": "Comprensión Lectora y Sintaxis",
+  "asignatura": "Lengua y Literatura",
+  "grado": "3er Grado de Primaria",
+  "semestre": "Segundo Semestre",
+  "curriculum": "MINED - Nicaragua",
+  "descripcion": "3 lecturas infantiles cortas estilo cuento/fábula nicaragüense, cada una con 3 preguntas interactivas de opción múltiple que evalúan: estructura del texto (inicio/nudo/desenlace/moraleja), gramática (sujeto/predicado) y pronombres (él/ella/ellos).",
+  "total_lecturas": 3,
+  "total_preguntas": 9,
+  "lecturas": [
+    {
+      "id": "M3-L01",
+      "titulo": "El nancite de Jerson",
+      "tipo": "Cuento corto",
+      "texto": "Había una vez un niño llamado Jerson que vivía en Masaya. Un día, Jerson encontró un nancite muy grande en el patio de su casa. Él lo mostró a su abuela con mucha alegría. Su abuela le preparó un dulce delicioso con el nancite. Jerson compartió el dulce con sus amigos del barrio. Al final, Jerson aprendió que compartir con los demás es mejor que guardar todo para uno mismo.",
+      "palabras": 78,
+      "contexto_cultural": "Masaya - ciudad nicaragüense; nancite - fruta tropical; dulce tradicional",
+      "preguntas": [
+        {
+          "id": "M3-L01-Q1",
+          "tipo": "estructura_del_texto",
+          "habilidad": "Identificar el desenlace",
+          "pregunta": "¿Qué pasó al FINAL del cuento?",
+          "opcion_correcta": "Jerson aprendió que compartir es mejor que guardar",
+          "opciones_incorrectas": [
+            "Jerson encontró un nancite muy grande",
+            "Jerson mostró el nancite a su abuela",
+            "La abuela preparó un dulce delicioso"
+          ],
+          "explicacion_pedagogica": "El desenlace es la parte final: la enseñanza o resolución. Los distractores son eventos del inicio y nudo."
+        },
+        {
+          "id": "M3-L01-Q2",
+          "tipo": "gramatica",
+          "habilidad": "Identificar el sujeto",
+          "pregunta": "En la oración 'Su abuela le preparó un dulce delicioso', ¿quién realiza la acción (cuál es el SUJETO)?",
+          "opcion_correcta": "Su abuela",
+          "opciones_incorrectas": [
+            "un dulce delicioso",
+            "le preparó",
+            "delicioso"
+          ],
+          "explicacion_pedagogica": "El sujeto es de quién se habla (quien realiza la acción). 'Su abuela' preparó el dulce. Los distractores son el objeto y el verbo."
+        },
+        {
+          "id": "M3-L01-Q3",
+          "tipo": "pronombres",
+          "habilidad": "Sustituir nombres por pronombres personales",
+          "pregunta": "En el cuento, la palabra 'Jerson' se puede cambiar por un pronombre. ¿Cuál es el correcto?",
+          "opcion_correcta": "él",
+          "opciones_incorrectas": [
+            "ella",
+            "ellos",
+            "nosotros"
+          ],
+          "explicacion_pedagogica": "Jerson es un niño (masculino, singular) → 'él'. 'Ella' es femenino, 'ellos' es plural, 'nosotros' es primera persona."
+        }
+      ]
+    },
+    {
+      "id": "M3-L02",
+      "titulo": "Nahomi y las pitahayas",
+      "tipo": "Cuento corto",
+      "texto": "Nahomi era una niña de Granada que cultivaba pitahayas en su huerto. Cada mañana, ella regaba las plantas con mucho cuidado. Las pitahayas crecieron rojas y muy dulces. Nahomi las vendió en el mercado de su ciudad. Con ese dinero, compró un cuaderno nuevo para la escuela. Nahomi se sintió muy orgullosa de su esfuerzo.",
+      "palabras": 76,
+      "contexto_cultural": "Granada - ciudad colonial; pitahaya - fruta cactácea; mercado nicaragüense",
+      "preguntas": [
+        {
+          "id": "M3-L02-Q1",
+          "tipo": "estructura_del_texto",
+          "habilidad": "Identificar el nudo (desarrollo)",
+          "pregunta": "¿Qué pasó en el NUDO (la parte del medio) del cuento?",
+          "opcion_correcta": "Las pitahayas crecieron y Nahomi las vendió en el mercado",
+          "opciones_incorrectas": [
+            "Nahomi regaba las plantas cada mañana",
+            "Nahomi compró un cuaderno nuevo",
+            "Nahomi vivía en Granada"
+          ],
+          "explicacion_pedagogica": "El nudo es el desarrollo: el problema o acción principal. Regar (inicio), comprar cuaderno (desenlace), vivir en Granada (presentación)."
+        },
+        {
+          "id": "M3-L02-Q2",
+          "tipo": "gramatica",
+          "habilidad": "Identificar el sujeto",
+          "pregunta": "En la oración 'Nahomi las vendió en el mercado', ¿quién realiza la acción (cuál es el SUJETO)?",
+          "opcion_correcta": "Nahomi",
+          "opciones_incorrectas": [
+            "las vendió",
+            "en el mercado",
+            "el mercado"
+          ],
+          "explicacion_pedagogica": "Nahomi es quien vende (realiza la acción). 'Las vendió' es el predicado, 'en el mercado' es un complemento de lugar."
+        },
+        {
+          "id": "M3-L02-Q3",
+          "tipo": "pronombres",
+          "habilidad": "Sustituir nombres por pronombres personales",
+          "pregunta": "¿Por qué palabra podemos cambiar 'Nahomi' en el cuento?",
+          "opcion_correcta": "ella",
+          "opciones_incorrectas": [
+            "él",
+            "ellos",
+            "ellas"
+          ],
+          "explicacion_pedagogica": "Nahomi es una niña (femenino, singular) → 'ella'. 'Él' es masculino, 'ellos/ellas' son plurales."
+        }
+      ]
+    },
+    {
+      "id": "M3-L03",
+      "titulo": "El bus de don Carlos",
+      "tipo": "Cuento corto",
+      "texto": "Don Carlos maneja el bus de Managua todos los días. Él lleva a muchos estudiantes a la escuela. Una mañana, el bus se descompuso en la carretera. Los estudiantes llegaron tarde a clases. Don Carlos pidió ayuda y arregló el motor con esfuerzo. Finalmente, los estudiantes llegaron a la escuela y le agradecieron a don Carlos por su ayuda.",
+      "palabras": 79,
+      "contexto_cultural": "Bus de Managua - transporte urbano; escuelas nicaragüenses; agradecimiento",
+      "preguntas": [
+        {
+          "id": "M3-L03-Q1",
+          "tipo": "estructura_del_texto",
+          "habilidad": "Identificar la moraleja/enseñanza",
+          "pregunta": "¿Cuál es la MORALEJA o enseñanza del cuento?",
+          "opcion_correcta": "Hay que agradecer cuando alguien nos ayuda",
+          "opciones_incorrectas": [
+            "Los buses se descomponen en la carretera",
+            "Don Carlos maneja un bus todos los días",
+            "Los estudiantes llegaron tarde a clases"
+          ],
+          "explicacion_pedagogica": "La moraleja es la enseñanza final. Los estudiantes agradecieron → enseñanza sobre gratitud. Los distractores son hechos del cuento, no enseñanzas."
+        },
+        {
+          "id": "M3-L03-Q2",
+          "tipo": "gramatica",
+          "habilidad": "Identificar el sujeto",
+          "pregunta": "En la oración 'Los estudiantes llegaron tarde', ¿quién realiza la acción (cuál es el SUJETO)?",
+          "opcion_correcta": "Los estudiantes",
+          "opciones_incorrectas": [
+            "llegaron tarde",
+            "tarde",
+            "llegaron"
+          ],
+          "explicacion_pedagogica": "'Los estudiantes' es el sujeto (quienes llegan). 'Llegaron tarde' es el predicado. 'Tarde' es un adverbio."
+        },
+        {
+          "id": "M3-L03-Q3",
+          "tipo": "pronombres",
+          "habilidad": "Sustituir nombres por pronombres personales",
+          "pregunta": "¿Por qué palabra podemos cambiar 'Los estudiantes' en el cuento?",
+          "opcion_correcta": "ellos",
+          "opciones_incorrectas": [
+            "él",
+            "ellas",
+            "nosotros"
+          ],
+          "explicacion_pedagogica": "'Los estudiantes' es plural masculino (grupo mixto) → 'ellos'. 'Él' es singular, 'ellas' es solo femenino, 'nosotros' es primera persona."
+        }
+      ]
+    }
+  ]
+}

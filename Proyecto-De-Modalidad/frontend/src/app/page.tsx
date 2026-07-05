@@ -13,6 +13,7 @@ import { TeacherDashboard } from "@/components/TeacherDashboard";
 import { StudentProgressView } from "@/components/StudentProgressView";
 import { ContentManager } from "@/components/ContentManager";
 import { BancoDesafiosViewer } from "@/components/BancoDesafiosViewer";
+import { ContenidoMINEDViewer } from "@/components/ContenidoMINEDViewer";
 import { Header } from "@/components/Header";
 import { ToastContainer } from "@/components/Toasts";
 
@@ -57,6 +58,9 @@ function Router() {
       break;
     case "banco-desafios":
       contenido = <BancoDesafiosViewer />;
+      break;
+    case "contenido-mined":
+      contenido = <ContenidoMINEDViewer />;
       break;
     default:
       contenido = <Dashboard />;

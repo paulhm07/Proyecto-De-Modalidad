@@ -1,0 +1,112 @@
+{
+  "modulo": 2,
+  "titulo": "Fracciones y Geometría",
+  "asignatura": "Matemática",
+  "grado": "3er Grado de Primaria",
+  "semestre": "Segundo Semestre",
+  "curriculum": "MINED - Nicaragua",
+  "descripcion": "10 desafíos visuales basados en fracciones propias (medios, tercios, cuartos, quintos) y geometría (elementos del círculo y clasificación de triángulos). Cada desafío incluye una descripción visual detallada para la interfaz UI de la aplicación Android.",
+  "total_desafios": 10,
+  "desafios": [
+    {
+      "nivel": 1,
+      "tema": "Fracciones propias - Medios",
+      "descripcion_visual_para_ui": "Mostrar una rosquilla (donut) tradicional nicaragüense dividida en 2 partes iguales con una línea de corte vertical. La mitad izquierda está sombreada en color rosa brillante. La mitad derecha está sin sombrear (color dorado claro). Debajo de la rosquilla, mostrar los botones de respuesta.",
+      "pregunta_para_el_nino": "¿Qué fracción de la rosquilla está pintada de color rosa?",
+      "opcion_correcta": "1/2",
+      "opciones_incorrectas": ["1/3", "2/2", "1/4"],
+      "explicacion_pedagogica": "Identificar que 1 de 2 partes iguales = 1/2. Distractor 2/2 evalúa si confunde parte pintada con total.",
+      "contexto_cultural": "Rosquillas - dulce tradicional nicaragüense"
+    },
+    {
+      "nivel": 2,
+      "tema": "Fracciones propias - Tercios",
+      "descripcion_visual_para_ui": "Mostrar un cajeta de leche (dulce nicaragüense en forma rectangular) dividido en 3 partes iguales con dos líneas de corte verticales. Las primeras 2 partes (izquierda y centro) están sombreadas en color caramelo dorado. La tercera parte (derecha) está sin sombrear (color blanco crema).",
+      "pregunta_para_el_nino": "¿Qué fracción del cajeta está pintada de color caramelo?",
+      "opcion_correcta": "2/3",
+      "opciones_incorrectas": ["1/3", "3/3", "2/4"],
+      "explicacion_pedagogica": "2 de 3 partes = 2/3. Distractor 2/4 evalúa confusión entre tercios y cuartos.",
+      "contexto_cultural": "Cajeta de leche - dulce tradicional hecho con leche y azúcar"
+    },
+    {
+      "nivel": 3,
+      "tema": "Fracciones propias - Cuartos",
+      "descripcion_visual_para_ui": "Mostrar una pizza redonda dividida en 4 partes iguales con dos cortes perpendiculares (en forma de X). 3 de las 4 porciones están sombreadas en color rojo (indicando que María se las comió). Solo 1 porción (la superior derecha) está sin sombrear, indicando lo que quedó.",
+      "pregunta_para_el_nino": "María se comió 3 de 4 partes de la pizza. ¿Qué fracción de la pizza QUEDÓ sin comer?",
+      "opcion_correcta": "1/4",
+      "opciones_incorrectas": ["3/4", "1/3", "1/2"],
+      "explicacion_pedagogica": "Si se comió 3/4, quedó 1/4. Evalúa comprensión de la fracción restante, no la consumida.",
+      "contexto_cultural": "Pizza - comida popular en celebrations familiares"
+    },
+    {
+      "nivel": 4,
+      "tema": "Fracciones propias - Quintos",
+      "descripcion_visual_para_ui": "Mostrar una barra de chocolate de cacao nicaragüense (forma rectangular horizontal) dividida en 5 partes iguales con 4 líneas de corte verticales. 4 de las 5 partes están sombreadas en color café oscuro. Solo 1 parte (la del extremo derecho) está sin sombrear (color café claro).",
+      "pregunta_para_el_nino": "¿Qué fracción de la barra de cacao está pintada de color café oscuro?",
+      "opcion_correcta": "4/5",
+      "opciones_incorrectas": ["1/5", "5/5", "4/4"],
+      "explicacion_pedagogica": "4 de 5 partes = 4/5. Distractor 4/4 evalúa si confunde denominador.",
+      "contexto_cultural": "Cacao - producto tradicional nicaragüense, cultivado en la Costa Caribe"
+    },
+    {
+      "nivel": 5,
+      "tema": "Relación numerador/denominador",
+      "descripcion_visual_para_ui": "Mostrar un pastel redondo dividido en 6 partes iguales. 5 partes están sombreadas en color azul. 1 parte sin sombrear. Debajo del pastel, mostrar la fracción '5/6' en grande: el número 5 (arriba, en color azul) y el número 6 (abajo, en color verde), separados por una línea horizontal. Colocar un puntero/cursor señalando el número 5 con una etiqueta '¿Qué significa?'",
+      "pregunta_para_el_nino": "En la fracción 5/6, ¿qué representa el número 5 (el de arriba)?",
+      "opcion_correcta": "Las partes pintadas del pastel",
+      "opciones_incorrectas": ["Las partes totales del pastel", "Las partes sin pintar", "El número de cortes hechos"],
+      "explicacion_pedagogica": "El numerador (5) indica partes tomadas/pintadas. El denominador (6) indica partes totales.",
+      "contexto_cultural": "Pastel - postre de celebraciones"
+    },
+    {
+      "nivel": 6,
+      "tema": "Geometría - Centro del círculo",
+      "descripcion_visual_para_ui": "Mostrar un círculo perfecto de color amarillo (como una tortilla vista desde arriba). En el centro exacto del círculo, dibujar un punto rojo grande y brillante con un tamaño visible (radio de 8px aprox). Al lado del punto, mostrar una etiqueta con signo de interrogación grande '¿?' en color azul.",
+      "pregunta_para_el_nino": "¿Cómo se llama el punto rojo que está en el centro del círculo?",
+      "opcion_correcta": "Centro",
+      "opciones_incorrectas": ["Radio", "Diámetro", "Borde"],
+      "explicacion_pedagogica": "El centro es el punto interior que está a la misma distancia de todos los puntos del borde.",
+      "contexto_cultural": "Tortilla - alimento circular básico en Nicaragua"
+    },
+    {
+      "nivel": 7,
+      "tema": "Geometría - Radio del círculo",
+      "descripcion_visual_para_ui": "Mostrar un círculo de color celeste. En el centro, dibujar un punto rojo pequeño. Desde ese punto rojo central, dibujar una línea recta azul gruesa que va hasta el borde del círculo (en dirección a las 3 en punto). La línea azul debe tener un pequeño cartel '¿?' en su punto medio.",
+      "pregunta_para_el_nino": "¿Cómo se llama la línea azul que va del centro al borde del círculo?",
+      "opcion_correcta": "Radio",
+      "opciones_incorrectas": ["Diámetro", "Centro", "Circunferencia"],
+      "explicacion_pedagogica": "El radio es la distancia del centro al borde. Todos los radios del mismo círculo miden igual.",
+      "contexto_cultural": "Concepto geométrico universal con ejemplos locales"
+    },
+    {
+      "nivel": 8,
+      "tema": "Geometría - Diámetro del círculo",
+      "descripcion_visual_para_ui": "Mostrar un círculo de color verde claro. En el centro, dibujar un punto rojo pequeño. Dibujar una línea recta verde oscuro gruesa que atraviesa el círculo completamente de lado a lado (de las 9 en punto a las 3 en punto), pasando exactamente por el punto rojo central. La línea debe tener un cartel '¿?' en su punto medio.",
+      "pregunta_para_el_nino": "¿Cómo se llama la línea verde que cruza el círculo de lado a lado pasando por el centro?",
+      "opcion_correcta": "Diámetro",
+      "opciones_incorrectas": ["Radio", "Centro", "Curva"],
+      "explicacion_pedagogica": "El diámetro atraviesa el círculo por el centro. Mide el doble del radio.",
+      "contexto_cultural": "Concepto geométrico visible en ruedas de buses, tortillas, etc."
+    },
+    {
+      "nivel": 9,
+      "tema": "Geometría - Triángulo equilátero",
+      "descripcion_visual_para_ui": "Mostrar un triángulo con sus tres lados del mismo tamaño, orientado con la base horizontal abajo y el vértice arriba. Cada lado del triángulo debe tener una marca pequeña de igualdad (tres rayitas inclinadas '|||') en el punto medio, indicando que los tres lados miden lo mismo. Los tres lados están dibujados en color azul fuerte. El interior del triángulo es de color azul claro.",
+      "pregunta_para_el_nino": "¿Qué tipo de triángulo es este si sus TRES lados miden lo mismo?",
+      "opcion_correcta": "Equilátero",
+      "opciones_incorrectas": ["Isósceles", "Escaleno", "Rectángulo"],
+      "explicacion_pedagogica": "Equilátero = 3 lados iguales. Isósceles = 2 lados iguales. Escaleno = 0 lados iguales.",
+      "contexto_cultural": "Forma visible en señales de tránsito nicaragüenses"
+    },
+    {
+      "nivel": 10,
+      "tema": "Geometría - Triángulo escaleno",
+      "descripcion_visual_para_ui": "Mostrar un triángulo con tres lados claramente de diferentes tamaños: lado izquierdo corto (en color rojo, con una marca '|'), lado derecho mediano (en color azul, con dos marcas '||'), y lado inferior largo (en color verde, con tres marcas '|||'). El triángulo debe verse asimétrico. El interior es de color gris claro.",
+      "pregunta_para_el_nino": "¿Qué tipo de triángulo es este si sus TRES lados miden diferente?",
+      "opcion_correcta": "Escaleno",
+      "opciones_incorrectas": ["Equilátero", "Isósceles", "Rectángulo"],
+      "explicacion_pedagogica": "Escaleno = 3 lados diferentes. Las marcas de igualdad (|, ||, |||) muestran que ninguno es igual.",
+      "contexto_cultural": "Forma visible en estructuras de techos de casas nicaragüenses"
+    }
+  ]
+}

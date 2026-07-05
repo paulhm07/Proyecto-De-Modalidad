@@ -1,0 +1,295 @@
+{
+  "modulo": 4,
+  "titulo": "Ortografía y Signos de Puntuación",
+  "asignatura": "Lengua y Literatura",
+  "grado": "3er Grado de Primaria",
+  "semestre": "Segundo Semestre",
+  "curriculum": "MINED - Nicaragua",
+  "descripcion": "Listado de 20 palabras y 10 oraciones con errores ortográficos específicos para un minijuego de corrección. Incluye uso de B/V, clasificación por acentuación (Agudas/Graves/Esdrújulas) y signos de puntuación (¡! ¿?) - específicamente el signo de apertura que falta.",
+  "total_palabras": 20,
+  "total_oraciones": 10,
+  "palabras": [
+    {
+      "id": "M4-P01",
+      "categoria": "uso_b_v",
+      "item_con_error": "vurro",
+      "palabra_correcta": "burro",
+      "letra_o_signo_faltante": "b (en lugar de v)",
+      "regla_ortografica_aplicada": "Las palabras que empiezan con 'bu-' se escriben con b",
+      "tipo_de_error": "Confusión b/v - inicio bu-"
+    },
+    {
+      "id": "M4-P02",
+      "categoria": "uso_b_v",
+      "item_con_error": "vuscar",
+      "palabra_correcta": "buscar",
+      "letra_o_signo_faltante": "b (en lugar de v)",
+      "regla_ortografica_aplicada": "Las palabras que empiezan con 'bus-' se escriben con b",
+      "tipo_de_error": "Confusión b/v - inicio bus-"
+    },
+    {
+      "id": "M4-P03",
+      "categoria": "uso_b_v",
+      "item_con_error": "vurbuja",
+      "palabra_correcta": "burbuja",
+      "letra_o_signo_faltante": "b (en lugar de v)",
+      "regla_ortografica_aplicada": "Las palabras que empiezan con 'bur-' se escriben con b",
+      "tipo_de_error": "Confusión b/v - inicio bur-"
+    },
+    {
+      "id": "M4-P04",
+      "categoria": "uso_b_v",
+      "item_con_error": "cantava",
+      "palabra_correcta": "cantaba",
+      "letra_o_signo_faltante": "b (en lugar de v)",
+      "regla_ortografica_aplicada": "Los verbos en tiempo pasado terminados en '-aba' se escriben con b",
+      "tipo_de_error": "Confusión b/v - pretérito imperfecto -aba"
+    },
+    {
+      "id": "M4-P05",
+      "categoria": "uso_b_v",
+      "item_con_error": "jugava",
+      "palabra_correcta": "jugaba",
+      "letra_o_signo_faltante": "b (en lugar de v)",
+      "regla_ortografica_aplicada": "Los verbos en tiempo pasado terminados en '-aba' se escriben con b",
+      "tipo_de_error": "Confusión b/v - pretérito imperfecto -aba"
+    },
+    {
+      "id": "M4-P06",
+      "categoria": "uso_b_v",
+      "item_con_error": "baca",
+      "palabra_correcta": "vaca",
+      "letra_o_signo_faltante": "v (en lugar de b)",
+      "regla_ortografica_aplicada": "Las palabras que empiezan con 'va-' se escriben con v",
+      "tipo_de_error": "Confusión b/v - inicio va-"
+    },
+    {
+      "id": "M4-P07",
+      "categoria": "uso_b_v",
+      "item_con_error": "bela",
+      "palabra_correcta": "vela",
+      "letra_o_signo_faltante": "v (en lugar de b)",
+      "regla_ortografica_aplicada": "Las palabras que empiezan con 've-' se escriben con v",
+      "tipo_de_error": "Confusión b/v - inicio ve-"
+    },
+    {
+      "id": "M4-P08",
+      "categoria": "uso_b_v",
+      "item_con_error": "bino",
+      "palabra_correcta": "vino",
+      "letra_o_signo_faltante": "v (en lugar de b)",
+      "regla_ortografica_aplicada": "Las palabras que empiezan con 'vi-' se escriben con v",
+      "tipo_de_error": "Confusión b/v - inicio vi-"
+    },
+    {
+      "id": "M4-P09",
+      "categoria": "uso_b_v",
+      "item_con_error": "bentana",
+      "palabra_correcta": "ventana",
+      "letra_o_signo_faltante": "v (en lugar de b)",
+      "regla_ortografica_aplicada": "Las palabras que empiezan con 'ven-' se escriben con v",
+      "tipo_de_error": "Confusión b/v - inicio ven-"
+    },
+    {
+      "id": "M4-P10",
+      "categoria": "uso_b_v",
+      "item_con_error": "biajar",
+      "palabra_correcta": "viajar",
+      "letra_o_signo_faltante": "v (en lugar de b)",
+      "regla_ortografica_aplicada": "Las palabras que empiezan con 'via-' se escriben con v",
+      "tipo_de_error": "Confusión b/v - inicio via-"
+    },
+    {
+      "id": "M4-P11",
+      "categoria": "acentuacion_aguda",
+      "item_con_error": "cafe",
+      "palabra_correcta": "café",
+      "letra_o_signo_faltante": "tilde en la é",
+      "regla_ortografica_aplicada": "Las palabras agudas terminadas en vocal llevan tilde",
+      "tipo_de_error": "Aguda sin tilde - termina en vocal"
+    },
+    {
+      "id": "M4-P12",
+      "categoria": "acentuacion_aguda",
+      "item_con_error": "tambien",
+      "palabra_correcta": "también",
+      "letra_o_signo_faltante": "tilde en la é",
+      "regla_ortografica_aplicada": "Las palabras agudas terminadas en -n o -s llevan tilde",
+      "tipo_de_error": "Aguda sin tilde - termina en -n"
+    },
+    {
+      "id": "M4-P13",
+      "categoria": "acentuacion_aguda",
+      "item_con_error": "camion",
+      "palabra_correcta": "camión",
+      "letra_o_signo_faltante": "tilde en la ó",
+      "regla_ortografica_aplicada": "Las palabras agudas terminadas en -n o -s llevan tilde",
+      "tipo_de_error": "Aguda sin tilde - termina en -n"
+    },
+    {
+      "id": "M4-P14",
+      "categoria": "acentuacion_grave",
+      "item_con_error": "arbol",
+      "palabra_correcta": "árbol",
+      "letra_o_signo_faltante": "tilde en la á",
+      "regla_ortografica_aplicada": "Las palabras graves terminadas en consonante que no sea -n ni -s llevan tilde",
+      "tipo_de_error": "Grave sin tilde - termina en -l"
+    },
+    {
+      "id": "M4-P15",
+      "categoria": "acentuacion_grave",
+      "item_con_error": "lapiz",
+      "palabra_correcta": "lápiz",
+      "letra_o_signo_faltante": "tilde en la á",
+      "regla_ortografica_aplicada": "Las palabras graves terminadas en consonante que no sea -n ni -s llevan tilde",
+      "tipo_de_error": "Grave sin tilde - termina en -z"
+    },
+    {
+      "id": "M4-P16",
+      "categoria": "acentuacion_grave",
+      "item_con_error": "carcel",
+      "palabra_correcta": "cárcel",
+      "letra_o_signo_faltante": "tilde en la á",
+      "regla_ortografica_aplicada": "Las palabras graves terminadas en consonante que no sea -n ni -s llevan tilde",
+      "tipo_de_error": "Grave sin tilde - termina en -l"
+    },
+    {
+      "id": "M4-P17",
+      "categoria": "acentuacion_esdrujula",
+      "item_con_error": "musica",
+      "palabra_correcta": "música",
+      "letra_o_signo_faltante": "tilde en la ú",
+      "regla_ortografica_aplicada": "Todas las palabras esdrújulas llevan tilde siempre",
+      "tipo_de_error": "Esdrújula sin tilde"
+    },
+    {
+      "id": "M4-P18",
+      "categoria": "acentuacion_esdrujula",
+      "item_con_error": "pajaro",
+      "palabra_correcta": "pájaro",
+      "letra_o_signo_faltante": "tilde en la á",
+      "regla_ortografica_aplicada": "Todas las palabras esdrújulas llevan tilde siempre",
+      "tipo_de_error": "Esdrújula sin tilde"
+    },
+    {
+      "id": "M4-P19",
+      "categoria": "acentuacion_esdrujula",
+      "item_con_error": "lampara",
+      "palabra_correcta": "lámpara",
+      "letra_o_signo_faltante": "tilde en la á",
+      "regla_ortografica_aplicada": "Todas las palabras esdrújulas llevan tilde siempre",
+      "tipo_de_error": "Esdrújula sin tilde"
+    },
+    {
+      "id": "M4-P20",
+      "categoria": "acentuacion_esdrujula",
+      "item_con_error": "medico",
+      "palabra_correcta": "médico",
+      "letra_o_signo_faltante": "tilde en la é",
+      "regla_ortografica_aplicada": "Todas las palabras esdrújulas llevan tilde siempre",
+      "tipo_de_error": "Esdrújula sin tilde"
+    }
+  ],
+  "oraciones": [
+    {
+      "id": "M4-O01",
+      "categoria": "signos_interrogativos",
+      "tipo_oracion": "interrogativa",
+      "item_con_error": "Qué hora es?",
+      "oracion_correcta": "¿Qué hora es?",
+      "letra_o_signo_faltante": "¿ (signo de apertura de interrogación)",
+      "regla_ortografica_aplicada": "Las preguntas en español deben abrir con ¿ y cerrar con ?",
+      "tipo_de_error": "Falta signo de apertura ¿"
+    },
+    {
+      "id": "M4-O02",
+      "categoria": "signos_interrogativos",
+      "tipo_oracion": "interrogativa",
+      "item_con_error": "Dónde vives?",
+      "oracion_correcta": "¿Dónde vives?",
+      "letra_o_signo_faltante": "¿ (signo de apertura de interrogación)",
+      "regla_ortografica_aplicada": "Las preguntas en español deben abrir con ¿ y cerrar con ?",
+      "tipo_de_error": "Falta signo de apertura ¿"
+    },
+    {
+      "id": "M4-O03",
+      "categoria": "signos_interrogativos",
+      "tipo_oracion": "interrogativa",
+      "item_con_error": "Cómo te llamas?",
+      "oracion_correcta": "¿Cómo te llamas?",
+      "letra_o_signo_faltante": "¿ (signo de apertura de interrogación)",
+      "regla_ortografica_aplicada": "Las preguntas en español deben abrir con ¿ y cerrar con ?",
+      "tipo_de_error": "Falta signo de apertura ¿"
+    },
+    {
+      "id": "M4-O04",
+      "categoria": "signos_interrogativos",
+      "tipo_oracion": "interrogativa",
+      "item_con_error": "Cuántos nancites tienes?",
+      "oracion_correcta": "¿Cuántos nancites tienes?",
+      "letra_o_signo_faltante": "¿ (signo de apertura de interrogación)",
+      "regla_ortografica_aplicada": "Las preguntas en español deben abrir con ¿ y cerrar con ?",
+      "tipo_de_error": "Falta signo de apertura ¿"
+    },
+    {
+      "id": "M4-O05",
+      "categoria": "signos_interrogativos",
+      "tipo_oracion": "interrogativa",
+      "item_con_error": "Por qué estudias?",
+      "oracion_correcta": "¿Por qué estudias?",
+      "letra_o_signo_faltante": "¿ (signo de apertura de interrogación)",
+      "regla_ortografica_aplicada": "Las preguntas en español deben abrir con ¿ y cerrar con ?",
+      "tipo_de_error": "Falta signo de apertura ¿"
+    },
+    {
+      "id": "M4-O06",
+      "categoria": "signos_exclamativos",
+      "tipo_oracion": "exclamativa",
+      "item_con_error": "Qué bonito está el lago de Managua!",
+      "oracion_correcta": "¡Qué bonito está el lago de Managua!",
+      "letra_o_signo_faltante": "¡ (signo de apertura de exclamación)",
+      "regla_ortografica_aplicada": "Las exclamaciones en español deben abrir con ¡ y cerrar con !",
+      "tipo_de_error": "Falta signo de apertura ¡"
+    },
+    {
+      "id": "M4-O07",
+      "categoria": "signos_exclamativos",
+      "tipo_oracion": "exclamativa",
+      "item_con_error": "Ayúdame por favor!",
+      "oracion_correcta": "¡Ayúdame por favor!",
+      "letra_o_signo_faltante": "¡ (signo de apertura de exclamación)",
+      "regla_ortografica_aplicada": "Las exclamaciones en español deben abrir con ¡ y cerrar con !",
+      "tipo_de_error": "Falta signo de apertura ¡"
+    },
+    {
+      "id": "M4-O08",
+      "categoria": "signos_exclamativos",
+      "tipo_oracion": "exclamativa",
+      "item_con_error": "Qué frío hace en Managua!",
+      "oracion_correcta": "¡Qué frío hace en Managua!",
+      "letra_o_signo_faltante": "¡ (signo de apertura de exclamación)",
+      "regla_ortografica_aplicada": "Las exclamaciones en español deben abrir con ¡ y cerrar con !",
+      "tipo_de_error": "Falta signo de apertura ¡"
+    },
+    {
+      "id": "M4-O09",
+      "categoria": "signos_exclamativos",
+      "tipo_oracion": "exclamativa",
+      "item_con_error": "Feliz cumpleaños Nahomi!",
+      "oracion_correcta": "¡Feliz cumpleaños Nahomi!",
+      "letra_o_signo_faltante": "¡ (signo de apertura de exclamación)",
+      "regla_ortografica_aplicada": "Las exclamaciones en español deben abrir con ¡ y cerrar con !",
+      "tipo_de_error": "Falta signo de apertura ¡"
+    },
+    {
+      "id": "M4-O10",
+      "categoria": "signos_exclamativos",
+      "tipo_oracion": "exclamativa",
+      "item_con_error": "Viva Nicaragua!",
+      "oracion_correcta": "¡Viva Nicaragua!",
+      "letra_o_signo_faltante": "¡ (signo de apertura de exclamación)",
+      "regla_ortografica_aplicada": "Las exclamaciones en español deben abrir con ¡ y cerrar con !",
+      "tipo_de_error": "Falta signo de apertura ¡"
+    }
+  ]
+}

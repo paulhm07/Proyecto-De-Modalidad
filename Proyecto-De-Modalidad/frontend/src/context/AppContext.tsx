@@ -23,7 +23,8 @@ export type Vista =
   | "maestro"
   | "progreso-estudiante"
   | "contenido"
-  | "banco-desafios";
+  | "banco-desafios"
+  | "contenido-mined";
 
 export interface Toast {
   id: string;

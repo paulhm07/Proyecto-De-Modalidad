@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Plus,
   Library,
+  GraduationCap,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
@@ -93,7 +94,7 @@ export function TeacherDashboard() {
       {/* Acceso rápido al Banco de Desafíos */}
       <button
         onClick={() => setVista("banco-desafios")}
-        className="btn-3d group mb-6 flex w-full items-center gap-4 rounded-3xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
+        className="btn-3d group mb-3 flex w-full items-center gap-4 rounded-3xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
       >
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-2 ring-white/40">
           <Library size={28} className="text-white" strokeWidth={2.5} />
@@ -102,6 +103,23 @@ export function TeacherDashboard() {
           <p className="text-lg font-black text-white">Banco de Desafíos</p>
           <p className="text-sm font-semibold text-white/90">
             30 desafíos curriculares listos · Matemáticas y Lengua · 3 niveles · JSON + Kotlin
+          </p>
+        </div>
+        <ChevronRight size={24} className="text-white transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+      </button>
+
+      {/* Acceso al Contenido MINED */}
+      <button
+        onClick={() => setVista("contenido-mined")}
+        className="btn-3d group mb-6 flex w-full items-center gap-4 rounded-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
+      >
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-2 ring-white/40">
+          <GraduationCap size={28} className="text-white" strokeWidth={2.5} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-lg font-black text-white">Contenido MINED — 3er Grado</p>
+          <p className="text-sm font-semibold text-white/90">
+            4 módulos · 55 ítems · Multiplicación/División · Fracciones/Geometría · Lecturas · Ortografía
           </p>
         </div>
         <ChevronRight size={24} className="text-white transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
