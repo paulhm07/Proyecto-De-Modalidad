@@ -248,3 +248,23 @@ Stage Summary:
 - 3 minijuegos verificados end-to-end sin errores de runtime ni de TypeScript.
 - Cada minijuego cubre un módulo MINED: Camión = Matemática (multiplicación), Bus = Lengua (sujeto/predicado/pronombres), Carta = Ortografía (b/v, acentos, signos).
 - App lista para usar por niños de 3er grado.
+
+---
+Task ID: ATRAPA-ACENTO-DESIGN
+Agent: main (Game Designer + Content)
+Task: Diseñar 20 desafíos para el videojuego móvil de ritmo ortográfico 'Atrapa el Acento' (3er grado MINED)
+
+Work Log:
+- Diseñada progresión: 8 agudas → 5 graves → 7 esdrújulas.
+- Cada palabra con: palabra_completa, palabra_incompleta (silabas separadas por guiones, sin tilde), silaba_tonica_index, clasificación, letra_con_tilde_correcta, posicion_x (izquierda/centro/derecha), audio_guia (pronunciación exagerada con sílaba en MAYÚSCULAS), bpm_sugerido (90-125), distracting_letters (2 distractores).
+- Contexto nicaragüense: "León" (AC-04), "plátano" (AC-17), "página" como libro MINED (AC-18).
+- Tempo musical crece con dificultad: agudas 90-105 BPM, graves 100-110 BPM, esdrújulas 110-125 BPM.
+- Distractores elegidos como vocales con tilde de la misma palabra o cercanas fonéticamente.
+- Guardado en frontend/src/data/atrapaAcento.ts con interfaz DesafioAtrapa tipada.
+- Helpers exportados: agudasAtrapa, gravesAtrapa, esdrujulasAtrapa, RESUMEN_ATRAPA_ACENTO.
+
+Stage Summary:
+- 20 desafíos listos para implementación futura del minijuego rítmico.
+- tsc --noEmit: EXIT_CODE=0 (sin errores de tipos).
+- Cubre las 5 vocales con tilde (á, é, í, ó, ú).
+- Próximo paso posible: implementar el componente React 'AtrapaAcento.tsx' similar a los 4 minijuegos ya existentes.
