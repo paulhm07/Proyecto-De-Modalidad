@@ -12,6 +12,9 @@ import {
   ChevronRight,
   Store,
   Gamepad2,
+  Truck,
+  Bus,
+  Mail,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
@@ -334,6 +337,143 @@ function StudentDashboard() {
 
               <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
                 <Store size={14} strokeWidth={2.5} /> ¡Vender!
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
+
+          {/* Tarjeta: El Camión de las Multiplicaciones */}
+          <button
+            onClick={() => setVista("camion")}
+            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+            style={{ animationDelay: "120ms" }}
+            aria-label="Jugar El Camión de las Multiplicaciones"
+          >
+            <div className="relative z-10 flex h-full flex-col">
+              {/* Badge con emoji */}
+              <div
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-300 via-emerald-400 to-lime-500 text-2xl shadow-lg shadow-emerald-500/40"
+                style={{
+                  boxShadow:
+                    "0 8px 20px -6px rgba(16,185,129,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+                }}
+              >
+                🚚
+              </div>
+
+              <h3 className="font-display text-base font-bold text-white">
+                El Camión de las Multiplicaciones
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+                Carga cajitas en el camión para aprender a multiplicar en el mercado nicaragüense.
+              </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="rounded-full bg-teal-400/15 px-2 py-0.5 text-teal-200">
+                  10 niveles
+                </span>
+                <span className="rounded-full bg-lime-400/15 px-2 py-0.5 text-lime-200">
+                  Multiplicación
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+                  3er grado
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-teal-400 via-emerald-400 to-lime-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+                <Truck size={14} strokeWidth={2.5} /> ¡Cargar!
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
+
+          {/* Tarjeta: El Bus de las Letras */}
+          <button
+            onClick={() => setVista("bus")}
+            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+            style={{ animationDelay: "180ms" }}
+            aria-label="Jugar El Bus de las Letras"
+          >
+            <div className="relative z-10 flex h-full flex-col">
+              {/* Badge con emoji */}
+              <div
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-300 via-fuchsia-400 to-amber-400 text-2xl shadow-lg shadow-fuchsia-500/40"
+                style={{
+                  boxShadow:
+                    "0 8px 20px -6px rgba(217,70,239,0.55), inset 0 2px 4px rgba(255,255,255,0.5)",
+                }}
+              >
+                🚌
+              </div>
+
+              <h3 className="font-display text-base font-bold text-white">
+                El Bus de las Letras
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+                Lleva a los pasajeros al bus identificando sujetos, predicados y
+                pronombres en cada parada.
+              </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="rounded-full bg-rose-400/15 px-2 py-0.5 text-rose-200">
+                  10 niveles
+                </span>
+                <span className="rounded-full bg-fuchsia-400/15 px-2 py-0.5 text-fuchsia-200">
+                  Lengua y Literatura
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+                  3er grado
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-rose-400 via-fuchsia-400 to-amber-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+                <Bus size={14} strokeWidth={2.5} /> ¡Subir!
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
+
+          {/* Tarjeta: La Carta Mal Enviada */}
+          <button
+            onClick={() => setVista("carta")}
+            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+            style={{ animationDelay: "240ms" }}
+            aria-label="Jugar La Carta Mal Enviada"
+          >
+            <div className="relative z-10 flex h-full flex-col">
+              {/* Badge con emoji */}
+              <div
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 via-orange-400 to-rose-500 text-2xl shadow-lg shadow-orange-500/40"
+                style={{
+                  boxShadow:
+                    "0 8px 20px -6px rgba(249,115,22,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+                }}
+              >
+                ✉️
+              </div>
+
+              <h3 className="font-display text-base font-bold text-white">
+                La Carta Mal Enviada
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+                Sella las cartas corrigiendo errores de b/v, acentos y signos ¡!
+                ¿? en la oficina de correos.
+              </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-amber-200">
+                  10 niveles
+                </span>
+                <span className="rounded-full bg-orange-400/15 px-2 py-0.5 text-orange-200">
+                  Ortografía
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+                  3er grado
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+                <Mail size={14} strokeWidth={2.5} /> ¡Sell!
                 <ArrowRight size={14} strokeWidth={2.5} />
               </div>
             </div>

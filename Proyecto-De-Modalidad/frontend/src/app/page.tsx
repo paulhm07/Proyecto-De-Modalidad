@@ -15,6 +15,9 @@ import { ContentManager } from "@/components/ContentManager";
 import { BancoDesafiosViewer } from "@/components/BancoDesafiosViewer";
 import { ContenidoMINEDViewer } from "@/components/ContenidoMINEDViewer";
 import { PulperiaFraccionesWrapper } from "@/components/PulperiaFraccionesWrapper";
+import { CamionMultiplicacionesWrapper } from "@/components/CamionMultiplicacionesWrapper";
+import { BusLetrasWrapper } from "@/components/BusLetrasWrapper";
+import { CartaOrtografiaWrapper } from "@/components/CartaOrtografiaWrapper";
 import { Header } from "@/components/Header";
 import { ToastContainer } from "@/components/Toasts";
 
@@ -65,6 +68,15 @@ function Router() {
       break;
     case "pulperia":
       contenido = <PulperiaFraccionesWrapper />;
+      break;
+    case "camion":
+      contenido = <CamionMultiplicacionesWrapper />;
+      break;
+    case "bus":
+      contenido = <BusLetrasWrapper />;
+      break;
+    case "carta":
+      contenido = <CartaOrtografiaWrapper />;
       break;
     default:
       contenido = <Dashboard />;

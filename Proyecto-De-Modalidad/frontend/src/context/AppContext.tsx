@@ -25,7 +25,10 @@ export type Vista =
   | "contenido"
   | "banco-desafios"
   | "contenido-mined"
-  | "pulperia";
+  | "pulperia"
+  | "camion"
+  | "bus"
+  | "carta";
 
 export interface Toast {
   id: string;
