@@ -268,3 +268,26 @@ Stage Summary:
 - tsc --noEmit: EXIT_CODE=0 (sin errores de tipos).
 - Cubre las 5 vocales con tilde (á, é, í, ó, ú).
 - Próximo paso posible: implementar el componente React 'AtrapaAcento.tsx' similar a los 4 minijuegos ya existentes.
+
+---
+Task ID: ATRAPA-ACENTO-1
+Agent: main (Game Designer)
+Task: Diseñar 20 desafíos para el minijuego 'Atrapa el Acento' (ritmo y velocidad ortográfica, 3er grado segundo semestre MINED Nicaragua)
+
+Work Log:
+- Diseñada progresión pedagógica: 7 Agudas + 8 Graves + 5 Esdrújulas (20 total).
+- Seleccionadas palabras con contexto nicaragüense: vigorón, León, sábado (feria de Masaya), médico (MINSA), colibrí.
+- Aplicada silabación con guiones en palabra_incompleta (ej. "ca-mion", "vi-go-ron").
+- Asignada Posición_X rotativa (centro/derecha/izquierda) para evitar memorización.
+- Redactada audio_guia con sílaba tónica en MAYÚSCULAS para la pronunciación exagerada.
+- Añadidos distractores (2 vocales con tilde incorrectas) por cada desafío.
+- Añadida regla ortográfica breve por cada palabra.
+- Guardado en frontend/src/data/atrapaAcento.ts con interfaz DesafioAtrapa tipada.
+- Corregido error de tipo: silaba_tonica cambiado de string a number.
+- tsc --noEmit: EXIT_CODE=0.
+
+Stage Summary:
+- Artefacto: atrapaAcento.ts (20 desafíos + helpers agudas/graves/esdrújulas + RESUMEN_ATRAPA).
+- Distribución: 35% agudas, 40% graves, 25% esdrújulas (acorde a frecuencia en español).
+- Vocabulario nicaragüense: vigorón, León, sábado (feria Masaya), médico (MINSA), colibrí.
+- Listo para integrarse al minijuego 'Atrapa el Acento' como componente React.

@@ -1,295 +1,299 @@
 /**
- * Atrapa el Acento — Banco de Desafíos
- * --------------------------------------
- * Videojuego móvil de ritmo y velocidad ortográfica para 3er grado
- * (MINED Nicaragua, segundo semestre).
+ * Atrapa el Acento — Diseño de 20 Desafíos
+ * ------------------------------------------
+ * Minijuego de ritmo y velocidad ortográfica para 3er grado
+ * (segundo semestre MINED Nicaragua).
  *
- * Mecánica: Caen vocales con tilde flotando por la pantalla. El niño debe
- * "atrapar" la vocal correcta para completar la palabra en el momento justo
- * del compás. Cada palabra tiene su sílaba tónica marcada pero sin tilde.
+ * Mecánica: Aparece una palabra incompleta (sin tilde) en pantalla.
+ * Tres vocales flotantes con tilde se mueven por la pantalla (¡/¿/ó/á...).
+ * El niño debe "atrapar" (tocar rápido) la vocal con tilde correcta
+ * antes de que salga de la pantalla. El audio guía refuerza la
+ * pronunciación exagerada de la sílaba tónica.
  *
  * Progresión pedagógica:
- *   1–8   Agudas (con tilde, terminadas en n, s o vocal)
- *   9–13  Graves (con tilde, NO terminadas en n, s o vocal)
- *   14–20 Esdrújulas (siempre con tilde)
+ *   1-7  Agudas (7 desafíos)       → terminadas en n, s, vocal
+ *   8-15 Graves (8 desafíos)       → terminadas en consonante (no n/s)
+ *   16-20 Esdrújulas (5 desafíos)  → siempre con tilde
  *
- * Total: 20 desafíos.
+ * Distribución de Posición_X:
+ *   - Variación rotativa (centro → derecha → izquierda) para que el
+ *     niño no memorice la posición y deba leer la palabra.
  */
 
 export interface DesafioAtrapa {
-  id: string; // p.ej. "AC-01"
-  palabra_completa: string; // forma final correcta, p.ej. "café"
-  palabra_incompleta: string; // con guiones separando sílabas, sin tilde, ej. "ca-fe"
-  silaba_tonica_index: number; // 0-based, cuál sílaba lleva el acento
+  id: string; // p.ej. "AA-001"
+  palabra_completa: string; // palabra con tilde (referencia)
+  palabra_incompleta: string; // silabeada sin tilde, ej. "ca-fe"
   clasificacion: "Aguda" | "Grave" | "Esdrújula";
-  letra_con_tilde_correcta: string; // vocal con tilde, p.ej. "é"
+  letra_con_tilde_correcta: string; // vocal con tilde, ej. "é"
   posicion_x: "izquierda" | "centro" | "derecha";
-  audio_guia: string; // pronunciación exagerada con sílaba tónica en MAYÚSCULAS
-  bpm_sugerido: number; // tempo musical del nivel
-  distracting_letters: string[]; // 2 vocales con tilde distractores que también caen
+  audio_guia: string; // pronunciación exagerada, mayúscula = sílaba tónica
+  silaba_tonica: number; // cuál sílaba se acentúa (1=última, 2=penúltima, 3=antepenúltima)
+  distractores: [string, string]; // 2 vocales con tilde incorrectas (flotantes)
+  regla: string; // regla ortográfica breve
 }
 
 export const desafiosAtrapa: DesafioAtrapa[] = [
-  // ===== AGUDAS (1-8) — introducción, tempo alegre =====
+  // ====== AGUDAS (1-7) ======
   {
-    id: "AC-01",
+    id: "AA-001",
     palabra_completa: "café",
     palabra_incompleta: "ca-fe",
-    silaba_tonica_index: 1,
     clasificacion: "Aguda",
     letra_con_tilde_correcta: "é",
     posicion_x: "centro",
-    audio_guia: "ca-FÉÉÉ (con alargue en la última)",
-    bpm_sugerido: 90,
-    distracting_letters: ["á", "í"],
+    audio_guia: "ca-FÉÉÉ",
+    silaba_tonica: 1,
+    distractores: ["á", "í"],
+    regla: "Aguda terminada en vocal: lleva tilde.",
   },
   {
-    id: "AC-02",
-    palabra_completa: "también",
-    palabra_incompleta: "tam-bien",
-    silaba_tonica_index: 1,
-    clasificacion: "Aguda",
-    letra_con_tilde_correcta: "é",
-    posicion_x: "izquierda",
-    audio_guia: "tam-bi-ÉÉÉN (la fuerza va al final)",
-    bpm_sugerido: 92,
-    distracting_letters: ["á", "ó"],
-  },
-  {
-    id: "AC-03",
-    palabra_completa: "canción",
-    palabra_incompleta: "can-cion",
-    silaba_tonica_index: 1,
-    clasificacion: "Aguda",
-    letra_con_tilde_correcta: "ó",
-    posicion_x: "derecha",
-    audio_guia: "can-CIÓÓÓN (alargue nasal en la o)",
-    bpm_sugerido: 95,
-    distracting_letters: ["é", "ú"],
-  },
-  {
-    id: "AC-04",
-    palabra_completa: "León",
-    palabra_incompleta: "le-on",
-    silaba_tonica_index: 1,
-    clasificacion: "Aguda",
-    letra_con_tilde_correcta: "ó",
-    posicion_x: "centro",
-    audio_guia: "le-ÓÓÓN (como rugiendo un león)",
-    bpm_sugerido: 95,
-    distracting_letters: ["é", "á"],
-  },
-  {
-    id: "AC-05",
+    id: "AA-002",
     palabra_completa: "camión",
     palabra_incompleta: "ca-mion",
-    silaba_tonica_index: 1,
-    clasificacion: "Aguda",
-    letra_con_tilde_correcta: "ó",
-    posicion_x: "izquierda",
-    audio_guia: "ca-MIÓÓÓN (sonido de motor al final)",
-    bpm_sugerido: 98,
-    distracting_letters: ["é", "í"],
-  },
-  {
-    id: "AC-06",
-    palabra_completa: "jabón",
-    palabra_incompleta: "ja-bon",
-    silaba_tonica_index: 1,
     clasificacion: "Aguda",
     letra_con_tilde_correcta: "ó",
     posicion_x: "derecha",
-    audio_guia: "ja-BÓÓÓN (sílaba final con fuerza)",
-    bpm_sugerido: 100,
-    distracting_letters: ["é", "á"],
+    audio_guia: "ca-MIÓN",
+    silaba_tonica: 1,
+    distractores: ["o", "ú"],
+    regla: "Aguda terminada en 'n': lleva tilde.",
   },
   {
-    id: "AC-07",
-    palabra_completa: "sofá",
-    palabra_incompleta: "so-fa",
-    silaba_tonica_index: 1,
+    id: "AA-003",
+    palabra_completa: "vigorón",
+    palabra_incompleta: "vi-go-ron",
     clasificacion: "Aguda",
-    letra_con_tilde_correcta: "á",
-    posicion_x: "centro",
-    audio_guia: "so-FÁÁÁ (última sílaba muy marcada)",
-    bpm_sugerido: 102,
-    distracting_letters: ["é", "í"],
+    letra_con_tilde_correcta: "ó",
+    posicion_x: "izquierda",
+    audio_guia: "vi-go-RÓN",
+    silaba_tonica: 1,
+    distractores: ["o", "á"],
+    regla: "Aguda terminada en 'n': lleva tilde. (Comida típica nicaragüense)",
   },
   {
-    id: "AC-08",
+    id: "AA-004",
     palabra_completa: "colibrí",
     palabra_incompleta: "co-li-bri",
-    silaba_tonica_index: 2,
     clasificacion: "Aguda",
     letra_con_tilde_correcta: "í",
+    posicion_x: "centro",
+    audio_guia: "co-li-BRÍÍÍ",
+    silaba_tonica: 1,
+    distractores: ["i", "é"],
+    regla: "Aguda terminada en vocal: lleva tilde.",
+  },
+  {
+    id: "AA-005",
+    palabra_completa: "bambú",
+    palabra_incompleta: "bam-bu",
+    clasificacion: "Aguda",
+    letra_con_tilde_correcta: "ú",
     posicion_x: "derecha",
-    audio_guia: "co-li-BRÍÍÍ (aguda como el piquito del pajarito)",
-    bpm_sugerido: 105,
-    distracting_letters: ["á", "é"],
+    audio_guia: "bam-BÚÚÚ",
+    silaba_tonica: 1,
+    distractores: ["u", "ó"],
+    regla: "Aguda terminada en vocal: lleva tilde.",
+  },
+  {
+    id: "AA-006",
+    palabra_completa: "canción",
+    palabra_incompleta: "can-cion",
+    clasificacion: "Aguda",
+    letra_con_tilde_correcta: "ó",
+    posicion_x: "izquierda",
+    audio_guia: "can-CIÓN",
+    silaba_tonica: 1,
+    distractores: ["o", "é"],
+    regla: "Aguda terminada en 'n': lleva tilde.",
+  },
+  {
+    id: "AA-007",
+    palabra_completa: "León",
+    palabra_incompleta: "Le-on",
+    clasificacion: "Aguda",
+    letra_con_tilde_correcta: "ó",
+    posicion_x: "centro",
+    audio_guia: "le-ÓN",
+    silaba_tonica: 1,
+    distractores: ["o", "á"],
+    regla: "Aguda terminada en 'n': lleva tilde. (Departamento de Nicaragua)",
   },
 
-  // ===== GRAVES (9-13) — sube la dificultad, tempo medio =====
+  // ====== GRAVES (8-15) ======
   {
-    id: "AC-09",
-    palabra_completa: "lápiz",
-    palabra_incompleta: "la-piz",
-    silaba_tonica_index: 0,
-    clasificacion: "Grave",
-    letra_con_tilde_correcta: "á",
-    posicion_x: "izquierda",
-    audio_guia: "LÁÁÁ-piz (la fuerza va en la primera)",
-    bpm_sugerido: 100,
-    distracting_letters: ["é", "í"],
-  },
-  {
-    id: "AC-10",
+    id: "AA-008",
     palabra_completa: "árbol",
     palabra_incompleta: "ar-bol",
-    silaba_tonica_index: 0,
+    clasificacion: "Grave",
+    letra_con_tilde_correcta: "á",
+    posicion_x: "derecha",
+    audio_guia: "ÁR-bol",
+    silaba_tonica: 2,
+    distractores: ["a", "é"],
+    regla: "Grave terminada en 'l' (no n/s): lleva tilde.",
+  },
+  {
+    id: "AA-009",
+    palabra_completa: "lápiz",
+    palabra_incompleta: "la-piz",
+    clasificacion: "Grave",
+    letra_con_tilde_correcta: "á",
+    posicion_x: "izquierda",
+    audio_guia: "LÁ-piz",
+    silaba_tonica: 2,
+    distractores: ["a", "í"],
+    regla: "Grave terminada en 'z' (no n/s): lleva tilde.",
+  },
+  {
+    id: "AA-010",
+    palabra_completa: "fácil",
+    palabra_incompleta: "fa-cil",
     clasificacion: "Grave",
     letra_con_tilde_correcta: "á",
     posicion_x: "centro",
-    audio_guia: "ÁÁÁR-bol (primera sílaba con peso, como raíz)",
-    bpm_sugerido: 102,
-    distracting_letters: ["é", "ó"],
+    audio_guia: "FÁ-cil",
+    silaba_tonica: 2,
+    distractores: ["a", "ó"],
+    regla: "Grave terminada en 'l' (no n/s): lleva tilde.",
   },
   {
-    id: "AC-11",
-    palabra_completa: "difícil",
-    palabra_incompleta: "di-fi-cil",
-    silaba_tonica_index: 1,
+    id: "AA-011",
+    palabra_completa: "Pérez",
+    palabra_incompleta: "Pe-rez",
     clasificacion: "Grave",
-    letra_con_tilde_correcta: "í",
+    letra_con_tilde_correcta: "é",
     posicion_x: "derecha",
-    audio_guia: "di-FÍÍÍ-cil (la del medio es la fuerte)",
-    bpm_sugerido: 105,
-    distracting_letters: ["á", "é"],
+    audio_guia: "PÉ-rez",
+    silaba_tonica: 2,
+    distractores: ["e", "á"],
+    regla: "Grave terminada en 'z' (no n/s): lleva tilde. (Apellido común)",
   },
   {
-    id: "AC-12",
-    palabra_completa: "azúcar",
-    palabra_incompleta: "a-zu-car",
-    silaba_tonica_index: 1,
+    id: "AA-012",
+    palabra_completa: "Sánchez",
+    palabra_incompleta: "San-chez",
     clasificacion: "Grave",
-    letra_con_tilde_correcta: "ú",
+    letra_con_tilde_correcta: "á",
     posicion_x: "izquierda",
-    audio_guia: "a-ZÚÚÚ-car (dulcecita la del medio)",
-    bpm_sugerido: 108,
-    distracting_letters: ["á", "ó"],
+    audio_guia: "SÁN-chez",
+    silaba_tonica: 2,
+    distractores: ["a", "é"],
+    regla: "Grave terminada en 'z' (no n/s): lleva tilde. (Apellido común)",
   },
   {
-    id: "AC-13",
+    id: "AA-013",
+    palabra_completa: "móvil",
+    palabra_incompleta: "mo-vil",
+    clasificacion: "Grave",
+    letra_con_tilde_correcta: "ó",
+    posicion_x: "centro",
+    audio_guia: "MÓ-vil",
+    silaba_tonica: 2,
+    distractores: ["o", "á"],
+    regla: "Grave terminada en 'l' (no n/s): lleva tilde.",
+  },
+  {
+    id: "AA-014",
     palabra_completa: "cárcel",
     palabra_incompleta: "car-cel",
-    silaba_tonica_index: 0,
     clasificacion: "Grave",
     letra_con_tilde_correcta: "á",
-    posicion_x: "centro",
-    audio_guia: "CÁÁÁR-cel (fuerza al principio)",
-    bpm_sugerido: 110,
-    distracting_letters: ["é", "ó"],
+    posicion_x: "derecha",
+    audio_guia: "CÁR-cel",
+    silaba_tonica: 2,
+    distractores: ["a", "é"],
+    regla: "Grave terminada en 'l' (no n/s): lleva tilde.",
+  },
+  {
+    id: "AA-015",
+    palabra_completa: "huésped",
+    palabra_incompleta: "hues-ped",
+    clasificacion: "Grave",
+    letra_con_tilde_correcta: "é",
+    posicion_x: "izquierda",
+    audio_guia: "HUÉS-ped",
+    silaba_tonica: 2,
+    distractores: ["e", "á"],
+    regla: "Grave terminada en 'd' (no n/s): lleva tilde.",
   },
 
-  // ===== ESDRÚJULAS (14-20) — máximo desafío, tempo rápido =====
+  // ====== ESDRÚJULAS (16-20) ======
   {
-    id: "AC-14",
+    id: "AA-016",
     palabra_completa: "música",
     palabra_incompleta: "mu-si-ca",
-    silaba_tonica_index: 0,
     clasificacion: "Esdrújula",
     letra_con_tilde_correcta: "ú",
     posicion_x: "centro",
-    audio_guia: "MÚÚÚ-si-ca (siempre con tilde, fuerza atrás)",
-    bpm_sugerido: 110,
-    distracting_letters: ["á", "í"],
+    audio_guia: "MÚ-si-ca",
+    silaba_tonica: 3,
+    distractores: ["u", "á"],
+    regla: "Esdrújula: siempre lleva tilde.",
   },
   {
-    id: "AC-15",
-    palabra_completa: "rápido",
-    palabra_incompleta: "ra-pi-do",
-    silaba_tonica_index: 0,
-    clasificacion: "Esdrújula",
-    letra_con_tilde_correcta: "á",
-    posicion_x: "izquierda",
-    audio_guia: "RÁÁÁ-pi-do (veloz como su nombre)",
-    bpm_sugerido: 112,
-    distracting_letters: ["é", "í"],
-  },
-  {
-    id: "AC-16",
-    palabra_completa: "sábado",
-    palabra_incompleta: "sa-ba-do",
-    silaba_tonica_index: 0,
+    id: "AA-017",
+    palabra_completa: "pájaro",
+    palabra_incompleta: "pa-ja-ro",
     clasificacion: "Esdrújula",
     letra_con_tilde_correcta: "á",
     posicion_x: "derecha",
-    audio_guia: "SÁÁÁ-ba-do (día de descanso, fuerza al inicio)",
-    bpm_sugerido: 115,
-    distracting_letters: ["é", "ú"],
+    audio_guia: "PÁ-ja-ro",
+    silaba_tonica: 3,
+    distractores: ["a", "ó"],
+    regla: "Esdrújula: siempre lleva tilde.",
   },
   {
-    id: "AC-17",
-    palabra_completa: "plátano",
-    palabra_incompleta: "pla-ta-no",
-    silaba_tonica_index: 0,
-    clasificacion: "Esdrújula",
-    letra_con_tilde_correcta: "á",
-    posicion_x: "centro",
-    audio_guia: "PLÁÁÁ-ta-no (¡como morder el plátano nicaragüense!)",
-    bpm_sugerido: 118,
-    distracting_letters: ["é", "í"],
-  },
-  {
-    id: "AC-18",
-    palabra_completa: "página",
-    palabra_incompleta: "pa-gi-na",
-    silaba_tonica_index: 0,
+    id: "AA-018",
+    palabra_completa: "sábado",
+    palabra_incompleta: "sa-ba-do",
     clasificacion: "Esdrújula",
     letra_con_tilde_correcta: "á",
     posicion_x: "izquierda",
-    audio_guia: "PÁÁÁ-gi-na (como abrir el libro de MINED)",
-    bpm_sugerido: 120,
-    distracting_letters: ["é", "í"],
+    audio_guia: "SÁ-ba-do",
+    silaba_tonica: 3,
+    distractores: ["a", "ú"],
+    regla: "Esdrújula: siempre lleva tilde. (Feria de Masaya es los sábados)",
   },
   {
-    id: "AC-19",
-    palabra_completa: "murciélago",
-    palabra_incompleta: "mur-cie-la-go",
-    silaba_tonica_index: 2,
+    id: "AA-019",
+    palabra_completa: "rápido",
+    palabra_incompleta: "ra-pi-do",
+    clasificacion: "Esdrújula",
+    letra_con_tilde_correcta: "á",
+    posicion_x: "centro",
+    audio_guia: "RÁ-pi-do",
+    silaba_tonica: 3,
+    distractores: ["a", "é"],
+    regla: "Esdrújula: siempre lleva tilde.",
+  },
+  {
+    id: "AA-020",
+    palabra_completa: "médico",
+    palabra_incompleta: "me-di-co",
     clasificacion: "Esdrújula",
     letra_con_tilde_correcta: "é",
     posicion_x: "derecha",
-    audio_guia: "mur-ci-ÉÉÉ-la-go (vuela fuerte la tercera)",
-    bpm_sugerido: 122,
-    distracting_letters: ["á", "í"],
-  },
-  {
-    id: "AC-20",
-    palabra_completa: "esdrújula",
-    palabra_incompleta: "es-dru-ju-la",
-    silaba_tonica_index: 1,
-    clasificacion: "Esdrújula",
-    letra_con_tilde_correcta: "ú",
-    posicion_x: "centro",
-    audio_guia: "es-DRÚÚÚ-ju-la (la palabra que las nombra a todas)",
-    bpm_sugerido: 125,
-    distracting_letters: ["á", "é"],
+    audio_guia: "MÉ-di-co",
+    silaba_tonica: 3,
+    distractores: ["e", "á"],
+    regla: "Esdrújula: siempre lleva tilde. (El médico del MINSA)",
   },
 ];
 
 // Helpers
-export const agudasAtrapa = desafiosAtrapa.filter((d) => d.clasificacion === "Aguda");
-export const gravesAtrapa = desafiosAtrapa.filter((d) => d.clasificacion === "Grave");
-export const esdrujulasAtrapa = desafiosAtrapa.filter((d) => d.clasificacion === "Esdrújula");
+export const agudas = desafiosAtrapa.filter((d) => d.clasificacion === "Aguda");
+export const graves = desafiosAtrapa.filter((d) => d.clasificacion === "Grave");
+export const esdrujulas = desafiosAtrapa.filter(
+  (d) => d.clasificacion === "Esdrújula",
+);
 
-export const RESUMEN_ATRAPA_ACENTO = {
-  total_desafios: desafiosAtrapa.length,
-  agudas: agudasAtrapa.length,
-  graves: gravesAtrapa.length,
-  esdrujulas: esdrujulasAtrapa.length,
-  bpm_min: 90,
-  bpm_max: 125,
-  vocales_con_tilde_usadas: ["á", "é", "í", "ó", "ú"],
+export const RESUMEN_ATRAPA = {
+  total: desafiosAtrapa.length,
+  agudas: agudas.length,
+  graves: graves.length,
+  esdrujulas: esdrujulas.length,
+  vocabulario_nicaraguense: ["vigorón", "León", "sábado (feria Masaya)"],
 };
 
 export default desafiosAtrapa;
