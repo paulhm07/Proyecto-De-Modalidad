@@ -10,6 +10,8 @@ import {
   BookOpen,
   ArrowRight,
   ChevronRight,
+  Store,
+  Gamepad2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
@@ -282,6 +284,61 @@ function StudentDashboard() {
             })}
           </div>
         )}
+      </div>
+
+      {/* ===== MINI-JUEGOS ===== */}
+      <div className="mt-8">
+        <div className="mb-4 flex items-center gap-2">
+          <Gamepad2 size={20} className="text-amber-300" strokeWidth={2.5} />
+          <h2 className="font-display text-xl font-bold text-white">Mini-juegos</h2>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Tarjeta: La Pulpería de Fracciones */}
+          <button
+            onClick={() => setVista("pulperia")}
+            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+            style={{ animationDelay: "60ms" }}
+            aria-label="Jugar La Pulpería de Fracciones"
+          >
+            <div className="relative z-10 flex h-full flex-col">
+              {/* Badge con emoji */}
+              <div
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 via-orange-400 to-rose-500 text-2xl shadow-lg shadow-orange-500/40"
+                style={{
+                  boxShadow:
+                    "0 8px 20px -6px rgba(251,146,60,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+                }}
+              >
+                🍉
+              </div>
+
+              <h3 className="font-display text-base font-bold text-white">
+                La Pulpería de Fracciones
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+                Atiende a los clientes partiendo sandías, pasteles y piñas en fracciones iguales.
+              </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-amber-200">
+                  10 niveles
+                </span>
+                <span className="rounded-full bg-rose-400/15 px-2 py-0.5 text-rose-200">
+                  Fracciones
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+                  3er grado
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+                <Store size={14} strokeWidth={2.5} /> ¡Vender!
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Decorative chevron hint */}

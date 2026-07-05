@@ -14,6 +14,7 @@ import { StudentProgressView } from "@/components/StudentProgressView";
 import { ContentManager } from "@/components/ContentManager";
 import { BancoDesafiosViewer } from "@/components/BancoDesafiosViewer";
 import { ContenidoMINEDViewer } from "@/components/ContenidoMINEDViewer";
+import { PulperiaFraccionesWrapper } from "@/components/PulperiaFraccionesWrapper";
 import { Header } from "@/components/Header";
 import { ToastContainer } from "@/components/Toasts";
 
@@ -61,6 +62,9 @@ function Router() {
       break;
     case "contenido-mined":
       contenido = <ContenidoMINEDViewer />;
+      break;
+    case "pulperia":
+      contenido = <PulperiaFraccionesWrapper />;
       break;
     default:
       contenido = <Dashboard />;

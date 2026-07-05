@@ -116,7 +116,7 @@ function AppProvider({ children }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx",
-        lineNumber: 160,
+        lineNumber: 161,
         columnNumber: 10
     }, this);
 }
@@ -869,7 +869,7 @@ function Router() {
     if (!usuario) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$LoginScreen$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LoginScreen"], {}, void 0, false, {
             fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-            lineNumber: 24,
+            lineNumber: 25,
             columnNumber: 12
         }, this);
     }
@@ -878,91 +878,91 @@ function Router() {
         case "dashboard":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$Dashboard$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dashboard"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 30,
+                lineNumber: 31,
                 columnNumber: 19
             }, this);
             break;
         case "asignatura":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$SubjectView$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SubjectView"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 33,
+                lineNumber: 34,
                 columnNumber: 19
             }, this);
             break;
         case "modulo":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$ModuleView$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ModuleView"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 36,
+                lineNumber: 37,
                 columnNumber: 19
             }, this);
             break;
         case "avatar":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$AvatarCustomizer$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AvatarCustomizer"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 39,
+                lineNumber: 40,
                 columnNumber: 19
             }, this);
             break;
         case "ranking":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$RankingView$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["RankingView"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 42,
+                lineNumber: 43,
                 columnNumber: 19
             }, this);
             break;
         case "perfil":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$ProfileView$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ProfileView"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 45,
+                lineNumber: 46,
                 columnNumber: 19
             }, this);
             break;
         case "padre":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$ParentDashboard$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ParentDashboard"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 48,
+                lineNumber: 49,
                 columnNumber: 19
             }, this);
             break;
         case "maestro":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$TeacherDashboard$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TeacherDashboard"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 51,
+                lineNumber: 52,
                 columnNumber: 19
             }, this);
             break;
         case "progreso-estudiante":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$StudentProgressView$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["StudentProgressView"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 54,
+                lineNumber: 55,
                 columnNumber: 19
             }, this);
             break;
         case "contenido":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$ContentManager$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ContentManager"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 57,
+                lineNumber: 58,
                 columnNumber: 19
             }, this);
             break;
         case "banco-desafios":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$BancoDesafiosViewer$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["BancoDesafiosViewer"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 60,
+                lineNumber: 61,
                 columnNumber: 19
             }, this);
             break;
         case "contenido-mined":
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$ContenidoMINEDViewer$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ContenidoMINEDViewer"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 63,
+                lineNumber: 64,
                 columnNumber: 19
             }, this);
             break;
         default:
             contenido = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$Dashboard$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Dashboard"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 66,
+                lineNumber: 67,
                 columnNumber: 19
             }, this);
     }
@@ -970,7 +970,7 @@ function Router() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$Header$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Header"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 71,
+                lineNumber: 72,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -978,7 +978,7 @@ function Router() {
                 children: contenido
             }, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 72,
+                lineNumber: 73,
                 columnNumber: 7
             }, this)
         ]
@@ -989,18 +989,18 @@ function Page() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Router, {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 80,
+                lineNumber: 81,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Proyecto$2d$De$2d$Modalidad$2f$frontend$2f$src$2f$components$2f$Toasts$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ToastContainer"], {}, void 0, false, {
                 fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-                lineNumber: 81,
+                lineNumber: 82,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/Proyecto-De-Modalidad/frontend/src/app/page.tsx",
-        lineNumber: 79,
+        lineNumber: 80,
         columnNumber: 5
     }, this);
 }
