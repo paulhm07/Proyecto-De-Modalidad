@@ -15,6 +15,7 @@ import {
   Truck,
   Bus,
   Mail,
+  Target,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
@@ -474,6 +475,52 @@ function StudentDashboard() {
 
               <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
                 <Mail size={14} strokeWidth={2.5} /> ¡Sell!
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
+
+          {/* Tarjeta: Atrapa el Acento */}
+          <button
+            onClick={() => setVista("atrapa")}
+            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+            style={{ animationDelay: "300ms" }}
+            aria-label="Jugar Atrapa el Acento"
+          >
+            <div className="relative z-10 flex h-full flex-col">
+              {/* Badge con emoji */}
+              <div
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-300 via-violet-400 to-amber-300 text-2xl shadow-lg shadow-fuchsia-500/40"
+                style={{
+                  boxShadow:
+                    "0 8px 20px -6px rgba(217,70,239,0.55), inset 0 2px 4px rgba(255,255,255,0.5)",
+                }}
+              >
+                🎯
+              </div>
+
+              <h3 className="font-display text-base font-bold text-white">
+                Atrapa el Acento
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+                Atrapa la vocal con tilde correcta mientras flota por la
+                pantalla. ¡Rápido, antes de que se escape!
+              </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="rounded-full bg-fuchsia-400/15 px-2 py-0.5 text-fuchsia-200">
+                  20 palabras
+                </span>
+                <span className="rounded-full bg-violet-400/15 px-2 py-0.5 text-violet-200">
+                  Acentos
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+                  3er grado
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-fuchsia-400 via-violet-400 to-amber-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+                <Target size={14} strokeWidth={2.5} /> ¡Atrapar!
                 <ArrowRight size={14} strokeWidth={2.5} />
               </div>
             </div>

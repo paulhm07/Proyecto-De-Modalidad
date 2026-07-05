@@ -18,6 +18,7 @@ import { PulperiaFraccionesWrapper } from "@/components/PulperiaFraccionesWrappe
 import { CamionMultiplicacionesWrapper } from "@/components/CamionMultiplicacionesWrapper";
 import { BusLetrasWrapper } from "@/components/BusLetrasWrapper";
 import { CartaOrtografiaWrapper } from "@/components/CartaOrtografiaWrapper";
+import { AtrapaAcentoWrapper } from "@/components/AtrapaAcentoWrapper";
 import { Header } from "@/components/Header";
 import { ToastContainer } from "@/components/Toasts";
 
@@ -77,6 +78,9 @@ function Router() {
       break;
     case "carta":
       contenido = <CartaOrtografiaWrapper />;
+      break;
+    case "atrapa":
+      contenido = <AtrapaAcentoWrapper />;
       break;
     default:
       contenido = <Dashboard />;

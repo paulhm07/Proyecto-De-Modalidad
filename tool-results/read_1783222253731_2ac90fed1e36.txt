@@ -1,0 +1,294 @@
+     1→
+     2→---
+     3→Task ID: GDF-1
+     4→Agent: main (Game Designer)
+     5→Task: Diseñar 10 niveles del minijuego "La Pulpería de Fracciones" para 3er grado MINED Nicaragua, con campos estructurados (Nivel, Objeto_Visual, Denominador_Cortes, Numerador_Pedido, Frase_Del_Cliente, Feedback_Error).
+     6→
+     7→Work Log:
+     8→- Verificado el estado del proyecto Proyecto-De-Modalidad (existe, con frontend/backend).
+     9→- Diseñada progresión pedagógica: 1/2 → 1/4 → 2/4 (equivalencia) → 1/3 → 2/3 → 3/4 → 1/6 → 5/8 → 3/8 → 5/6.
+    10→- Asignados objetos típicos nicaragüenses rotando: sandía, pastel de tres leches, piña, cuajada, barra de jabón de lavar.
+    11→- Redactadas frases de cliente en tono coloquial nicaragüense ("porfa", "deme", "Buenas").
+    12→- Redactados feedbacks de error pedagógicos, simples y alentadores, sin palabra "incorrecto".
+    13→- Guardado diseño en frontend/src/data/pulperiaFracciones.ts (tipado TypeScript, interfaz NivelPulperia).
+    14→- Guardado diseño en frontend/src/data/pulperiaFracciones.json (versión portable para app Android).
+    15→
+    16→Stage Summary:
+    17→- Artefactos: pulperiaFracciones.ts (con interfaz + 10 niveles), pulperiaFracciones.json (portable).
+    18→- Progresión pedagógica introduce denominadores en orden: 2, 4, 3, 6, 8.
+    19→- Nivel 3 destaca equivalencia 2/4 = 1/2 reutilizando la sandía del nivel 1.
+    20→- Listo para integrarse al EducaPlay o exportarse a la app Android.
+    21→
+    22→---
+    23→Task ID: MINED-CONTENT-1
+    24→Agent: general-purpose (content generator)
+    25→Task: Generar contenido de 4 módulos MINED 3er grado Nicaragua
+    26→
+    27→Work Log:
+    28→- Leído worklog.md previo (GDF-1) y bancoDesafios.ts para alinear estilo TypeScript y tono pedagógico nicaragüense.
+    29→- Creado modulo2Matematica.ts: 15 problemas verticales (5 multiplicación DU×U y CDU×U; 5 división exacta DU÷U; 5 división con residuo DU÷U). Contextos: córdobas, quintales de café, nancites, pitahayas, buses Managua-Masaya-Granada, cuajada, cacao, nacatamal, vigorón. Distractores lógicos de errores comunes de 8-9 años.
+    30→- Creado modulo3FraccionesGeometria.ts: 10 desafíos visuales (5 fracciones propias 1/2, 1/3, 1/4, 1/5 con sandía, cuajada, pastel de tres leches, piña, nacatamal; 5 geometría con centro/radio/diámetro en Laguna de Masaya, rueda de carreta, sombrero de pino y triángulos equilátero/escaleno con hoja de cacao y techo chorotega).
+    31→- Creado modulo3Lectura.ts: 3 lecturas ≤80 palabras (El nacatamal de Doña Rosa, El viaje a Granada, El cacao de Don Luis) con 3 preguntas cada una: estructura (inicio/final/moraleja), gramática (sujeto/predicado) y pronombres (él/ella/ellos).
+    32→- Creado modulo4Ortografia.ts: 30 ítems (5 b/v con error a corregir + 5 b/v correctas para clasificar; 10 clasificación por acento: 3 agudas, 4 graves, 3 esdrújulas; 10 signos de apertura faltantes: 5 exclamativas ¡ y 5 interrogativas ¿). Cada ítem trae regla ortográfica simple.
+    33→- Ejecutado `bunx tsc --noEmit` en /home/z/my-project/Proyecto-De-Modalidad/frontend → EXIT_CODE=0, sin errores de tipos en los 4 archivos nuevos.
+    34→- Helpers de agrupación y objetos RESUMEN_* añadidos en cada archivo para uso futuro de la UI.
+    35→
+    36→Stage Summary:
+    37→- Artefactos producidos (4 archivos TS tipados):
+    38→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/data/modulo2Matematica.ts (15 items)
+    39→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/data/modulo3FraccionesGeometria.ts (10 items)
+    40→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/data/modulo3Lectura.ts (3 lecturas, 9 preguntas)
+    41→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/data/modulo4Ortografia.ts (30 items)
+    42→- Conteos: 15 + 10 + 9 + 30 = 64 ítems pedagógicos nuevos alineados a 3er grado MINED segundo semestre.
+    43→- tsc --noEmit compila limpio (EXIT_CODE=0).
+    44→- Lenguaje coloquial nicaragüense, distractores lógicos, sin uso de la palabra "incorrecto".
+    45→- Listo para integrarse a componentes React en EducaPlay.
+    46→
+    47→---
+    48→Task ID: PULPERIA-IMPL-1
+    49→Agent: full-stack-developer
+    50→Task: Implementar minijuego 'La Pulpería de Fracciones' como componente React
+    51→
+    52→Work Log:
+    53→- Leído /home/z/my-project/worklog.md (secciones GDF-1 y MINED-CONTENT-1) para alinear el diseño con la progresión pedagógica de 10 niveles ya definida en pulperiaFracciones.ts.
+    54→- Estudiada la arquitectura existente: AppContext (state lifting con tipo Vista y hook useApp), page.tsx (router por switch sobre `vista`), Dashboard.tsx (tarjetas glass-panel + sistema de colores cósmicos), globals.css (clases glass-panel, challenge-board, btn-cosmic, animate-confetti-fall) y layout.tsx (font Fredoka, fondo cósmico fijo -z-10, footer mt-auto pegado al bottom).
+    55→- Verificado que NO existe carpeta src/components/ui (el proyecto usa clases CSS propias en globals.css en lugar de shadcn/ui). Se decidió reutilizar las clases existentes (glass-panel, animate-bounce-in, animate-confetti-fall) y crear clases utilitarias inline con Tailwind para el tema cálido de la pulpería (amber/orange/rose/emerald) sin tocar el sistema cósmico.
+    56→- Creado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/PulperiaFracciones.tsx (~900 líneas, client component):
+    57→  • Máquina de estados: 'presentacion' | 'cortando' | 'arrastrando' | 'verificando' | 'celebrando' | 'completado'.
+    58→  • Parser de fracciones: renderFrase() detecta $\\frac{a}{b}$ en frase_del_cliente y lo renderiza como fracción visual apilada (numerador/barra/denominador) con componente Fraccion.
+    59→  • SVG por producto: PiezaProducto renderiza cada objeto (sandía, cuajada = circulares con pieSlicePath; pastel de tres leches, piña, jabón = rectangulares con tiras verticales). Cada pieza es draggable (HTML5 DnD) + clickable (fallback táctil para niños). Decoraciones: cascá verde + pulpa rosada + semillas para sandía; capas sponge+crema+cereza para pastel; rombos marrones + corona para piña; banda etiqueta "JABÓN" para el jabón de lavar.
+    60→  • Animación de cortes: al tocar el producto en estado 'cortando', los bordes de cada pieza aparecen progresivamente (transition opacity con staggered delay de 110ms por pieza) y tras 1.3s se habilita el arrastre.
+    61→  • Canasta drop zone con borde punteado (border-dashed) que se ilumina en verde (border-emerald-400 + scale-[1.02]) durante onDragOver. Contador "X / numerador_pedido" con color emerald cuando coincide.
+    62→  • Piezas en canasta se muestran como iconos SVG pequeños; tap para quitar. Botón "Vaciar canasta" disponible.
+    63→  • Validación: entregar() compara piezasEnCanasta.length === nivel.numerador_pedido. Correcto → celebrando (Confetti 2.8s + autoavance al siguiente nivel o pantalla completado). Incorrecto → muestra nivel.feedback_error en callout ámbar y vuelve a arrastrando (sin resetear canasta, para que el niño ajuste).
+    64→  • HUD superior: icono Store, nivel actual "N de 10", barra de progreso (de amber a rose), contador de ventas exitosas con icono ShoppingCart.
+    65→  • Pantalla final 'completado': trofeo 🏆 (animate-trophy-float), "¡Pulpero Experto!", resumen de ventas, botón "Jugar de nuevo".
+    66→  • Avatares de cliente rotando por nivel: ['👵','👨‍🦱','🧒','👩‍🦰','🧑‍🦱','👴','👧','🧔','🧓','👨'].
+    67→  • Timeouts gestionados con useRef<Set> para limpieza segura al desmontar.
+    68→  • Responsive mobile-first: grid de 1 columna en móvil, 2 columnas (lg:grid-cols-2) en desktop. Botones con py-3.5 (≥44px touch target). Texto mínimo 18px (text-base/text-lg).
+    69→- Creado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/PulperiaFraccionesWrapper.tsx: botón "Salir" fijo (fixed top-left) con icono ArrowLeft que llama setVista('dashboard'), monta PulperiaFracciones.
+    70→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx: agregado 'pulperia' al tipo Vista (sin romper los 13 valores existentes).
+    71→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/app/page.tsx: agregado import PulperiaFraccionesWrapper y case 'pulperia' en el switch del Router.
+    72→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/Dashboard.tsx: agregados iconos Store y Gamepad2 a imports; agregada sección "Mini-juegos" después de "Mis aventuras" con tarjeta glass-panel "La Pulpería de Fracciones" 🍉 (gradiente amber→orange→rose, badges "10 niveles" y "Fracciones", botón "¡Vender!" que llama setVista('pulperia')).
+    73→- Corregidos 2 errores de TypeScript iniciales: (1) prop `draggable` no existe en SVGProps<SVGGElement> → resuelto con spread condicional tipado como Record<string,unknown>; (2) comparación `estado === 'verificando'` con narrowing no intencional por TS vía puedeEntregar → resuelto extrayendo booleanos esArrastrando/esVerificando/esCelebrando/esPresentacion.
+    74→- Verificación: `bunx tsc --noEmit` → EXIT_CODE=0 (sin errores). `bun run lint` → no ejecutable (next lint fue removido en Next.js 16 y no hay eslint config en el proyecto; verificado que no es regresión introducida por esta tarea). Dev server (dev.log) compila sin errores: "✓ Compiled in Xms" repetido, HTTP 200 en todas las peticiones GET /.
+    75→
+    76→Stage Summary:
+    77→- Artefactos producidos:
+    78→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/PulperiaFracciones.tsx (NUEVO, ~900 líneas, componente principal del minijuego con máquina de 6 estados, 5 productos SVG, drag-and-drop HTML5 + tap, confeti, pantalla final).
+    79→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/PulperiaFraccionesWrapper.tsx (NUEVO, wrapper con botón Salir).
+    80→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx (MODIFICADO, +1 valor 'pulperia' en tipo Vista).
+    81→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/app/page.tsx (MODIFICADO, +1 case en router switch).
+    82→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/Dashboard.tsx (MODIFICADO, +sección "Mini-juegos" con tarjeta 🍉).
+    83→- Paleta usada (cálida, sin indigo/azul): amber-50→orange-100→rose-100 (fondo), orange-400→rose-400 (acciones primarias), emerald-400→lime-400 (entrega correcta), amber (feedbacks). Footer cósmico existente respetado (mt-auto en layout.tsx, no se tocó).
+    84→- Flujo de juego: Dashboard → tarjeta "La Pulpería de Fracciones" → vista 'pulperia' → nivel 1 (presentación 👵 + frase "Quiero ½ de esa sandía") → "¡Atender!" → "Toca la sandía para cortarla" → cortes aparecen en 2 → arrastrar/tocar 1 pedazo a canasta → "Entregar pedido" → confeti 🎉 → nivel 2 (pastel, ¼) → ... → nivel 10 (piña, 5/6) → pantalla "¡Pulpero Experto!" 🏆 con botón "Jugar de nuevo".
+    85→- tsc --noEmit: EXIT_CODE=0 (limpio).
+    86→- Dev server: compila sin errores, HTTP 200.
+    87→- Listo para QA visual en el panel de preview.
+    88→
+    89→---
+    90→Task ID: CAMION-IMPL-1
+    91→Agent: full-stack-developer
+    92→Task: Implementar minijuego 'El Camión de las Multiplicaciones'
+    93→
+    94→Work Log:
+    95→- Leído /home/z/my-project/worklog.md (secciones GDF-1, MINED-CONTENT-1, PULPERIA-IMPL-1) para alinear arquitectura con PulperiaFracciones y respetar el sistema de clases CSS cósmico + paleta cálida sin indigo/azul.
+    96→- Estudiada la data existente en /home/z/my-project/Proyecto-De-Modalidad/frontend/src/data/camionMultiplicaciones.ts: interfaz NivelCamion + 10 niveles con progresión DU×U → CDU×U (2×3, 3×4, 4×5, 5×6, 6×7, 8×4, 12×3, 14×5, 23×4, 34×6) y 8 productos visuales nicaragüenses rotando (nancites, café, rosquillas, pitahayas, frijoles, cuajadas, cacao, pan de leche).
+    97→- Reutilizada la arquitectura del componente PulperiaFracciones: máquina de estados con 5 valores, hook useRef<Set> para timeouts seguros al desmontar, useEffect de transición celebrando→siguiente nivel, drag-and-drop HTML5 + tap fallback, Confetti de @/components/Toasts.
+    98→- Creado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/CamionMultiplicaciones.tsx (~620 líneas, client component):
+    99→  • Máquina de estados: 'presentacion' | 'cargando' | 'verificando' | 'celebrando' | 'completado'.
+   100→  • Mapeo PRODUCTO_EMOJI y PRODUCTO_NOMBRE para los 8 productos visuales (🫐 nancites, ☕ café, 🍩 rosquillas, 🍈 pitahayas, 🫘 frijoles, 🧀 cuajadas, 🍫 cacao, 🥖 pan de leche).
+   101→  • Componente Cajita: cuadrado redondeado con border-amber-700/bg-amber-100, grid de emojis del producto repetido elementos_por_grupo veces (cols auto: 3 para cantidades ≤6, 4 para 7). 3 tamaños responsivos (lg/md/sm) según cantidad de grupos del nivel. Draggable HTML5 + onClick (tap) + onKeyDown (Enter/Space para accesibilidad).
+   102→  • Componente CamionSVG: camión estilizado en SVG (viewBox 0 0 320 210) con cabina teal-600 (#0d9488), caja de carga amber-200 (#fde68a) con borde amber-700 (#92400e) que cambia a emerald-400 al completar o rose-500 al pasarse, ruedas negras con llanta gris, faro amarillo, ventana teal-200 con brillo. Contador flotante "X / Y" sobre la caja de carga con color semántico (verde si coincide, rosa si se pasó, ámbar si falta).
+   103→  • Componente ToldosMercado: 8 toldos triangulares de colores cálidos (orange, rose, amber, emerald, teal, amber-dark, red, lime) en la parte superior, con ondas triangulares SVG en el borde inferior. NO usa azul/indigo.
+   104→  • Drop zone: div con onDragOver/onDrop envuelve el CamionSVG; borde dashed teal-400 en estado 'cargando', borde emerald-400 + scale-[1.02] durante dragOver. Cajitas cargadas se visualizan en un panel dentro del camión (max-h-44/52 overflow-y-auto) con cada cajita mostrando su contenido completo; tap para regresar a la pila.
+   105→  • Pila de cajitas disponibles: total = grupos + 4 extras (para permitir "pasarse" o quedarse corto). Grid de cajitas con max-h-80 overflow-y-auto y estilo de scrollbar thin. Cada cajita solo se puede cargar una vez.
+   106→  • Validación: despachar() compara cajitasCargadas.length === nivel.grupos. Correcto → celebrando (overlay con operación formal "12 × 3 = 36" + Confetti 2.8s + autoavance). Incorrecto → feedback_error en callout ámbar, vuelve a 'cargando' SIN resetear (el niño ajusta).
+   107→  • HUD superior: icono Truck (lucide) en gradiente teal→emerald, "Nivel X de 10", barra de progreso teal→emerald→lime, contador de "camiones despachados" con icono Package en tono lime.
+   108→  • Cliente con avatar emoji rotando por nivel (10 avatares, mismo arreglo que PulperiaFracciones para consistencia) + bocadillo de cómic teal-300 con cola triangular. Encargo visual "X cajitas × M [emoji]" SIN revelar la respuesta (la operación formal aparece solo en celebración).
+   109→  • Overlay de celebración: card blanca centrada con "¡Camión despachado!", operación formal grande (text-3xl emerald-900), desglose pedagógico "N cajitas × M [producto] cada una".
+   110→  • Pantalla final 'completado': trofeo 🏆 (animate-trophy-float), "¡Transportista Experto!", resumen de camiones despachados, 9 emojis de productos + trofeo, botón "Jugar de nuevo".
+   111→  • Responsive mobile-first: grid de 1 columna en móvil, 2 columnas (lg:grid-cols-2) en desktop. Botones py-3.5 (≥44px touch target). Texto mínimo 18px (text-base/text-lg). Padding pt-14/pt-16 para no tapar los toldos.
+   112→  • Paleta: amber-100→orange-200→rose-200 (fondo gradiente cálido), teal-500→emerald-500 (HUD y acción primaria), lime-400→emerald-500 (despachar), emerald (correcto), rose (se pasó), amber (feedbacks). Sin indigo ni azul brillante.
+   113→- Creado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/CamionMultiplicacionesWrapper.tsx: botón "Salir" fijo (fixed top-left, top-16/top-20) con icono ArrowLeft, tono teal-300/teal-800 (vs orange del wrapper de PulperiaFracciones) para distinguirlo visualmente, llama setVista('dashboard').
+   114→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx: agregado 'camion' al tipo Vista (14 valores totales ahora, sin romper existentes).
+   115→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/app/page.tsx: agregado import CamionMultiplicacionesWrapper y case 'camion' en el switch del Router.
+   116→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/Dashboard.tsx: agregado icono Truck a imports de lucide-react; agregada tarjeta "El Camión de las Multiplicaciones" 🚚 después de la tarjeta 🍉 en la sección "Mini-juegos" (gradiente teal-300→emerald-400→lime-500, badges "10 niveles" + "Multiplicación", botón "¡Cargar!" con icono Truck que llama setVista('camion')).
+   117→- Verificación: `bunx tsc --noEmit` → EXIT_CODE=0 (sin errores, sin output). Dev server (dev.log) compila sin errores: "✓ Compiled in Xms" repetido, HTTP 200 en todas las peticiones GET /.
+   118→
+   119→Stage Summary:
+   120→- Artefactos producidos:
+   121→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/CamionMultiplicaciones.tsx (NUEVO, ~620 líneas, componente principal del minijuego con máquina de 5 estados, CamionSVG estilizado, Cajita con grid de emojis, ToldosMercado, drag-and-drop HTML5 + tap, confeti, pantalla final).
+   122→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/CamionMultiplicacionesWrapper.tsx (NUEVO, wrapper con botón Salir tono teal).
+   123→  - /home/z/my-project/De-Modalidad/frontend/src/context/AppContext.tsx (MODIFICADO, +1 valor 'camion' en tipo Vista). [Nota: ruta real es /home/z/my-project/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx]
+   124→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/app/page.tsx (MODIFICADO, +1 import y +1 case en router switch).
+   125→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/Dashboard.tsx (MODIFICADO, +icono Truck, +tarjeta 🚚 en sección Mini-juegos).
+   126→- Paleta usada (cálida, sin indigo/azul brillante): amber-100→orange-200→rose-200 (fondo), teal-500→emerald-500 (HUD y primario), lime-400→emerald-500 (despachar), emerald (correcto), rose (se pasó), amber (feedbacks). Cabina del camión en teal-600 (#0d9488).
+   127→- Flujo de juego: Dashboard → tarjeta "El Camión de las Multiplicaciones" 🚚 → vista 'camion' → nivel 1 (presentación 👵 + frase "¡Buenas! Llevo 2 cajitas con 3 nancites cada una al mercado de Masaya, porfa.") → "¡Empezar a cargar!" → pila de 6 cajitas (2+4 extras) cada una con 3 🫐 → arrastrar/tocar 2 cajitas al camión → contador "2/2" en verde → "¡Despachar camión!" → overlay "2 × 3 = 6" + confeti 🎉 → nivel 2 (pitahayas, 3×4) → ... → nivel 10 (cuajadas, 34×6=204) → pantalla "¡Transportista Experto!" 🏆 con botón "Jugar de nuevo".
+   128→- tsc --noEmit: EXIT_CODE=0 (limpio, sin output).
+   129→- Dev server: compila sin errores, HTTP 200.
+   130→- Footer cósmico existente respetado (mt-auto en layout.tsx, no se tocó). Wrapper usa min-h-[calc(100vh-72px)] para llenar el viewport sobre el fondo cósmico.
+   131→- Listo para QA visual en el panel de preview.
+   132→
+   133→---
+   134→Task ID: BUS-IMPL-1
+   135→Agent: full-stack-developer
+   136→Task: Implementar minijuego 'El Bus de las Letras'
+   137→
+   138→Work Log:
+   139→- Leído /home/z/my-project/worklog.md (secciones GDF-1, MINED-CONTENT-1, PULPERIA-IMPL-1, CAMION-IMPL-1) para alinear arquitectura con PulperiaFracciones y CamionMultiplicaciones: máquina de 5 estados, hook useRef<Set> para timeouts seguros, useEffect de transición celebrando→siguiente nivel, reutilización de Confetti de @/components/Toasts, paleta cálida sin indigo/azul brillante, responsive lg:grid-cols-2 con pt para no tapar botón Salir fijo.
+   140→- Estudiada la data existente en /home/z/my-project/Proyecto-De-Modalidad/frontend/src/data/busLetras.ts: interfaz NivelBus + 10 niveles con progresión sujeto_simple → sujeto_compuesto → predicado_simple → predicado_adjetivo → sujeto_vs_predicado → pronombre_el_ella → pronombre_ellos_ellas → estructura_inicio → estructura_desarrollo → estructura_final. Cada nivel trae avatar_pasajero (emoji) + consigna + enunciado + palabra_correcta (1-7 palabras) + 3 distractores + feedback_error. Detectado que los niveles 6 y 7 (pronombres) NO contienen la palabra_correcta dentro del enunciado, lo que requiere un modo de "opciones múltiples" distinto al modo "enunciado tokenizado" del resto.
+   141→- Creado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/BusLetras.tsx (~758 líneas, client component):
+   142→  • Máquina de estados: 'presentacion' | 'seleccionando' | 'verificando' | 'celebrando' | 'completado'.
+   143→  • Helpers de normalización: limpiar() quita puntuación de los extremos de un token; normalizar() pasa a minúsculas, limpia cada palabra y colapsa espacios, para comparar la selección del niño contra palabra_correcta sin que importen mayúsculas, puntos o comas finales.
+   144→  • Helper esNivelPronombres() detecta tipo_ejercicio === 'pronombre_el_ella' || 'pronombre_ellos_ellas' → activa modo opciones múltiples (4 botones con la palabra_correcta + 3 distractores mezclados con Fisher–Yates). En este modo solo se permite 1 selección a la vez (toggle).
+   145→  • Helper tokenizarEnunciado() divide el enunciado por espacios y limpia cada token — usado en los otros 8 niveles donde la consigna pide tocar palabras dentro de la oración. Selección multi-palabra permitida (sujeto compuesto "Doña Rosa", predicado con adjetivo "sabe delicioso", moraleja "la astucia vence a la fuerza bruta"). Validación: se ordenan los índices seleccionados ascendentemente y se unen los tokens correspondientes para formar la frase, que se normaliza y compara.
+   146→  • Componente Palmera: SVG estilizado (tronco marrón curvado + 6 hojas verdes + 2 cocos marrones) para decorar el fondo a los lados del bus (solo sm: en adelante, pointer-events-none).
+   147→  • Componente LetreroParada: cartel rectangular blanco con borde rose-500, ícono Bus, etiqueta "PARADA" y el nombre del lugar; poste marrón (amber-700) debajo. Centrado sobre el bus.
+   148→  • Componente BusSVG: bus escolar nicaragüense en SVG (viewBox 0 0 360 200) con caja de pasajeros rose-200 (#fecdd3, borde rose-500) que pasa a verde (#bbf7d0) al completar, 4 ventanas teal-200 (#99f6e4) con brillos, banda decorativa con texto "ESCUELA", cabina amber-400 (#fbbf24, borde amber-700) con parabrisas teal, puerta con manija, faro delantero amarillo, 2 ruedas negras con llanta gris, check verde flotante al celebrar. NO usa azul brillante ni indigo.
+   149→  • Card del pasajero: avatar emoji grande (h-16/w-16 sm:h-20/w-20) en gradiente amber→rose con shadow-inner, bocadillo de cómic rosa con cola triangular apuntando al avatar, consigna_para_nino dentro. Al celebrar, el avatar se anima (translate-x-6 -translate-y-4 scale-50 opacity-0, transition 700ms) simulando que "sube al bus". Pie con icono MapPin + nombre de la parada.
+   150→  • Card de palabras (enunciado o pronombres): header con BookOpen, contador "X selec.", instrucción con icono Hand. Botones-tarjeta redondeados (rounded-xl, border-2, py-2.5 px-3.5, text-base sm:text-lg, font-bold) con fondo white/90, borde rose-300. Al seleccionar: borde rose-500 + fondo rose-100 + scale-[1.05] + shadow-md. Botones disabled cuando no es 'seleccionando'. Texto del enunciado tokenizado o 4 opciones de pronombre.
+   151→  • Preview de la frase construida: cuando hay selección, muestra el texto "subiendo al bus" (palabra única o frase unida en orden) en una caja rosa — refuerza la asociación niño→selección.
+   152→  • Botones de acción: principal "¡Subir al bus!" (gradiente rose-500→fuchsia-500, icono Check, ≥44px py-3.5, text-base) con estado disabled cuando no hay selección; secundario "Limpiar" (borde rose-300, icono RotateCcw) aparece solo si hay selección; "Revisando…" con RefreshCw animado en 'verificando'; "¡Bien hecho!" con PartyPopper en 'celebrando'.
+   153→  • Validación: subirAlBus() pasa a 'verificando', programa 550ms, si correcto → incrementa pasajerosTransportados y pasa a 'celebrando'; si incorrecto → muestra nivel.feedback_error en callout ámbar y vuelve a 'seleccionando' SIN resetear selección (el niño ajusta, consistente con PulperiaFracciones y CamionMultiplicaciones).
+   154→  • Transición celebrando→siguiente nivel: useEffect con setTimeout 2800ms. Si era nivel 10 → 'completado'; si no → setNivelIdx+1, resetea seleccionadas y feedback, vuelve a 'presentacion'.
+   155→  • Overlay de celebración: card blanca centrada (pointer-events-none) con "¡Pasajero a bordo!", palabra_correcta en grande (text-2xl/3xl emerald-900), mensaje de refuerzo.
+   156→  • HUD superior: icono Bus (lucide) en gradiente rose-500→fuchsia-500, "Nivel X de 10", barra de progreso rose-400→fuchsia-400→amber-400, contador de "pasajeros transportados" con icono Users en tono amber.
+   157→  • Pantalla final 'completado': trofeo 🏆 (animate-trophy-float) en gradiente rose-300→fuchsia-400→amber-400, "¡Conductor Experto!", resumen de pasajeros transportados, lista de los 10 avatares + trofeo, botón "Jugar de nuevo" con RefreshCw + ArrowRight.
+   158→  • Responsive mobile-first: grid de 1 columna en móvil, 2 columnas (lg:grid-cols-2) en desktop. Botones py-3.5 (≥44px touch target). Texto mínimo text-base/text-lg. pt-4/pt-6 para no tapar el botón Salir fijo.
+   159→  • Paleta usada (cálida, sin indigo ni azul brillante): rose-100→amber-100→rose-200 (fondo gradiente), rose-500→fuchsia-500 (HUD y primario), rose-300 (bordes), amber-300 (HUD secundario), emerald (correcto), amber (feedbacks). Ventanas del bus en teal-200 (verde-azulado suave, no azul brillante).
+   160→- Creado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/BusLetrasWrapper.tsx: botón "Salir" fijo (fixed top-16/top-20, left-3/left-4) con icono ArrowLeft, tono rose-300/rose-800 (vs orange del wrapper de PulperiaFracciones y teal del de CamionMultiplicaciones) para distinguirlo visualmente, llama setVista('dashboard'). Monta BusLetras.
+   161→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx: agregado 'bus' al tipo Vista (15 valores totales ahora, sin romper existentes).
+   162→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/app/page.tsx: agregado import BusLetrasWrapper y case 'bus' en el switch del Router (después de case 'camion').
+   163→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/Dashboard.tsx: agregado icono Bus a imports de lucide-react; agregada tarjeta "El Bus de las Letras" 🚌 después de la tarjeta 🚚 en la sección "Mini-juegos" (gradiente rose-300→fuchsia-400→amber-400, sombra fuchsia, badges "10 niveles" + "Lengua y Literatura" + "3er grado", botón "¡Subir!" con icono Bus que llama setVista('bus'), animationDelay 180ms).
+   164→- Verificación: `bunx tsc --noEmit` → EXIT_CODE=0 (sin output, sin errores). Dev server (dev.log) compila sin errores: "✓ Compiled in Xms" repetido, HTTP 200 en todas las peticiones GET /.
+   165→
+   166→Stage Summary:
+   167→- Artefactos producidos:
+   168→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/BusLetras.tsx (NUEVO, ~758 líneas, componente principal del minijuego con máquina de 5 estados, BusSVG estilizado amarillo/rosa/teal, LetreroParada, Palmera decorativa, modo enunciado + modo pronombres, validación por normalización, animación de "subir al bus", confeti, pantalla final).
+   169→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/BusLetrasWrapper.tsx (NUEVO, wrapper con botón Salir tono rose).
+   170→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx (MODIFICADO, +1 valor 'bus' en tipo Vista).
+   171→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/app/page.tsx (MODIFICADO, +1 import y +1 case en router switch).
+   172→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/Dashboard.tsx (MODIFICADO, +icono Bus, +tarjeta 🚌 en sección Mini-juegos).
+   173→- Paleta usada (cálida, sin indigo/azul brillante): rose-100→amber-100→rose-200 (fondo), rose-500→fuchsia-500 (HUD y primario), amber-300 (HUD secundario), emerald (correcto), amber (feedbacks). Bus en cabina amber-400 + caja rose-200 + ventanas teal-200.
+   174→- Mecánica dual: modo enunciado (8 niveles con sujeto/predicado/estructura) — tokenización del enunciado + selección multi-palabra consecutiva; modo pronombres (2 niveles) — 4 opciones mezcladas + selección única. Validación por normalización (limpiar puntuación, minúsculas, colapsar espacios) para tolerar mayúsculas y signos de puntuación.
+   175→- Flujo de juego: Dashboard → tarjeta "El Bus de las Letras" 🚌 → vista 'bus' → nivel 1 (presentación: "Parada 1 de 10 — Mercado de Masaya", avatar 🧒, consigna "Tocá la palabra que es el SUJETO de la oración") → "¡Recoger al pasajero!" → escena con pasajero 🧒 + bocadillo + letrero "Mercado de Masaya" + bus SVG → enunciado tokenizado ["María","vende","cuajadas","en","el","mercado"] en tarjetas → tap en "María" (se resalta rose-500 + scale-1.05) → "¡Subir al bus!" → overlay "¡Pasajero a bordo! — María" + avatar se anima subiendo al bus + confeti 🎉 → nivel 2 (Parque Central de León, 👵, "Doña Rosa") → ... → nivel 10 (Puerto Salvador Allende, 🐰, moraleja "la astucia vence a la fuerza bruta" — selección de 7 tokens) → pantalla "¡Conductor Experto!" 🏆 con 10 avatares + trofeo y botón "Jugar de nuevo".
+   176→- tsc --noEmit: EXIT_CODE=0 (limpio, sin output).
+   177→- Dev server: compila sin errores, HTTP 200.
+   178→- Footer cósmico existente respetado (mt-auto en layout.tsx, no se tocó). Wrapper usa min-h-[calc(100vh-72px)] para llenar el viewport sobre el fondo cósmico.
+   179→- Listo para QA visual en el panel de preview.
+   180→
+   181→---
+   182→Task ID: CARTA-IMPL-1
+   183→Agent: full-stack-developer
+   184→Task: Implementar minijuego 'La Carta Mal Enviada' como componente React
+   185→
+   186→Work Log:
+   187→- Leído /home/z/my-project/worklog.md (secciones GDF-1, MINED-CONTENT-1, PULPERIA-IMPL-1, CAMION-IMPL-1, BUS-IMPL-1) para alinear arquitectura con PulperiaFracciones, CamionMultiplicaciones y BusLetras: máquina de estados con useEffect de transición celebrando→siguiente nivel, hook useRef<Set> para timeouts seguros al desmontar, Confetti de @/components/Toasts, paleta cálida sin indigo/azul brillante, responsive lg:grid-cols con pt para no tapar el botón Salir fijo, footer cósmico existente respetado.
+   188→- Estudiada la data existente en /home/z/my-project/Proyecto-De-Modalidad/frontend/src/data/cartaOrtografia.ts: interfaz Carta + 40 cartas en 10 niveles (4 cartas/nivel), 3 tipos de error (uso_b_v, clasificacion_acentos, signos_apertura), 10 subtipos. Verificado que la respuesta correcta NO está determinada por un campo booleano sino comparando texto_mostrado vs correccion_correcta (algunas cartas como CARTA-001, 003, 008, 014, 015, 017, 018, 019, 020, 022 son "trampa" — no tienen error y la respuesta correcta es "✓ Está bien" para enseñar a no sobrecorregir).
+   189→- Creado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/CartaOrtografia.tsx (~1095 líneas, client component):
+   190→  • Máquina de estados global: 'presentacion' | 'jugando' | 'celebrando' | 'completado'.
+   191→  • Máquina de estados por carta (EstadoCarta): 'sin_abrir' | 'abierta' | 'corrigiendo' | 'sellada_correcta'. Las cartas fallidas no se marcan como estado separado — se mantienen en 'abierta' o 'corrigiendo' y el feedback_error aparece a nivel del componente para que el niño reintente esa carta en su mismo estado (consistente con el patrón de PulperiaFracciones/CamionMultiplicaciones/BusLetras).
+   192→  • Helper normalizar() pasa a minúsculas, hace trim y colapsa espacios múltiples — usado para comparar texto_input vs correccion_correcta (case-insensitive, trim). NO se quita signos de puntuación en los extremos porque los signos ¡ ¿ ! ? son parte de las correcciones que se enseñan en los niveles 7-9.
+   193→  • Helper cartaTieneError(c) compara normalizar(texto_mostrado) vs normalizar(correccion_correcta) — determina dinámicamente la respuesta correcta sin hardcodear IDs.
+   194→  • Componente EstanteSobres: SVG decorativo de oficina de correos (3 filas de sobres mini en estantes marrones), se renderiza en las esquinas superiores (solo sm: en adelante, pointer-events-none, opacity-40) para crear ambiente de "oficina del cartero".
+   195→  • Componente SobreSVG: sobre estilizado en SVG (viewBox 0 0 120 90) con cuerpo crema (white/beige), solapa amber-500 que cambia de forma (cerrada: triángulo arriba; abierta/sellada: línea) cuando el sobre se abre o se sella, borde amber-700 (o emerald si sellada), estampilla cuadrada con "NI" (Nicaragua), número de carta en esquina superior izquierda, sello verde circular con ✓ (rotado -12° estilo estampilla real) y la palabra "ENVIADA" cuando está sellada, pulso naranja animado (animate-pulse) cuando la carta está activa. Estados: cerrado, abierto, sellada.
+   196→  • Componente BuzonSVG: buzón cilíndrico clásico de correos en SVG (viewBox 0 0 120 160) — cuerpo rojo (red-600 #dc2626) que se vuelve verde (#16a34a) cuando el buzón está lleno (4/4 cartas del nivel), techo semicilíndrico, poste marrón (amber-800), ranura negra para cartas, ventanilla con 4 cartitas mini (cada una se vuelve verde a medida que se sella, transition fill 0.4s), texto "CORREOS" en la parte superior. Check verde flotante cuando el buzón está lleno.
+   197→  • Componente PantallaCompletado: trofeo 🏆 (animate-trophy-float) en gradiente amber→orange→rose, "¡Cartero Experto!", resumen de cartas enviadas, 3 stat cards (enviadas, niveles, selladas) con iconos CheckCircle2/Mail/Stamp, fila de 10 emojis ✉️📭📬📮🏆, botón "Jugar de nuevo" con RefreshCw + ArrowRight.
+   198→  • HUD superior: icono Mail (lucide) en gradiente amber-500→orange-600, "Nivel X de 10", barra de progreso amber-400→orange-400→rose-400, contador de "cartas enviadas (X/40)" con icono Send en tono rose.
+   199→  • Pantalla de presentación: oficina de correos, emoji 📮 grande, "¡Cartero, hay cartas para revisar!", consigna con instrucciones ("Abrí cada sobre, leé con cuidado y decidí: ¿está bien o tiene error?"), botón "¡Abrir primera carta!" con icono Mail + ArrowRight.
+   200→  • Layout jugando: grid lg:grid-cols-[1fr_220px] con columna principal (fila de 4 sobres + panel de carta activa + feedback) y columna derecha (buzón SVG + tip pedagógico solo en lg).
+   201→  • Fila de 4 sobres: grid grid-cols-2 sm:grid-cols-4, cada sobre es un <button> con SobreSVG + etiqueta (✓ Enviada / Abierta / Tocá para abrir). El sobre activo se resalta con border-orange-500 + ring-2 ring-orange-300. Sellados tienen border-emerald-400 + bg-emerald-50.
+   202→  • Panel de carta activa: muestra ID de carta + etiqueta de tipo (Uso de b y v / Acentos / Signos ¡ ¿). Hoja de papel con texto_mostrado: rectángulo blanco con líneas de cuaderno (repeating-linear-gradient cada 28px en amber-400 opacity-30) y margen rojo vertical a la izquierda (estilo cuaderno escolar). Texto text-lg/xl font-semibold leading-8/9.
+   203→  • Estado 'abierta': 2 botones grandes (≥44px py-3.5, text-base/lg) — "✓ Está bien" (emerald-400 border, bg-emerald-50, icono Check) y "✗ Tiene error" (rose-400 border, bg-rose-50, icono X).
+   204→  • Estado 'corrigiendo': 3 callouts apilados — pista (regla_ortografica en amber-50 con icono BookOpen), correccion_correcta como referencia (en emerald-50 con icono Stamp), y <input type="text"> pre-llenado con texto_mostrado (el niño solo corrige lo que está mal, más usable para 8 años que escribir la frase completa desde cero) con focus:border-orange-500 + ring. Botón "Corregir" (gradiente emerald→teal, icono Check) + botón "Volver" (border amber, icono RotateCcw) que regresa al estado 'abierta'. Enter en el input dispara corregir().
+   205→  • Validación decidir(): si el niño dice "Tiene error" y la carta SÍ tenía error → pasa a 'corrigiendo' con textoInput pre-llenado. Si dice "Tiene error" pero NO tenía error → muestra feedback_error. Si dice "Está bien" y la carta NO tenía error → sella con ✓. Si dice "Está bien" pero SÍ tenía error → muestra feedback_error.
+   206→  • Validación corregir(): compara normalizar(textoInput) vs normalizar(correccion_correcta). Coincide → sella con ✓ + incrementa cartasEnviadasTotal + cierra carta activa. No coincide → muestra feedback_error (carta se queda en 'corrigiendo' para reintentar).
+   207→  • Transición a celebración: useEffect detecta cuando selladasNivel === 4 (CARTAS_POR_NIVEL) y programa setEstado('celebrando') tras 400ms. useEffect de celebración programa el avance de nivel (o 'completado' si era nivel 10) tras 2400ms.
+   208→  • Overlay de celebración: card blanca centrada (pointer-events-none) con "¡Nivel X completado!", "4 cartas selladas 🎉", mensaje de transición al siguiente nivel. Confetti 2400ms cantidad 48 desde @/components/Toasts.
+   209→  • Responsive mobile-first: HUD y cartas en grid 2 columnas en móvil, 4 columnas en sm+. Botones py-3.5 (≥44px touch target). Texto mínimo text-base/text-lg. pt-4/pt-6 para no tapar el botón Salir fijo. Tip pedagógico solo visible en lg (hidden en móvil para no amontonar).
+   210→  • Paleta usada (cálida, sin indigo ni azul brillante): amber-100→orange-100→orange-200 (fondo gradiente), amber-500→orange-600 (HUD primario), amber-400→orange-400→rose-400 (barra de progreso), emerald-400/500 + teal-500 (corregir, sellada, correcto), rose-400/500 (tiene error, buzón, contador), amber-300 (bordes, feedbacks). Buzón en red-600 (#dc2626) con poste amber-800.
+   211→- Creado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/CartaOrtografiaWrapper.tsx: botón "Salir" fijo (fixed top-16/top-20, left-3/left-4) con icono ArrowLeft, tono amber-400/amber-800 (vs orange del wrapper de PulperiaFracciones, teal del de CamionMultiplicaciones y rose del de BusLetras) para distinguirlo visualmente pero coherente con el tema de la oficina de correos, llama setVista('dashboard'). Monta CartaOrtografia.
+   212→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx: agregado 'carta' al tipo Vista (16 valores totales ahora, sin romper existentes).
+   213→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/app/page.tsx: agregado import CartaOrtografiaWrapper y case 'carta' en el switch del Router (después de case 'bus').
+   214→- Modificado /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/Dashboard.tsx: agregado icono Mail a imports de lucide-react; agregada tarjeta "La Carta Mal Enviada" ✉️ después de la tarjeta 🚌 en la sección "Mini-juegos" (gradiente amber-300→orange-400→rose-500, sombra orange, badges "10 niveles" + "Ortografía" + "3er grado", botón "¡Sell!" con icono Mail que llama setVista('carta'), animationDelay 240ms).
+   215→- Eliminado import no usado PartyPopper (detectado durante revisión post-escritura).
+   216→- Verificación: `bunx tsc --noEmit` → EXIT_CODE=0 (sin output, sin errores). Dev server (dev.log) compila sin errores: "✓ Compiled in Xms" repetido (277ms, 71ms, 136ms, 322ms, 126ms, 392ms, etc.), HTTP 200 en todas las peticiones GET /.
+   217→
+   218→Stage Summary:
+   219→- Artefactos producidos:
+   220→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/CartaOrtografia.tsx (NUEVO, ~1095 líneas, componente principal del minijuego con máquina de 4 estados globales + 4 estados por carta, SobreSVG estilizado con sello verde animado, BuzonSVG cilíndrico rojo/verde, EstanteSobres decorativo, mini-formulario de corrección con input pre-llenado + pista + corrección de referencia, confeti, pantalla final "¡Cartero Experto!").
+   221→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/CartaOrtografiaWrapper.tsx (NUEVO, wrapper con botón Salir tono amber/terracota).
+   222→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/context/AppContext.tsx (MODIFICADO, +1 valor 'carta' en tipo Vista).
+   223→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/app/page.tsx (MODIFICADO, +1 import y +1 case en router switch).
+   224→  - /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/Dashboard.tsx (MODIFICADO, +icono Mail, +tarjeta ✉️ en sección Mini-juegos).
+   225→- Paleta usada (cálida, sin indigo/azul brillante): amber-100→orange-100→orange-200 (fondo), amber-500→orange-600 (HUD primario), amber-400→orange-400→rose-400 (barra de progreso), emerald/teal (corregir, sellada, correcto), rose (tiene error, buzón, contador), amber (bordes, feedbacks). Buzón en red-600 con poste amber-800.
+   226→- Mecánica dual por carta: modo decisión (2 botones "Está bien" / "Tiene error") y modo corrección (input pre-llenado con texto_mostrado + pista regla + correccion_correcta como referencia + botón Corregir). Detección dinámica de si la carta tiene error comparando texto_mostrado vs correccion_correcta (no hardcodeada por ID), lo que permite 10 cartas "trampa" sin error (CARTA-001, 003, 008, 014, 015, 017, 018, 019, 020, 022) para enseñar al niño a no sobrecorregir.
+   227→- Flujo de juego: Dashboard → tarjeta "La Carta Mal Enviada" ✉️ → vista 'carta' → nivel 1 (presentación: "¡Cartero, hay cartas para revisar!" + 📮 + consigna) → "¡Abrir primera carta!" → fila de 4 sobres + buzón rojo vacío a la derecha → toca sobre #1 → carta CARTA-001 se abre y muestra "El ciervo corre por el bosque." en hoja de cuaderno → botones "✓ Está bien" / "✗ Tiene error" → niño toca "✓ Está bien" (correcto: no hay error) → carta se sella con ✓ verde + sello "ENVIADA" + se incrementa contador 1/40 + cartita mini del buzón se vuelve verde → toca sobre #2 → "Compré un kilo de cavas..." → niño toca "✗ Tiene error" (correcto: sí hay error) → aparece mini-form con pista, corrección de referencia y input pre-llenado → niño corrige "cavas" por "cebollas" → botón "Corregir" → carta sellada con ✓ → ... → 4 cartas selladas → overlay "¡Nivel 1 completado!" + confeti 🎉 → nivel 2 → ... → nivel 10 → pantalla "¡Cartero Experto!" 🏆 con stat cards y botón "Jugar de nuevo".
+   228→- tsc --noEmit: EXIT_CODE=0 (limpio, sin output).
+   229→- Dev server: compila sin errores, HTTP 200 en todas las peticiones.
+   230→- Footer cósmico existente respetado (mt-auto en layout.tsx, no se tocó). Wrapper usa min-h-[calc(100vh-72px)] para llenar el viewport sobre el fondo cósmico.
+   231→- Listo para QA visual en el panel de preview.
+   232→
+   233→---
+   234→Task ID: MINIJUEGOS-VERIFICACION
+   235→Agent: main (verificación con Agent Browser)
+   236→Task: Verificar end-to-end los 3 minijuegos nuevos con Agent Browser
+   237→
+   238→Work Log:
+   239→- Login DemoKid/1111 vía gateway :81 exitoso.
+   240→- Dashboard muestra 4 tarjetas de minijuegos: 🍉 Pulpería, 🚚 Camión, 🚌 Bus, ✉️ Carta.
+   241→- Camión: nivel 1 cargado (cliente 👵 pidiendo 2 cajitas × 3 nancites), tap 2 cajitas, "¡Despachar camión!" → auto-avance a nivel 2 (👨‍🦱 pitahayas 3×4). ✅
+   242→- Bus: nivel 1 cargado (parada Mercado de Masaya, 🧒, "Tocá el SUJETO"), tap "María", "¡Subir al bus!" → auto-avance a nivel 2 (Parque Central de León, 👵, sujeto compuesto). ✅
+   243→- Carta: nivel 1 cargado (oficina de correos, 4 sobres). Carta 1 "El ciervo corre" → "Está bien" → sellada ✓. Carta 2 "Compré un kilo de cavas" → "Tiene error" → formulario de corrección con pista + referencia → input pre-llenado → corregir "cavas" por "cebollas" → sellada ✓. Contadores 2/4 y 2/40. ✅
+   244→- Console: sin errores ni warnings.
+   245→- Dev log: compila limpio, HTTP 200.
+   246→
+   247→Stage Summary:
+   248→- 3 minijuegos verificados end-to-end sin errores de runtime ni de TypeScript.
+   249→- Cada minijuego cubre un módulo MINED: Camión = Matemática (multiplicación), Bus = Lengua (sujeto/predicado/pronombres), Carta = Ortografía (b/v, acentos, signos).
+   250→- App lista para usar por niños de 3er grado.
+   251→
+   252→---
+   253→Task ID: ATRAPA-ACENTO-DESIGN
+   254→Agent: main (Game Designer + Content)
+   255→Task: Diseñar 20 desafíos para el videojuego móvil de ritmo ortográfico 'Atrapa el Acento' (3er grado MINED)
+   256→
+   257→Work Log:
+   258→- Diseñada progresión: 8 agudas → 5 graves → 7 esdrújulas.
+   259→- Cada palabra con: palabra_completa, palabra_incompleta (silabas separadas por guiones, sin tilde), silaba_tonica_index, clasificación, letra_con_tilde_correcta, posicion_x (izquierda/centro/derecha), audio_guia (pronunciación exagerada con sílaba en MAYÚSCULAS), bpm_sugerido (90-125), distracting_letters (2 distractores).
+   260→- Contexto nicaragüense: "León" (AC-04), "plátano" (AC-17), "página" como libro MINED (AC-18).
+   261→- Tempo musical crece con dificultad: agudas 90-105 BPM, graves 100-110 BPM, esdrújulas 110-125 BPM.
+   262→- Distractores elegidos como vocales con tilde de la misma palabra o cercanas fonéticamente.
+   263→- Guardado en frontend/src/data/atrapaAcento.ts con interfaz DesafioAtrapa tipada.
+   264→- Helpers exportados: agudasAtrapa, gravesAtrapa, esdrujulasAtrapa, RESUMEN_ATRAPA_ACENTO.
+   265→
+   266→Stage Summary:
+   267→- 20 desafíos listos para implementación futura del minijuego rítmico.
+   268→- tsc --noEmit: EXIT_CODE=0 (sin errores de tipos).
+   269→- Cubre las 5 vocales con tilde (á, é, í, ó, ú).
+   270→- Próximo paso posible: implementar el componente React 'AtrapaAcento.tsx' similar a los 4 minijuegos ya existentes.
+   271→
+   272→---
+   273→Task ID: ATRAPA-ACENTO-1
+   274→Agent: main (Game Designer)
+   275→Task: Diseñar 20 desafíos para el minijuego 'Atrapa el Acento' (ritmo y velocidad ortográfica, 3er grado segundo semestre MINED Nicaragua)
+   276→
+   277→Work Log:
+   278→- Diseñada progresión pedagógica: 7 Agudas + 8 Graves + 5 Esdrújulas (20 total).
+   279→- Seleccionadas palabras con contexto nicaragüense: vigorón, León, sábado (feria de Masaya), médico (MINSA), colibrí.
+   280→- Aplicada silabación con guiones en palabra_incompleta (ej. "ca-mion", "vi-go-ron").
+   281→- Asignada Posición_X rotativa (centro/derecha/izquierda) para evitar memorización.
+   282→- Redactada audio_guia con sílaba tónica en MAYÚSCULAS para la pronunciación exagerada.
+   283→- Añadidos distractores (2 vocales con tilde incorrectas) por cada desafío.
+   284→- Añadida regla ortográfica breve por cada palabra.
+   285→- Guardado en frontend/src/data/atrapaAcento.ts con interfaz DesafioAtrapa tipada.
+   286→- Corregido error de tipo: silaba_tonica cambiado de string a number.
+   287→- tsc --noEmit: EXIT_CODE=0.
+   288→
+   289→Stage Summary:
+   290→- Artefacto: atrapaAcento.ts (20 desafíos + helpers agudas/graves/esdrújulas + RESUMEN_ATRAPA).
+   291→- Distribución: 35% agudas, 40% graves, 25% esdrújulas (acorde a frecuencia en español).
+   292→- Vocabulario nicaragüense: vigorón, León, sábado (feria Masaya), médico (MINSA), colibrí.
+   293→- Listo para integrarse al minijuego 'Atrapa el Acento' como componente React.
+   294→

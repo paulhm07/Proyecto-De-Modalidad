@@ -28,7 +28,8 @@ export type Vista =
   | "pulperia"
   | "camion"
   | "bus"
-  | "carta";
+  | "carta"
+  | "atrapa";
 
 export interface Toast {
   id: string;
