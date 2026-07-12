@@ -412,3 +412,22 @@ Stage Summary:
 - ✅ API frontend↔backend funcional vía gateway Caddy (XTransformPort=3001).
 - ✅ Responsive (móvil con menú hamburguesa) y footer sticky.
 - ✅ Sin errores de consola ni de runtime.
+
+---
+Task ID: RUN-APP-RESTART
+Agent: main (orchestrator)
+Task: Recorrer la app EducaPlay tras reset del entorno (los procesos persistentes murieron entre turnos).
+
+Work Log:
+- Detectado reset del entorno: frontend (3000) y backend (3001) ya no corrían; solo el gateway Caddy (81) seguía arriba devolviendo 502.
+- node_modules de ambos proyectos fueron wiped por el reset. Reinstalados en paralelo: frontend (53 paquetes, next@16.2.10) y backend (437 paquetes, @nestjs/core presente).
+- Regenerado Prisma client (bunx prisma generate) y verificado schema en sync (prisma db push → "already in sync").
+- Frontend: primer arranque crashó con panic de Turbopack (turbo-persistence static_sorted_file, caché .next corrupta). Solución: rm -rf frontend/.next + reinicio. Arrancó limpio, next-server v16.2.10 en puerto 3000, HTTP 200.
+- Backend: arrancó limpio con `node dist/src/main.js`, NestJS en puerto 3001, HTTP 200, "Servidor NestJS corriendo en http://localhost:3001/api". Todas las rutas /api mapeadas.
+- Ambos procesos reparentados a PID 1 vía setsid -f (frontend PID 1517 PPID 1, backend PID 1441 PPID 1).
+- Verificación Agent Browser: login screen renderiza → click "Estudiante DemoKid" → dashboard "¡Hola, DemoKid! 👋" con los 5 minijuegos → scroll → "Jugar Atrapa el Acento" → pantalla del minijuego "¡Atrapa el Acento!" con botón "¡Atrapar!". Sin errores de consola.
+
+Stage Summary:
+- ✅ Servicios persistentes: frontend (3000, PID 1517), backend (3001, PID 1441), gateway (81).
+- ✅ App EducaPlay visible en el Preview Panel; login demo + dashboard + Atrapa el Acento (5º minijuego) verificados end-to-end.
+- ✅ Nota para futuros resets: tras un reset del entorno hay que reinstalar node_modules (wiped), regenerar prisma client y borrar frontend/.next si Turbopack paniquea.

@@ -1,0 +1,1032 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useState } from "react";
+     4→import {
+     5→  ArrowLeft,
+     6→  BookOpen,
+     7→  CheckCircle2,
+     8→  ChevronRight,
+     9→  FileText,
+    10→  GraduationCap,
+    11→  HelpCircle,
+    12→  Inbox,
+    13→  Layers,
+    14→  Lightbulb,
+    15→  Package,
+    16→  Palette,
+    17→  Pencil,
+    18→  Plus,
+    19→  Puzzle,
+    20→  Star,
+    21→  Target,
+    22→  Trash2,
+    23→  X,
+    24→  type LucideIcon,
+    25→} from "lucide-react";
+    26→import { api } from "@/lib/api";
+    27→import { useApp } from "@/context/AppContext";
+    28→import { getAsignaturaVisual } from "@/lib/asignaturaVisual";
+    29→import type {
+    30→  Asignatura,
+    31→  Desafio,
+    32→  Modulo,
+    33→} from "@/lib/types";
+    34→
+    35→type Nivel = "asignaturas" | "modulos" | "desafios";
+    36→
+    37→interface OpcionDraft {
+    38→  texto: string;
+    39→  esCorrecta: boolean;
+    40→}
+    41→
+    42→export function ContentManager() {
+    43→  const { usuario, mostrarToast } = useApp();
+    44→  const [nivel, setNivel] = useState<Nivel>("asignaturas");
+    45→
+    46→  const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
+    47→  const [asignaturaSel, setAsignaturaSel] = useState<Asignatura | null>(null);
+    48→  const [modulos, setModulos] = useState<Modulo[]>([]);
+    49→  const [moduloSel, setModuloSel] = useState<Modulo | null>(null);
+    50→  const [desafios, setDesafios] = useState<Desafio[]>([]);
+    51→
+    52→  const [cargandoAsignaturas, setCargandoAsignaturas] = useState(true);
+    53→  const [cargandoModulos, setCargandoModulos] = useState(false);
+    54→  const [cargandoDesafios, setCargandoDesafios] = useState(false);
+    55→
+    56→  const [modalAsignatura, setModalAsignatura] = useState(false);
+    57→  const [modalModulo, setModalModulo] = useState(false);
+    58→  const [modalDesafio, setModalDesafio] = useState(false);
+    59→
+    60→  const cargarAsignaturas = useCallback(async () => {
+    61→    setCargandoAsignaturas(true);
+    62→    try {
+    63→      const data = await api.obtenerAsignaturas();
+    64→      setAsignaturas(data);
+    65→    } catch (err) {
+    66→      console.error(err);
+    67→    } finally {
+    68→      setCargandoAsignaturas(false);
+    69→    }
+    70→  }, []);
+    71→
+    72→  useEffect(() => {
+    73→    cargarAsignaturas();
+    74→  }, [cargarAsignaturas]);
+    75→
+    76→  const cargarModulos = useCallback(async (asigId: string) => {
+    77→    setCargandoModulos(true);
+    78→    try {
+    79→      const data = await api.obtenerModulos(asigId);
+    80→      setModulos(data);
+    81→    } catch (err) {
+    82→      console.error(err);
+    83→    } finally {
+    84→      setCargandoModulos(false);
+    85→    }
+    86→  }, []);
+    87→
+    88→  const cargarDesafios = useCallback(async (modId: string) => {
+    89→    setCargandoDesafios(true);
+    90→    try {
+    91→      const data = await api.obtenerDesafios(modId);
+    92→      setDesafios(data);
+    93→    } catch (err) {
+    94→      console.error(err);
+    95→    } finally {
+    96→      setCargandoDesafios(false);
+    97→    }
+    98→  }, []);
+    99→
+   100→  // === Acciones CRUD ===
+   101→  const crearAsignatura = async (nombre: string, descripcion: string) => {
+   102→    if (!usuario) return;
+   103→    try {
+   104→      await api.crearAsignatura(
+   105→        nombre.trim(),
+   106→        descripcion.trim() || null,
+   107→        usuario.id,
+   108→      );
+   109→      mostrarToast("Asignatura creada", "exito");
+   110→      setModalAsignatura(false);
+   111→      cargarAsignaturas();
+   112→    } catch (err) {
+   113→      mostrarToast(err instanceof Error ? err.message : "Error", "error");
+   114→    }
+   115→  };
+   116→
+   117→  const eliminarAsignatura = async (a: Asignatura) => {
+   118→    if (
+   119→      !confirm(
+   120→        `¿Eliminar "${a.nombre}" y todos sus módulos y desafíos? Esta acción no se puede deshacer.`,
+   121→      )
+   122→    )
+   123→      return;
+   124→    try {
+   125→      await api.eliminarAsignatura(a.id);
+   126→      mostrarToast("Asignatura eliminada", "info");
+   127→      if (asignaturaSel?.id === a.id) {
+   128→        setAsignaturaSel(null);
+   129→        setModulos([]);
+   130→      }
+   131→      cargarAsignaturas();
+   132→    } catch (err) {
+   133→      mostrarToast(err instanceof Error ? err.message : "Error", "error");
+   134→    }
+   135→  };
+   136→
+   137→  const crearModulo = async (titulo: string) => {
+   138→    if (!asignaturaSel) return;
+   139→    try {
+   140→      await api.crearModulo(asignaturaSel.id, titulo.trim());
+   141→      mostrarToast("Módulo creado", "exito");
+   142→      setModalModulo(false);
+   143→      cargarModulos(asignaturaSel.id);
+   144→    } catch (err) {
+   145→      mostrarToast(err instanceof Error ? err.message : "Error", "error");
+   146→    }
+   147→  };
+   148→
+   149→  const eliminarModulo = async (m: Modulo) => {
+   150→    if (!confirm(`¿Eliminar el módulo "${m.titulo}"?`)) return;
+   151→    try {
+   152→      await api.eliminarModulo(m.id);
+   153→      mostrarToast("Módulo eliminado", "info");
+   154→      if (moduloSel?.id === m.id) {
+   155→        setModuloSel(null);
+   156→        setDesafios([]);
+   157→      }
+   158→      if (asignaturaSel) cargarModulos(asignaturaSel.id);
+   159→    } catch (err) {
+   160→      mostrarToast(err instanceof Error ? err.message : "Error", "error");
+   161→    }
+   162→  };
+   163→
+   164→  const crearDesafio = async (data: {
+   165→    tipo: string;
+   166→    pregunta: string;
+   167→    puntos: number;
+   168→    opciones: OpcionDraft[];
+   169→  }) => {
+   170→    if (!moduloSel) return;
+   171→    if (data.opciones.filter((o) => o.esCorrecta).length !== 1) {
+   172→      mostrarToast("Debe haber exactamente una opción correcta", "error");
+   173→      return;
+   174→    }
+   175→    try {
+   176→      await api.crearDesafio({
+   177→        moduloId: moduloSel.id,
+   178→        tipo: data.tipo,
+   179→        pregunta: data.pregunta.trim(),
+   180→        puntos: data.puntos,
+   181→        opciones: data.opciones
+   182→          .filter((o) => o.texto.trim())
+   183→          .map((o) => ({ texto: o.texto.trim(), esCorrecta: o.esCorrecta })),
+   184→      });
+   185→      mostrarToast("Desafío creado", "exito");
+   186→      setModalDesafio(false);
+   187→      cargarDesafios(moduloSel.id);
+   188→    } catch (err) {
+   189→      mostrarToast(err instanceof Error ? err.message : "Error", "error");
+   190→    }
+   191→  };
+   192→
+   193→  const eliminarDesafio = async (d: Desafio) => {
+   194→    if (!confirm(`¿Eliminar el desafío "${d.pregunta.slice(0, 40)}..."?`))
+   195→      return;
+   196→    try {
+   197→      await api.eliminarDesafio(d.id);
+   198→      mostrarToast("Desafío eliminado", "info");
+   199→      if (moduloSel) cargarDesafios(moduloSel.id);
+   200→    } catch (err) {
+   201→      mostrarToast(err instanceof Error ? err.message : "Error", "error");
+   202→    }
+   203→  };
+   204→
+   205→  // === Navegación ===
+   206→  const entrarAsignatura = (a: Asignatura) => {
+   207→    setAsignaturaSel(a);
+   208→    setModuloSel(null);
+   209→    setDesafios([]);
+   210→    cargarModulos(a.id);
+   211→    setNivel("modulos");
+   212→  };
+   213→  const entrarModulo = (m: Modulo) => {
+   214→    setModuloSel(m);
+   215→    cargarDesafios(m.id);
+   216→    setNivel("desafios");
+   217→  };
+   218→  const volverAAsignaturas = () => {
+   219→    setAsignaturaSel(null);
+   220→    setModulos([]);
+   221→    setModuloSel(null);
+   222→    setDesafios([]);
+   223→    setNivel("asignaturas");
+   224→  };
+   225→  const volverAModulos = () => {
+   226→    setModuloSel(null);
+   227→    setDesafios([]);
+   228→    setNivel("modulos");
+   229→  };
+   230→
+   231→  const accentVisual = asignaturaSel
+   232→    ? getAsignaturaVisual(asignaturaSel.nombre)
+   233→    : getAsignaturaVisual("");
+   234→  const accentGrad = accentVisual.gradient;
+   235→
+   236→  return (
+   237→    <div className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
+   238→      {/* Encabezado + breadcrumb */}
+   239→      <div className="mb-6">
+   240→        <div className="mb-4 flex items-center gap-4">
+   241→          <div className="animate-float flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-purple-600 shadow-lg shadow-violet-200 sm:h-16 sm:w-16">
+   242→            <Palette className="h-7 w-7 text-white sm:h-8 sm:w-8" />
+   243→          </div>
+   244→          <div>
+   245→            <h1 className="text-2xl font-black tracking-tight text-purple-900 sm:text-3xl">
+   246→              Taller del maestro
+   247→            </h1>
+   248→            <p className="text-sm font-semibold text-purple-500">
+   249→              Crea aventuras, módulos y desafíos
+   250→            </p>
+   251→          </div>
+   252→        </div>
+   253→
+   254→        {/* Breadcrumb */}
+   255→        <nav className="flex flex-wrap items-center gap-1 text-sm font-bold text-purple-400">
+   256→          <button
+   257→            onClick={volverAAsignaturas}
+   258→            className={`flex min-h-[36px] items-center gap-1.5 rounded-lg px-2.5 py-1 transition-colors ${
+   259→              nivel === "asignaturas"
+   260→                ? "bg-purple-100 text-purple-700"
+   261→                : "hover:bg-purple-50 hover:text-purple-600"
+   262→            }`}
+   263→          >
+   264→            <BookOpen className="h-4 w-4" />
+   265→            Asignaturas
+   266→          </button>
+   267→          {asignaturaSel && (
+   268→            <>
+   269→              <ChevronRight className="h-4 w-4 text-purple-300" />
+   270→              <button
+   271→                onClick={volverAModulos}
+   272→                className={`flex min-h-[36px] items-center gap-1.5 rounded-lg px-2.5 py-1 transition-colors ${
+   273→                  nivel === "modulos"
+   274→                    ? "bg-purple-100 text-purple-700"
+   275→                    : "hover:bg-purple-50 hover:text-purple-600"
+   276→                }`}
+   277→              >
+   278→                {asignaturaSel.nombre}
+   279→              </button>
+   280→            </>
+   281→          )}
+   282→          {moduloSel && (
+   283→            <>
+   284→              <ChevronRight className="h-4 w-4 text-purple-300" />
+   285→              <span className="flex min-h-[36px] items-center rounded-lg bg-purple-100 px-2.5 py-1 text-purple-700">
+   286→                {moduloSel.titulo}
+   287→              </span>
+   288→            </>
+   289→          )}
+   290→        </nav>
+   291→      </div>
+   292→
+   293→      {/* NIVEL 1: ASIGNATURAS */}
+   294→      {nivel === "asignaturas" && (
+   295→        <>
+   296→          <div className="mb-5 flex justify-end">
+   297→            <button
+   298→              onClick={() => setModalAsignatura(true)}
+   299→              className="btn-3d flex min-h-[44px] items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-purple-600 px-5 py-3 text-sm font-black text-white shadow-xl shadow-violet-200 transition-all hover:scale-[1.02]"
+   300→            >
+   301→              <Plus className="h-4 w-4" />
+   302→              Nueva asignatura
+   303→            </button>
+   304→          </div>
+   305→
+   306→          {cargandoAsignaturas ? (
+   307→            <div className="space-y-3">
+   308→              {[0, 1, 2].map((i) => (
+   309→                <div
+   310→                  key={i}
+   311→                  className="h-24 animate-pulse rounded-[1.5rem] bg-white/50"
+   312→                />
+   313→              ))}
+   314→            </div>
+   315→          ) : asignaturas.length === 0 ? (
+   316→            <EmptyState
+   317→              icon={Inbox}
+   318→              gradient="from-violet-400 via-purple-500 to-fuchsia-600"
+   319→              titulo="Aún no hay asignaturas"
+   320→              subtitulo="Crea tu primera asignatura para empezar la aventura"
+   321→              cta={{
+   322→                label: "Crear asignatura",
+   323→                onClick: () => setModalAsignatura(true),
+   324→              }}
+   325→            />
+   326→          ) : (
+   327→            <div className="space-y-3">
+   328→              {asignaturas.map((a, i) => {
+   329→                const visual = getAsignaturaVisual(a.nombre);
+   330→                const AsigIcon = visual.icon;
+   331→                const grad = visual.gradient;
+   332→                const countModulos = a._count?.modulos ?? 0;
+   333→                return (
+   334→                  <div
+   335→                    key={a.id}
+   336→                    style={{ animationDelay: `${i * 60}ms` }}
+   337→                    className="card-premium animate-pop flex items-center gap-3 rounded-[1.5rem] p-3 transition-transform duration-200 hover:-translate-y-0.5 sm:gap-4 sm:p-4"
+   338→                  >
+   339→                    <button
+   340→                      onClick={() => entrarAsignatura(a)}
+   341→                      className="group flex min-h-[64px] flex-1 items-center gap-3 text-left sm:gap-4"
+   342→                    >
+   343→                      <div
+   344→                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${grad} shadow-md transition-transform group-hover:scale-110 sm:h-14 sm:w-14 sm:rounded-3xl`}
+   345→                      >
+   346→                        <AsigIcon className="h-6 w-6 text-white sm:h-7 sm:w-7" />
+   347→                      </div>
+   348→                      <div className="min-w-0 flex-1">
+   349→                        <p className="truncate text-base font-black text-purple-900 sm:text-lg">
+   350→                          {a.nombre}
+   351→                        </p>
+   352→                        <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-purple-500">
+   353→                          <Package className="h-3.5 w-3.5" />
+   354→                          <span>
+   355→                            {countModulos} módulo{countModulos === 1 ? "" : "s"}
+   356→                          </span>
+   357→                          <span className="text-purple-300">·</span>
+   358→                          <FileText className="h-3.5 w-3.5" />
+   359→                          <span className="truncate">
+   360→                            {a.descripcion || "Sin descripción"}
+   361→                          </span>
+   362→                        </p>
+   363→                      </div>
+   364→                      <ChevronRight className="h-5 w-5 shrink-0 text-purple-300 transition-transform group-hover:translate-x-1 group-hover:text-violet-500" />
+   365→                    </button>
+   366→                    <button
+   367→                      onClick={() => eliminarAsignatura(a)}
+   368→                      title="Eliminar asignatura"
+   369→                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-400 transition-colors hover:bg-red-500 hover:text-white"
+   370→                    >
+   371→                      <Trash2 className="h-5 w-5" />
+   372→                    </button>
+   373→                  </div>
+   374→                );
+   375→              })}
+   376→            </div>
+   377→          )}
+   378→        </>
+   379→      )}
+   380→
+   381→      {/* NIVEL 2: MÓDULOS */}
+   382→      {nivel === "modulos" && asignaturaSel && (
+   383→        <>
+   384→          <div
+   385→            className={`mb-5 flex items-center gap-3 rounded-[1.5rem] border-2 border-white bg-gradient-to-r ${accentGrad} p-4 shadow-lg`}
+   386→          >
+   387→            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm">
+   388→              <BookOpen className="h-6 w-6 text-white" />
+   389→            </div>
+   390→            <div className="min-w-0 flex-1">
+   391→              <h2 className="truncate text-lg font-black text-white drop-shadow sm:text-xl">
+   392→                {asignaturaSel.nombre}
+   393→              </h2>
+   394→              <p className="truncate text-sm font-semibold text-white/90">
+   395→                {asignaturaSel.descripcion || "Sin descripción"}
+   396→              </p>
+   397→            </div>
+   398→            <button
+   399→              onClick={volverAAsignaturas}
+   400→              title="Volver a asignaturas"
+   401→              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white transition-colors hover:bg-white/30"
+   402→            >
+   403→              <ArrowLeft className="h-5 w-5" />
+   404→            </button>
+   405→          </div>
+   406→
+   407→          <div className="mb-5 flex justify-end">
+   408→            <button
+   409→              onClick={() => setModalModulo(true)}
+   410→              className="btn-3d flex min-h-[44px] items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-purple-600 px-5 py-3 text-sm font-black text-white shadow-xl shadow-violet-200 transition-all hover:scale-[1.02]"
+   411→            >
+   412→              <Plus className="h-4 w-4" />
+   413→              Nuevo módulo
+   414→            </button>
+   415→          </div>
+   416→
+   417→          {cargandoModulos ? (
+   418→            <div className="space-y-3">
+   419→              {[0, 1].map((i) => (
+   420→                <div
+   421→                  key={i}
+   422→                  className="h-24 animate-pulse rounded-[1.5rem] bg-white/50"
+   423→                />
+   424→              ))}
+   425→            </div>
+   426→          ) : modulos.length === 0 ? (
+   427→            <EmptyState
+   428→              icon={Package}
+   429→              gradient={accentGrad}
+   430→              titulo="Aún no hay módulos"
+   431→              subtitulo="Crea el primer módulo de esta asignatura"
+   432→              cta={{
+   433→                label: "Crear módulo",
+   434→                onClick: () => setModalModulo(true),
+   435→              }}
+   436→            />
+   437→          ) : (
+   438→            <div className="space-y-3">
+   439→              {modulos.map((m, i) => {
+   440→                const countDesafios = m._count?.desafios ?? 0;
+   441→                return (
+   442→                  <div
+   443→                    key={m.id}
+   444→                    style={{ animationDelay: `${i * 60}ms` }}
+   445→                    className="card-premium animate-pop flex items-center gap-3 rounded-[1.5rem] p-3 transition-transform duration-200 hover:-translate-y-0.5 sm:gap-4 sm:p-4"
+   446→                  >
+   447→                    <button
+   448→                      onClick={() => entrarModulo(m)}
+   449→                      className="group flex min-h-[64px] flex-1 items-center gap-3 text-left sm:gap-4"
+   450→                    >
+   451→                      <div
+   452→                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${accentGrad} text-base font-black text-white shadow-md transition-transform group-hover:scale-110 sm:h-14 sm:w-14 sm:rounded-3xl sm:text-lg`}
+   453→                      >
+   454→                        {m.orden}
+   455→                      </div>
+   456→                      <div className="min-w-0 flex-1">
+   457→                        <p className="truncate text-base font-black text-purple-900 sm:text-lg">
+   458→                          {m.titulo}
+   459→                        </p>
+   460→                        <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-purple-500">
+   461→                          <Puzzle className="h-3.5 w-3.5" />
+   462→                          <span>
+   463→                            {countDesafios} desafío
+   464→                            {countDesafios === 1 ? "" : "s"}
+   465→                          </span>
+   466→                          <span className="text-purple-300">·</span>
+   467→                          <Target className="h-3.5 w-3.5" />
+   468→                          <span>Nivel mínimo {m.nivelMinimo}</span>
+   469→                        </p>
+   470→                      </div>
+   471→                      <ChevronRight className="h-5 w-5 shrink-0 text-purple-300 transition-transform group-hover:translate-x-1 group-hover:text-violet-500" />
+   472→                    </button>
+   473→                    <button
+   474→                      onClick={() => eliminarModulo(m)}
+   475→                      title="Eliminar módulo"
+   476→                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-400 transition-colors hover:bg-red-500 hover:text-white"
+   477→                    >
+   478→                      <Trash2 className="h-5 w-5" />
+   479→                    </button>
+   480→                  </div>
+   481→                );
+   482→              })}
+   483→            </div>
+   484→          )}
+   485→        </>
+   486→      )}
+   487→
+   488→      {/* NIVEL 3: DESAFÍOS */}
+   489→      {nivel === "desafios" && moduloSel && (
+   490→        <>
+   491→          <div
+   492→            className={`mb-5 flex items-center gap-3 rounded-[1.5rem] border-2 border-white bg-gradient-to-r ${accentGrad} p-4 shadow-lg`}
+   493→          >
+   494→            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/25 backdrop-blur-sm">
+   495→              <Package className="h-6 w-6 text-white" />
+   496→            </div>
+   497→            <div className="min-w-0 flex-1">
+   498→              <h2 className="truncate text-lg font-black text-white drop-shadow sm:text-xl">
+   499→                {moduloSel.titulo}
+   500→              </h2>
+   501→              <p className="flex items-center gap-1.5 text-sm font-semibold text-white/90">
+   502→                <Puzzle className="h-4 w-4" />
+   503→                {desafios.length} desafío{desafios.length === 1 ? "" : "s"} en
+   504→                este módulo
+   505→              </p>
+   506→            </div>
+   507→            <button
+   508→              onClick={volverAModulos}
+   509→              title="Volver a módulos"
+   510→              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white transition-colors hover:bg-white/30"
+   511→            >
+   512→              <ArrowLeft className="h-5 w-5" />
+   513→            </button>
+   514→          </div>
+   515→
+   516→          <div className="mb-5 flex justify-end">
+   517→            <button
+   518→              onClick={() => setModalDesafio(true)}
+   519→              className="btn-3d flex min-h-[44px] items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-purple-600 px-5 py-3 text-sm font-black text-white shadow-xl shadow-violet-200 transition-all hover:scale-[1.02]"
+   520→            >
+   521→              <Plus className="h-4 w-4" />
+   522→              Nuevo desafío
+   523→            </button>
+   524→          </div>
+   525→
+   526→          {cargandoDesafios ? (
+   527→            <div className="space-y-3">
+   528→              {[0, 1].map((i) => (
+   529→                <div
+   530→                  key={i}
+   531→                  className="h-28 animate-pulse rounded-[1.5rem] bg-white/50"
+   532→                />
+   533→              ))}
+   534→            </div>
+   535→          ) : desafios.length === 0 ? (
+   536→            <EmptyState
+   537→              icon={Target}
+   538→              gradient={accentGrad}
+   539→              titulo="Aún no hay desafíos"
+   540→              subtitulo="Crea el primer desafío para este módulo"
+   541→              cta={{
+   542→                label: "Crear desafío",
+   543→                onClick: () => setModalDesafio(true),
+   544→              }}
+   545→            />
+   546→          ) : (
+   547→            <div className="space-y-3">
+   548→              {desafios.map((d, i) => {
+   549→                const esMultiple = d.tipo === "SELECCION_MULTIPLE";
+   550→                const TipoIcon = esMultiple ? Target : Pencil;
+   551→                return (
+   552→                  <div
+   553→                    key={d.id}
+   554→                    style={{ animationDelay: `${i * 60}ms` }}
+   555→                    className="card-premium animate-pop rounded-[1.5rem] p-3 transition-transform duration-200 hover:-translate-y-0.5 sm:p-4"
+   556→                  >
+   557→                    <div className="flex items-start gap-3">
+   558→                      <span
+   559→                        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${accentGrad} text-xs font-black text-white shadow`}
+   560→                      >
+   561→                        {i + 1}
+   562→                      </span>
+   563→                      <div className="min-w-0 flex-1">
+   564→                        <p className="font-black text-purple-900">
+   565→                          {d.pregunta}
+   566→                        </p>
+   567→                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+   568→                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-black text-amber-700">
+   569→                            <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+   570→                            {d.puntos} pts
+   571→                          </span>
+   572→                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 font-black text-purple-700">
+   573→                            <TipoIcon className="h-3 w-3" />
+   574→                            {esMultiple
+   575→                              ? "Selección múltiple"
+   576→                              : "Completar texto"}
+   577→                          </span>
+   578→                          <span className="inline-flex items-center gap-1 font-bold text-purple-400">
+   579→                            <Layers className="h-3 w-3" />
+   580→                            {d.opciones.length} opciones
+   581→                          </span>
+   582→                        </div>
+   583→                        <ul className="mt-2 space-y-0.5">
+   584→                          {d.opciones.map((op) => (
+   585→                            <li
+   586→                              key={op.id}
+   587→                              className="text-xs font-semibold text-purple-500"
+   588→                            >
+   589→                              · {op.texto}
+   590→                            </li>
+   591→                          ))}
+   592→                        </ul>
+   593→                      </div>
+   594→                      <button
+   595→                        onClick={() => eliminarDesafio(d)}
+   596→                        title="Eliminar desafío"
+   597→                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-400 transition-colors hover:bg-red-500 hover:text-white"
+   598→                      >
+   599→                        <Trash2 className="h-5 w-5" />
+   600→                      </button>
+   601→                    </div>
+   602→                  </div>
+   603→                );
+   604→              })}
+   605→            </div>
+   606→          )}
+   607→        </>
+   608→      )}
+   609→
+   610→      {/* MODALES */}
+   611→      {modalAsignatura && (
+   612→        <CrearAsignaturaModal
+   613→          onClose={() => setModalAsignatura(false)}
+   614→          onCrear={crearAsignatura}
+   615→        />
+   616→      )}
+   617→      {modalModulo && asignaturaSel && (
+   618→        <CrearModuloModal
+   619→          asignaturaNombre={asignaturaSel.nombre}
+   620→          onClose={() => setModalModulo(false)}
+   621→          onCrear={crearModulo}
+   622→        />
+   623→      )}
+   624→      {modalDesafio && (
+   625→        <CrearDesafioModal
+   626→          onClose={() => setModalDesafio(false)}
+   627→          onCrear={crearDesafio}
+   628→        />
+   629→      )}
+   630→    </div>
+   631→  );
+   632→}
+   633→
+   634→// ============ Sub-componentes UI ============
+   635→
+   636→function EmptyState({
+   637→  icon: Icon,
+   638→  gradient,
+   639→  titulo,
+   640→  subtitulo,
+   641→  cta,
+   642→}: {
+   643→  icon: LucideIcon;
+   644→  gradient: string;
+   645→  titulo: string;
+   646→  subtitulo: string;
+   647→  cta?: { label: string; onClick: () => void };
+   648→}) {
+   649→  return (
+   650→    <div className="card-premium rounded-[2rem] border-2 border-dashed border-purple-200 p-8 text-center sm:p-12">
+   651→      <div
+   652→        className={`animate-float mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br ${gradient} shadow-lg sm:h-20 sm:w-20`}
+   653→      >
+   654→        <Icon className="h-8 w-8 text-white sm:h-10 sm:w-10" />
+   655→      </div>
+   656→      <p className="text-base font-black text-purple-700 sm:text-lg">
+   657→        {titulo}
+   658→      </p>
+   659→      <p className="mt-1 text-sm font-semibold text-purple-400">{subtitulo}</p>
+   660→      {cta && (
+   661→        <button
+   662→          onClick={cta.onClick}
+   663→          className="btn-3d mt-5 inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-purple-600 px-5 py-2.5 text-sm font-black text-white shadow-xl shadow-violet-200"
+   664→        >
+   665→          <Plus className="h-4 w-4" />
+   666→          {cta.label}
+   667→        </button>
+   668→      )}
+   669→    </div>
+   670→  );
+   671→}
+   672→
+   673→function ModalShell({
+   674→  title,
+   675→  icon: Icon,
+   676→  iconGradient = "from-fuchsia-500 via-violet-500 to-purple-600",
+   677→  onClose,
+   678→  children,
+   679→}: {
+   680→  title: string;
+   681→  icon: LucideIcon;
+   682→  iconGradient?: string;
+   683→  onClose: () => void;
+   684→  children: React.ReactNode;
+   685→}) {
+   686→  return (
+   687→    <div
+   688→      className="fixed inset-0 z-50 flex items-end justify-center bg-purple-900/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+   689→      onClick={onClose}
+   690→    >
+   691→      <div
+   692→        className="card-premium animate-bounce-in max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-[2rem] p-5 sm:rounded-[2rem] sm:p-7"
+   693→        onClick={(e) => e.stopPropagation()}
+   694→      >
+   695→        <div className="mb-5 flex items-center justify-between">
+   696→          <h2 className="flex items-center gap-3 text-xl font-black text-purple-900 sm:text-2xl">
+   697→            <span
+   698→              className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${iconGradient} shadow-md`}
+   699→            >
+   700→              <Icon className="h-6 w-6 text-white" />
+   701→            </span>
+   702→            {title}
+   703→          </h2>
+   704→          <button
+   705→            onClick={onClose}
+   706→            className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-400 transition-colors hover:bg-purple-100 hover:text-purple-600"
+   707→          >
+   708→            <X className="h-5 w-5" />
+   709→          </button>
+   710→        </div>
+   711→        {children}
+   712→      </div>
+   713→    </div>
+   714→  );
+   715→}
+   716→
+   717→function CrearAsignaturaModal({
+   718→  onClose,
+   719→  onCrear,
+   720→}: {
+   721→  onClose: () => void;
+   722→  onCrear: (nombre: string, descripcion: string) => Promise<void>;
+   723→}) {
+   724→  const [nombre, setNombre] = useState("");
+   725→  const [descripcion, setDescripcion] = useState("");
+   726→  const [creando, setCreando] = useState(false);
+   727→
+   728→  const inputClass =
+   729→    "w-full rounded-2xl border-2 border-purple-100 bg-purple-50/50 px-4 py-3 font-semibold text-purple-900 outline-none transition-all placeholder:text-purple-300 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100";
+   730→
+   731→  return (
+   732→    <ModalShell title="Nueva asignatura" icon={BookOpen} onClose={onClose}>
+   733→      <form
+   734→        onSubmit={async (e) => {
+   735→          e.preventDefault();
+   736→          if (!nombre.trim()) return;
+   737→          setCreando(true);
+   738→          await onCrear(nombre, descripcion);
+   739→          setCreando(false);
+   740→        }}
+   741→        className="space-y-4"
+   742→      >
+   743→        <div>
+   744→          <label className="mb-1.5 flex items-center gap-1.5 text-sm font-black text-purple-700">
+   745→            <GraduationCap className="h-4 w-4" />
+   746→            Nombre
+   747→          </label>
+   748→          <input
+   749→            type="text"
+   750→            value={nombre}
+   751→            onChange={(e) => setNombre(e.target.value)}
+   752→            placeholder="Ej: Ciencias Naturales"
+   753→            className={inputClass}
+   754→            autoFocus
+   755→            maxLength={60}
+   756→          />
+   757→        </div>
+   758→        <div>
+   759→          <label className="mb-1.5 flex items-center gap-1.5 text-sm font-black text-purple-700">
+   760→            <FileText className="h-4 w-4" />
+   761→            Descripción (opcional)
+   762→          </label>
+   763→          <textarea
+   764→            value={descripcion}
+   765→            onChange={(e) => setDescripcion(e.target.value)}
+   766→            placeholder="Breve descripción del contenido"
+   767→            className={inputClass}
+   768→            rows={3}
+   769→            maxLength={200}
+   770→          />
+   771→        </div>
+   772→        <button
+   773→          type="submit"
+   774→          disabled={creando}
+   775→          className="btn-3d flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-purple-600 py-3.5 text-base font-black text-white shadow-xl shadow-violet-200 disabled:opacity-60"
+   776→        >
+   777→          <Plus className="h-5 w-5" />
+   778→          {creando ? "Creando..." : "Crear asignatura"}
+   779→        </button>
+   780→      </form>
+   781→    </ModalShell>
+   782→  );
+   783→}
+   784→
+   785→function CrearModuloModal({
+   786→  asignaturaNombre,
+   787→  onClose,
+   788→  onCrear,
+   789→}: {
+   790→  asignaturaNombre: string;
+   791→  onClose: () => void;
+   792→  onCrear: (titulo: string) => Promise<void>;
+   793→}) {
+   794→  const [titulo, setTitulo] = useState("");
+   795→  const [creando, setCreando] = useState(false);
+   796→
+   797→  const inputClass =
+   798→    "w-full rounded-2xl border-2 border-purple-100 bg-purple-50/50 px-4 py-3 font-semibold text-purple-900 outline-none transition-all placeholder:text-purple-300 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100";
+   799→
+   800→  return (
+   801→    <ModalShell title="Nuevo módulo" icon={Package} onClose={onClose}>
+   802→      <p className="mb-4 flex items-center gap-2 rounded-2xl bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700">
+   803→        <BookOpen className="h-4 w-4 shrink-0" />
+   804→        <span className="truncate">
+   805→          Asignatura: <strong>{asignaturaNombre}</strong>
+   806→        </span>
+   807→      </p>
+   808→      <form
+   809→        onSubmit={async (e) => {
+   810→          e.preventDefault();
+   811→          if (!titulo.trim()) return;
+   812→          setCreando(true);
+   813→          await onCrear(titulo);
+   814→          setCreando(false);
+   815→        }}
+   816→        className="space-y-4"
+   817→      >
+   818→        <div>
+   819→          <label className="mb-1.5 flex items-center gap-1.5 text-sm font-black text-purple-700">
+   820→            <Layers className="h-4 w-4" />
+   821→            Título del módulo
+   822→          </label>
+   823→          <input
+   824→            type="text"
+   825→            value={titulo}
+   826→            onChange={(e) => setTitulo(e.target.value)}
+   827→            placeholder="Ej: Los seres vivos"
+   828→            className={inputClass}
+   829→            autoFocus
+   830→            maxLength={80}
+   831→          />
+   832→        </div>
+   833→        <button
+   834→          type="submit"
+   835→          disabled={creando}
+   836→          className="btn-3d flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-purple-600 py-3.5 text-base font-black text-white shadow-xl shadow-violet-200 disabled:opacity-60"
+   837→        >
+   838→          <Plus className="h-5 w-5" />
+   839→          {creando ? "Creando..." : "Crear módulo"}
+   840→        </button>
+   841→      </form>
+   842→    </ModalShell>
+   843→  );
+   844→}
+   845→
+   846→function CrearDesafioModal({
+   847→  onClose,
+   848→  onCrear,
+   849→}: {
+   850→  onClose: () => void;
+   851→  onCrear: (data: {
+   852→    tipo: string;
+   853→    pregunta: string;
+   854→    puntos: number;
+   855→    opciones: OpcionDraft[];
+   856→  }) => Promise<void>;
+   857→}) {
+   858→  const [tipo, setTipo] = useState("SELECCION_MULTIPLE");
+   859→  const [pregunta, setPregunta] = useState("");
+   860→  const [puntos, setPuntos] = useState(10);
+   861→  const [opciones, setOpciones] = useState<OpcionDraft[]>([
+   862→    { texto: "", esCorrecta: false },
+   863→    { texto: "", esCorrecta: false },
+   864→  ]);
+   865→  const [creando, setCreando] = useState(false);
+   866→
+   867→  const actualizarOpcion = (
+   868→    i: number,
+   869→    campo: keyof OpcionDraft,
+   870→    valor: string | boolean,
+   871→  ) => {
+   872→    setOpciones((prev) =>
+   873→      prev.map((o, idx) =>
+   874→        idx === i
+   875→          ? { ...o, [campo]: valor }
+   876→          : campo === "esCorrecta" && valor
+   877→            ? { ...o, esCorrecta: false }
+   878→            : o,
+   879→      ),
+   880→    );
+   881→  };
+   882→
+   883→  const agregarOpcion = () =>
+   884→    setOpciones((prev) => [...prev, { texto: "", esCorrecta: false }]);
+   885→
+   886→  const quitarOpcion = (i: number) =>
+   887→    setOpciones((prev) =>
+   888→      prev.length <= 2 ? prev : prev.filter((_, idx) => idx !== i),
+   889→    );
+   890→
+   891→  const inputClass =
+   892→    "w-full rounded-2xl border-2 border-purple-100 bg-purple-50/50 px-4 py-3 font-semibold text-purple-900 outline-none transition-all placeholder:text-purple-300 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100";
+   893→
+   894→  return (
+   895→    <ModalShell title="Nuevo desafío" icon={Target} onClose={onClose}>
+   896→      <form
+   897→        onSubmit={async (e) => {
+   898→          e.preventDefault();
+   899→          if (!pregunta.trim()) return;
+   900→          setCreando(true);
+   901→          await onCrear({ tipo, pregunta, puntos, opciones });
+   902→          setCreando(false);
+   903→        }}
+   904→        className="space-y-4"
+   905→      >
+   906→        <div>
+   907→          <label className="mb-1.5 flex items-center gap-1.5 text-sm font-black text-purple-700">
+   908→            <HelpCircle className="h-4 w-4" />
+   909→            Pregunta
+   910→          </label>
+   911→          <textarea
+   912→            value={pregunta}
+   913→            onChange={(e) => setPregunta(e.target.value)}
+   914→            placeholder="Ej: ¿Cuál es el resultado de 5 + 3?"
+   915→            className={inputClass}
+   916→            rows={2}
+   917→            autoFocus
+   918→            maxLength={300}
+   919→          />
+   920→        </div>
+   921→
+   922→        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+   923→          <div>
+   924→            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-black text-purple-700">
+   925→              <Target className="h-4 w-4" />
+   926→              Tipo
+   927→            </label>
+   928→            <select
+   929→              value={tipo}
+   930→              onChange={(e) => setTipo(e.target.value)}
+   931→              className="w-full rounded-2xl border-2 border-purple-100 bg-purple-50/50 px-4 py-3 font-semibold text-purple-900 outline-none transition-all focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100"
+   932→            >
+   933→              <option value="SELECCION_MULTIPLE">Selección múltiple</option>
+   934→              <option value="COMPLETAR_TEXTO">Completar texto</option>
+   935→            </select>
+   936→          </div>
+   937→          <div>
+   938→            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-black text-purple-700">
+   939→              <Star className="h-4 w-4" />
+   940→              Puntos
+   941→            </label>
+   942→            <div className="relative">
+   943→              <Star className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 fill-amber-400 text-amber-400" />
+   944→              <input
+   945→                type="number"
+   946→                min={1}
+   947→                max={100}
+   948→                value={puntos}
+   949→                onChange={(e) => setPuntos(Number(e.target.value) || 1)}
+   950→                className="w-full rounded-2xl border-2 border-purple-100 bg-purple-50/50 py-3 pl-11 pr-3 text-center text-xl font-black text-purple-900 outline-none transition-all focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-100"
+   951→              />
+   952→            </div>
+   953→          </div>
+   954→        </div>
+   955→
+   956→        <div>
+   957→          <div className="mb-2 flex items-center justify-between">
+   958→            <label className="flex items-center gap-1.5 text-sm font-black text-purple-700">
+   959→              <CheckCircle2 className="h-4 w-4" />
+   960→              Opciones (marca la correcta)
+   961→            </label>
+   962→            <button
+   963→              type="button"
+   964→              onClick={agregarOpcion}
+   965→              className="flex min-h-[36px] items-center gap-1 rounded-xl bg-violet-100 px-3 py-1 text-xs font-black text-violet-700 transition-colors hover:bg-violet-200"
+   966→            >
+   967→              <Plus className="h-3.5 w-3.5" />
+   968→              Añadir
+   969→            </button>
+   970→          </div>
+   971→          <div className="space-y-2">
+   972→            {opciones.map((op, i) => (
+   973→              <div
+   974→                key={i}
+   975→                className={`flex items-center gap-2 rounded-2xl border-2 p-1.5 transition-colors ${
+   976→                  op.esCorrecta
+   977→                    ? "border-emerald-300 bg-emerald-50/50"
+   978→                    : "border-purple-100 bg-purple-50/30"
+   979→                }`}
+   980→              >
+   981→                <button
+   982→                  type="button"
+   983→                  onClick={() => actualizarOpcion(i, "esCorrecta", true)}
+   984→                  title="Marcar como correcta"
+   985→                  className="flex h-11 w-11 shrink-0 items-center justify-center"
+   986→                >
+   987→                  {op.esCorrecta ? (
+   988→                    <CheckCircle2 className="h-6 w-6 fill-emerald-500 text-white" />
+   989→                  ) : (
+   990→                    <div className="h-6 w-6 rounded-full border-2 border-purple-300" />
+   991→                  )}
+   992→                </button>
+   993→                <input
+   994→                  type="text"
+   995→                  value={op.texto}
+   996→                  onChange={(e) => actualizarOpcion(i, "texto", e.target.value)}
+   997→                  placeholder={`Opción ${i + 1}`}
+   998→                  className="min-w-0 flex-1 rounded-xl bg-transparent px-2 py-2 text-sm font-semibold text-purple-900 outline-none placeholder:text-purple-300"
+   999→                  maxLength={100}
+  1000→                />
+  1001→                {opciones.length > 2 && (
+  1002→                  <button
+  1003→                    type="button"
+  1004→                    onClick={() => quitarOpcion(i)}
+  1005→                    title="Quitar opción"
+  1006→                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-400 transition-colors hover:bg-red-500 hover:text-white"
+  1007→                  >
+  1008→                    <X className="h-4 w-4" />
+  1009→                  </button>
+  1010→                )}
+  1011→              </div>
+  1012→            ))}
+  1013→          </div>
+  1014→          <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-purple-400">
+  1015→            <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+  1016→            Debe haber exactamente una opción marcada como correcta.
+  1017→          </p>
+  1018→        </div>
+  1019→
+  1020→        <button
+  1021→          type="submit"
+  1022→          disabled={creando}
+  1023→          className="btn-3d flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-purple-600 py-3.5 text-base font-black text-white shadow-xl shadow-violet-200 disabled:opacity-60"
+  1024→        >
+  1025→          <Plus className="h-5 w-5" />
+  1026→          {creando ? "Creando..." : "Crear desafío"}
+  1027→        </button>
+  1028→      </form>
+  1029→    </ModalShell>
+  1030→  );
+  1031→}
+  1032→
