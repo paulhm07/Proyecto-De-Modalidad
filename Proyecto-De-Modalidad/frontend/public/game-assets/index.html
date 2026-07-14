@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EducaPlay · Recursos Gráficos — Minijuego de Matemáticas</title>
+  <style>
+    :root {
+      --purple: #7c3aed;
+      --purple-soft: #ede9fe;
+      --green: #10b981;
+      --pink: #ec4899;
+      --amber: #f59e0b;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --bg: #faf5ff;
+      --card: #ffffff;
+      --shadow: 0 10px 30px -8px rgba(124, 58, 237, 0.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #fce7f3 0%, transparent 60%),
+        radial-gradient(1000px 500px at 110% 10%, #ddd6fe 0%, transparent 55%),
+        var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 28px 24px 18px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--purple-soft);
+      color: var(--purple);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      border-radius: 999px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); }
+    h1 {
+      margin-top: 14px;
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    h1 .grad {
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
+    .chips {
+      margin: 18px auto 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .chip {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 22px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -10px rgba(124,58,237,.35); }
+    .preview {
+      background:
+        linear-gradient(45deg, #f9fafb 25%, transparent 25%) 0 0/24px 24px,
+        linear-gradient(-45deg, #f9fafb 25%, transparent 25%) 0 12px/24px 24px,
+        linear-gradient(45deg, transparent 75%, #f9fafb 75%) 12px -12px/24px 24px,
+        linear-gradient(-45deg, transparent 75%, #f9fafb 75%) -12px 0/24px 24px,
+        #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      min-height: 240px;
+    }
+    .preview img {
+      max-width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      filter: drop-shadow(0 12px 18px rgba(0,0,0,.12));
+    }
+    .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .num {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--purple);
+    }
+    .title { font-size: 18px; font-weight: 800; }
+    .desc { font-size: 14px; color: var(--muted); line-height: 1.5; flex: 1; }
+    .meta { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--purple-soft);
+      color: var(--purple);
+    }
+    .tag.green { background: #d1fae5; color: #065f46; }
+    .tag.pink  { background: #fce7f3; color: #9d174d; }
+    .tag.amber { background: #fef3c7; color: #92400e; }
+    .actions { display: flex; gap: 10px; margin-top: 4px; }
+    .btn {
+      flex: 1;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 11px 14px;
+      border-radius: 14px;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: linear-gradient(90deg, var(--purple), var(--pink)); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.07); }
+    .btn-ghost { background: #f3f4f6; color: var(--ink); border: 1px solid var(--line); }
+    .btn-ghost:hover { background: #eef2ff; }
+    .note {
+      margin-top: 28px;
+      background: #fff;
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      padding: 18px 20px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .note strong { color: var(--ink); }
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.6);
+    }
+    footer b { color: var(--purple); }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="badge"><span class="dot"></span> EducaPlay · Assets 2D</span>
+    <h1>Recursos Gráficos para tu <span class="grad">Minijuego de Matemáticas</span></h1>
+    <p class="subtitle">
+      Set de recursos 2D en estilo Cartoon / Flat Design con relieve Plastilina (Claymorphic),
+      aislados sobre fondo blanco puro. Listos para usar en tu minijuego infantil.
+    </p>
+    <div class="chips">
+      <span class="chip">Estilo: Claymorphic / Flat</span>
+      <span class="chip">Resolución: 1024 × 1024 px</span>
+      <span class="chip">Fondo: Blanco puro</span>
+      <span class="chip">Público: Niños de 8 años</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid">
+      <!-- Recurso 1 -->
+      <article class="card">
+        <div class="preview">
+          <img src="./monstruo_hambriento.png" alt="Monstruo morado amigable con la boca abierta" />
+        </div>
+        <div class="body">
+          <span class="num">Recurso 01</span>
+          <h2 class="title">Monstruo Hambriento 🟣</h2>
+          <p class="desc">
+            Monstruo carismático y amigable de color morado brillante, con ojos grandes
+            y la boca completamente abierta en actitud de comer felizmente. Personaje
+            principal del minijuego "Alimenta al Monstruo".
+          </p>
+          <div class="meta">
+            <span class="tag">Personaje</span>
+            <span class="tag pink">Morado</span>
+            <span class="tag amber">Claymorphic</span>
+          </div>
+          <div class="actions">
+            <a class="btn btn-primary" href="./monstruo_hambriento.png" download>⬇ Descargar PNG</a>
+            <a class="btn btn-ghost" href="./monstruo_hambriento.png" target="_blank" rel="noopener">👁 Ver</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Recurso 2 -->
+      <article class="card">
+        <div class="preview">
+          <img src="./galleta_chispas.png" alt="Galleta redonda con chispas de chocolate" />
+        </div>
+        <div class="body">
+          <span class="num">Recurso 02</span>
+          <h2 class="title">Galleta con Chispas 🍪</h2>
+          <p class="desc">
+            Galleta redonda y texturizada con chispas de chocolate, diseñada con un área
+            central plana donde puedes colocar texto o números (el resultado de la operación).
+            Ideal como "respuesta correcta" arrastrable.
+          </p>
+          <div class="meta">
+            <span class="tag">Comida</span>
+            <span class="tag amber">Texturable</span>
+            <span class="tag green">Texto encima</span>
+          </div>
+          <div class="actions">
+            <a class="btn btn-primary" href="./galleta_chispas.png" download>⬇ Descargar PNG</a>
+            <a class="btn btn-ghost" href="./galleta_chispas.png" target="_blank" rel="noopener">👁 Ver</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Recurso 3 -->
+      <article class="card">
+        <div class="preview">
+          <img src="./dona_chispas.png" alt="Dona colorida con chispas" />
+        </div>
+        <div class="body">
+          <span class="num">Recurso 03</span>
+          <h2 class="title">Dona Colorida 🍩</h2>
+          <p class="desc">
+            Dona con glaseado rosa brillante y chispas de colores (verde, amarillo, azul,
+            naranja, rojo). Perfecta como premio visual o como "respuesta distractora"
+            arrastrable dentro del minijuego.
+          </p>
+          <div class="meta">
+            <span class="tag">Comida</span>
+            <span class="tag pink">Chispas</span>
+            <span class="tag amber">Claymorphic</span>
+          </div>
+          <div class="actions">
+            <a class="btn btn-primary" href="./dona_chispas.png" download>⬇ Descargar PNG</a>
+            <a class="btn btn-ghost" href="./dona_chispas.png" target="_blank" rel="noopener">👁 Ver</a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="note">
+      <strong>💡 Cómo usar estos recursos en tu minijuego:</strong><br/>
+      • <strong>Monstruo</strong>: colócalo en el centro de la pantalla como receptor del drag &amp; drop.<br/>
+      • <strong>Galleta</strong>: úsala como tarjeta arrastrable — escribe el número del resultado sobre el área central plana.<br/>
+      • <strong>Dona</strong>: úsala como tarjeta arrastrable alternativa o como recompensa visual al acertar.<br/><br/>
+      Todos los PNG están aislados sobre fondo blanco. Si necesitas transparencia, puedes
+      usar la herramienta de魔术 wand / fondo mágico de cualquier editor para remover el blanco.
+    </div>
+  </main>
+
+  <footer>
+    Diseñado para <b>EducaPlay</b> · Estilo Claymorphic / Flat Design · 1024×1024 px · Fondo blanco puro
+  </footer>
+</body>
+</html>
