@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    speech_bubble.xml
+    Burbuja de diálogo del monstruo (fondo blanco redondeado con colita).
+    Ubicación: res/drawable/speech_bubble.xml
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FFFFFF" />
+    <corners android:radius="16dp" />
+    <stroke android:width="2dp" android:color="#F59E0B" />
+</shape>

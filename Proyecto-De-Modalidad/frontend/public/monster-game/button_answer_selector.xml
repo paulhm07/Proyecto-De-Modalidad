@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    button_answer_selector.xml
+    Estilo de los botones de respuesta (3 botones arrastrables).
+    - Estado normal: gradiente morado/violeta con sombra
+    - Estado pressed: hundido
+    Ubicación: res/drawable/button_answer_selector.xml
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="true">
+        <layer-list>
+            <item android:left="2dp" android:right="2dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="#0A000000" />
+                    <corners android:radius="22dp" />
+                </shape>
+            </item>
+            <item android:top="4dp" android:left="2dp" android:right="2dp" android:bottom="2dp">
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:startColor="#7C3AED"
+                        android:endColor="#5B21B6"
+                        android:angle="270" />
+                    <corners android:radius="20dp" />
+                    <stroke android:width="1.5dp" android:color="#C4B5FD" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#1F000000" />
+                    <corners android:radius="24dp" />
+                </shape>
+            </item>
+            <item android:top="2dp" android:left="2dp" android:right="2dp" android:bottom="5dp">
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:startColor="#A78BFA"
+                        android:centerColor="#8B5CF6"
+                        android:endColor="#6D28D9"
+                        android:angle="270" />
+                    <corners android:radius="20dp" />
+                    <stroke android:width="1.5dp" android:color="#DDD6FE" />
+                </shape>
+            </item>
+            <item android:top="4dp" android:left="6dp" android:right="6dp" android:bottom="10dp">
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:startColor="#66FFFFFF"
+                        android:endColor="#00FFFFFF"
+                        android:angle="90" />
+                    <corners android:radius="16dp" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+</selector>

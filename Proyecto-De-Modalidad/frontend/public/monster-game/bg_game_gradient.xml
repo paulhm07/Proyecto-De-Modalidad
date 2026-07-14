@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    bg_game_gradient.xml
+    Fondo de pantalla del minijuego con gradiente cálido.
+    Ubicación: res/drawable/bg_game_gradient.xml
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:startColor="#FFF8E1"
+        android:centerColor="#FFE0B2"
+        android:endColor="#FFCCBC"
+        android:angle="135"
+        android:type="linear" />
+</shape>
