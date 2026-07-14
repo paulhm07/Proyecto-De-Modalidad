@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Guía de Administrador — EducaPlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+@page {
+  size: 210mm 297mm;
+  margin: 0;
+}
+:root {
+  --c-bg: #ffffff;
+  --c-text: #1e293b;
+  --c-text-soft: #475569;
+  --c-text-muted: #94a3b8;
+  --c-border: #e2e8f0;
+  --c-accent: #fb7185;
+  --c-accent-2: #8b5cf6;
+  --c-cover-bg: #0b0a1f;
+  --c-cover-bg-2: #1a1145;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 210mm;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: 'Inter', 'Noto Color Emoji', sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+@media screen {
+  html {
+    height: auto;
+    display: flex;
+    justify-content: center;
+    background: #475569;
+  }
+  body {
+    margin: 20px auto;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+}
+
+/* ============ COVER PAGE ============ */
+.cover {
+  width: 210mm;
+  height: 297mm;
+  box-sizing: border-box;
+  break-after: page;
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(139,92,246,0.35) 0px, transparent 50%),
+    radial-gradient(ellipse at 85% 25%, rgba(34,211,238,0.22) 0px, transparent 45%),
+    radial-gradient(ellipse at 75% 85%, rgba(251,113,133,0.20) 0px, transparent 50%),
+    radial-gradient(ellipse at 15% 80%, rgba(251,191,36,0.16) 0px, transparent 45%),
+    linear-gradient(160deg, #07061f 0%, #0d0830 45%, #160a3a 100%);
+  color: #eaf2ff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 28mm 24mm;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(251,191,36,0.6) 1px, transparent 1.6px);
+  background-size: 60px 60px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+.cover-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cover-logo {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fb7185, #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 22px; color: #04121a;
+  box-shadow: 0 0 24px rgba(34,211,238,0.5);
+}
+.cover-brand {
+  font-size: 15pt; font-weight: 700; letter-spacing: -0.01em;
+  color: #eaf2ff;
+}
+.cover-brand span { color: #fb7185; }
+.cover-center {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; justify-content: center; flex: 1;
+  padding: 20mm 0;
+}
+.cover-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 9pt; font-weight: 700; letter-spacing: 0.18em;
+  color: #fb7185;
+  background: rgba(34,211,238,0.10);
+  border: 1px solid rgba(34,211,238,0.35);
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 48px;
+}
+.cover-tag-sub {
+  font-size: 9pt; color: #94a3b8; margin-top: 10px; letter-spacing: 0.04em;
+}
+.cover-title {
+  font-size: 42pt; font-weight: 900; line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 0 0 44px 0;
+  text-shadow: 0 0 40px rgba(139,92,246,0.4);
+}
+.cover-title em {
+  font-style: normal;
+  background: linear-gradient(120deg, #fb7185, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.cover-subtitle {
+  font-size: 13pt; font-weight: 400; line-height: 1.5;
+  color: #cbd5e1;
+  max-width: 130mm;
+  margin: 0;
+}
+.cover-runes {
+  margin-top: 48px;
+  display: flex; gap: 18px; flex-wrap: wrap;
+  font-size: 20pt; opacity: 0.5;
+}
+.cover-bottom {
+  position: relative; z-index: 2;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  font-size: 9pt; color: #94a3b8; letter-spacing: 0.04em;
+}
+.cover-bottom .left { max-width: 100mm; }
+.cover-bottom .left strong { color: #eaf2ff; font-weight: 700; display:block; margin-bottom: 4px; font-size: 10pt; }
+.cover-bottom .right { text-align: right; }
+.cover-bottom .right strong { color: #fb7185; font-weight: 700; display:block; font-size: 11pt; margin-bottom: 4px; }
+
+/* ============ BODY CONTENT ============ */
+.main-content {
+  padding: 16mm 18mm 14mm 18mm;
+}
+.doc-h1 { display: none; }
+.doc-h2 {
+  font-size: 19pt; font-weight: 800; color: var(--c-text);
+  letter-spacing: -0.015em;
+  margin: 26px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2.5px solid var(--c-accent);
+  break-after: avoid;
+  break-inside: avoid;
+}
+.doc-h2:first-child { margin-top: 0; }
+.doc-h3 {
+  font-size: 13.5pt; font-weight: 700; color: var(--c-accent-2);
+  margin: 20px 0 8px 0;
+  break-after: avoid;
+  break-inside: avoid;
+}
+.doc-h4 {
+  font-size: 11.5pt; font-weight: 700; color: var(--c-text);
+  margin: 14px 0 6px 0;
+  break-after: avoid;
+}
+.doc-p {
+  margin: 0 0 9px 0;
+  color: var(--c-text);
+  orphans: 2; widows: 2;
+}
+.doc-p strong { color: var(--c-text); font-weight: 700; }
+.doc-ul, .doc-ol {
+  margin: 6px 0 12px 0;
+  padding-left: 22px;
+}
+.doc-ul li, .doc-ol li {
+  margin-bottom: 5px;
+  color: var(--c-text);
+  orphans: 2; widows: 2;
+}
+.doc-ul li::marker { color: var(--c-accent); }
+.doc-ol li::marker { color: var(--c-accent-2); font-weight: 700; }
+.doc-ul ul, .doc-ol ol, .doc-ul ol, .doc-ol ul {
+  margin: 4px 0 4px 0;
+}
+.doc-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9pt;
+  background: #f1f5f9;
+  color: #8b5cf6;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--c-border);
+  font-weight: 600;
+}
+.doc-quote {
+  margin: 12px 0;
+  padding: 10px 16px;
+  background: linear-gradient(120deg, rgba(34,211,238,0.06), rgba(139,92,246,0.06));
+  border-left: 4px solid var(--c-accent);
+  border-radius: 0 8px 8px 0;
+  color: var(--c-text-soft);
+  font-size: 10pt;
+  break-inside: avoid;
+}
+.doc-quote p { margin: 0; }
+.doc-quote p strong { color: var(--c-accent-2); }
+.doc-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--c-border) 20%, var(--c-border) 80%, transparent);
+  margin: 44px 0;
+  break-inside: avoid;
+}
+.table-wrap {
+  margin: 12px 0 16px 0;
+  break-inside: avoid;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--c-border);
+}
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+}
+.doc-table thead {
+  background: linear-gradient(120deg, var(--c-accent-2), var(--c-accent));
+}
+.doc-table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 9.5pt;
+  letter-spacing: 0.01em;
+}
+.doc-table td {
+  padding: 7px 10px;
+  border-top: 1px solid var(--c-border);
+  color: var(--c-text);
+  vertical-align: top;
+}
+.doc-table tbody tr:nth-child(even) { background: #f8fafc; }
+.doc-table tbody tr:nth-child(odd) { background: #ffffff; }
+.doc-table code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5pt;
+  background: #f1f5f9;
+  color: #8b5cf6;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* ============ ENDING PAGE ============ */
+.ending {
+  width: 210mm;
+  height: 297mm;
+  box-sizing: border-box;
+  break-before: page;
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(139,92,246,0.30) 0px, transparent 55%),
+    radial-gradient(ellipse at 30% 80%, rgba(34,211,238,0.18) 0px, transparent 50%),
+    linear-gradient(160deg, #07061f 0%, #0d0830 50%, #160a3a 100%);
+  color: #eaf2ff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40mm;
+}
+.ending::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(251,191,36,0.5) 1px, transparent 1.4px);
+  background-size: 80px 80px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+.ending-logo {
+  position: relative; z-index: 2;
+  width: 70px; height: 70px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fb7185, #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 32px; color: #04121a;
+  box-shadow: 0 0 40px rgba(34,211,238,0.6);
+  margin-bottom: 44px;
+}
+.ending-title {
+  position: relative; z-index: 2;
+  font-size: 26pt; font-weight: 800; color: #ffffff;
+  margin: 0 0 14px 0;
+  letter-spacing: -0.01em;
+}
+.ending-sub {
+  position: relative; z-index: 2;
+  font-size: 12pt; color: #cbd5e1; line-height: 1.6;
+  max-width: 130mm;
+  margin: 0 0 36px 0;
+}
+.ending-line {
+  position: relative; z-index: 2;
+  width: 60px; height: 3px;
+  background: linear-gradient(90deg, #fb7185, #8b5cf6);
+  border-radius: 2px;
+  margin-bottom: 44px;
+}
+.ending-foot {
+  position: relative; z-index: 2;
+  font-size: 9pt; color: #94a3b8; letter-spacing: 0.06em;
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-logo">E</div>
+    <div class="cover-brand">Educa<span>Play</span></div>
+  </div>
+  <div class="cover-center">
+    <div>
+      <div class="cover-tag">GUÍA DE ADMINISTRADOR</div>
+      <div class="cover-tag-sub">Para maestros/as y soporte técnico</div>
+    </div>
+    <h1 class="cover-title">Guía de Administrador <br><em>— EducaPlay</em></h1>
+    <p class="cover-subtitle">Panel del Maestro/a — Gestión de contenido, seguimiento de estudiantes y recursos curriculares.</p>
+    <div class="cover-runes">π &nbsp; ∑ &nbsp; √ &nbsp; A &nbsp; Ñ &nbsp; 🎯 &nbsp; 🚌 &nbsp; ✨</div>
+  </div>
+  <div class="cover-bottom">
+    <div class="left">
+      <strong>EducaPlay · Cristal del Saber</strong>
+      Plataforma educativa gamificada para 3.<sup>er</sup> grado de primaria<br>
+      Alineada al currículo del MINED de Nicaragua
+    </div>
+    <div class="right">
+      <strong>Documentación</strong>
+      Versión 1.0 · 2026
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="main-content">
+
+<blockquote class="doc-quote">
+<p class="doc-p"><strong>Panel del Maestro/a</strong> — Gestión de contenido, seguimiento de estudiantes y recursos curriculares.
+Esta guía está dirigida al personal docente y de soporte técnico que administra la plataforma.</p>
+</blockquote>
+<div class="doc-divider"></div>
+<h2 class="doc-h2">1. Introducción al Rol de Administrador</h2>
+<p class="doc-p">En EducaPlay, el rol de <strong>administrador</strong> lo ejerce el <strong>Maestro/a</strong>. Es quien crea, organiza y mantiene el contenido educativo, y quien da seguimiento al desempeño de los estudiantes.</p>
+<h3 class="doc-h3">Responsabilidades principales</h3>
+<ul class="doc-ul">
+<li><strong>Crear contenido curricular</strong>: asignaturas, módulos y desafíos alineados al currículo del MINED.</li>
+<li><strong>Gestionar el ciclo de vida del contenido</strong>: crear y eliminar desafíos, módulos y asignaturas (operaciones CRUD parciales).</li>
+<li><strong>Monitorear a los estudiantes</strong>: consultar puntos, nivel, porcentaje global de avance y medallas de cada estudiante.</li>
+<li><strong>Aprovechar recursos curriculares</strong>: consultar y exportar el <strong>Banco de Desafíos</strong> y el <strong>Contenido MINED</strong> para reutilizar material listo.</li>
+<li><strong>Dar soporte</strong>: ayudar a estudiantes con problemas de acceso (verificación de nombre y PIN).</li>
+</ul>
+<h3 class="doc-h3">Alcance</h3>
+<ul class="doc-ul">
+<li>El maestro/a gestiona <strong>sus propias</strong> asignaturas y los <strong>estudiantes asignados</strong> a ellas.</li>
+<li><strong>No</strong> hay edición directa (PUT/PATCH) de asignaturas, módulos o desafíos: para modificar un registro, debe <strong>eliminarse y volver a crearse</strong>.</li>
+<li>Las cuentas de usuario y el seed inicial de la tienda de avatares se gestionan a nivel de sistema (backend/BD), no desde el panel del maestro.</li>
+</ul>
+<div class="doc-divider"></div>
+<h2 class="doc-h2">2. Acceso al Panel</h2>
+<h3 class="doc-h3">2.1 Cómo ingresar de forma segura</h3>
+<ol class="doc-ol">
+<li>Abre EducaPlay.</li>
+<li>En la pantalla de inicio, toca el rol <strong>Maestro/a</strong>.</li>
+<li>Asegúrate de estar en el modo <strong>Iniciar sesión</strong>.</li>
+<li>Escribe tu <strong>Nombre</strong> y tu <strong>PIN de 4 dígitos</strong>.</li>
+<li>Toca <strong>¡Entrar a jugar!</strong>.</li>
+</ol>
+<blockquote class="doc-quote">
+<p class="doc-p"><strong>Modo Demo</strong>: si solo necesitas explorar el panel sin usar tu cuenta real, puedes entrar con el botón <strong>Maestro/a → <code class="doc-code">MaestroDemo</code></strong> del bloque <em>Modo Demo</em>. No use la cuenta demo para gestionar contenido real.</p>
+</blockquote>
+<h3 class="doc-h3">2.2 Recomendaciones de acceso</h3>
+<ul class="doc-ul">
+<li><strong>No compartas tu PIN</strong>. Es tu llave de administración.</li>
+<li>Cierra sesión con el botón <strong>Salir</strong> al terminar, especialmente en equipos compartidos.</li>
+<li>La sesión se guarda en el navegador; al recargar, volverás al panel si seguías logueado. Usa <strong>Salir</strong> para limpiar la sesión del dispositivo.</li>
+</ul>
+<h3 class="doc-h3">2.3 Estructura del menú del Maestro/a</h3>
+<p class="doc-p">Desde la barra superior (<strong>Header</strong>), el maestro/a tiene acceso a:</p>
+<ul class="doc-ul">
+<li><strong>Inicio</strong> — Panel del maestro/a (centro de control).</li>
+<li><strong>Contenido</strong> — Gestión de contenido (CRUD).</li>
+<li><strong>Perfil</strong> — Tu propio perfil.</li>
+</ul>
+<div class="doc-divider"></div>
+<h2 class="doc-h2">3. Módulos de Gestión</h2>
+<div class="doc-divider"></div>
+<h3 class="doc-h3">3.1 Módulo: Panel del Maestro/a (centro de control)</h3>
+<p class="doc-p"><strong>Propósito</strong>
+Pantalla de inicio del docente. Resume accesos rápidos a los bancos de contenido, la lista de estudiantes y las asignaturas propias.</p>
+<p class="doc-p"><strong>Elementos clave</strong></p>
+<ul class="doc-ul">
+<li><strong>Botón Volver</strong>: regresa a tu perfil.</li>
+<li><strong>Saludo</strong>: <em>&quot;Hola, {nombre}. Gestiona tus asignaturas y estudiantes.&quot;</em>.</li>
+<li><strong>Banner &quot;Banco de Desafíos&quot;</strong>: 30 desafíos curriculares listos (Matemáticas y Lengua, 3 niveles). Al tocarlo abre el visor del banco.</li>
+<li><strong>Banner &quot;Contenido MINED — 3er Grado&quot;</strong>: 4 módulos, 55 ítems alineados al MINED. Al tocarlo abre el visor MINED.</li>
+<li><strong>Sección &quot;Mis estudiantes&quot;</strong>: lista con avatar, nombre, puntos, nivel y <em>% global</em>. Botón <strong>Ver</strong> para el detalle de cada uno.</li>
+<li><strong>Sección &quot;Mis asignaturas&quot;</strong>: botón <strong>Crear</strong> (abre la gestión de contenido) y tarjetas de tus asignaturas con botón <strong>Gestionar</strong>.</li>
+</ul>
+<p class="doc-p"><strong>Flujo de trabajo — Cómo orientarse al ingresar</strong></p>
+<ol class="doc-ol">
+<li>Revisa <strong>Mis estudiantes</strong> para ver el estado general de tu grupo.</li>
+<li>Si necesitas crear o ajustar contenido, toca <strong>Contenido</strong> en el menú (o <strong>Crear/Gestionar</strong>).</li>
+<li>Si necesitas inspiración o material listo, entra al <strong>Banco de Desafíos</strong> o al <strong>Contenido MINED</strong>.</li>
+</ol>
+<div class="doc-divider"></div>
+<h3 class="doc-h3">3.2 Módulo: Gestión de Contenido (CRUD)</h3>
+<p class="doc-p"><strong>Propósito</strong>
+Es el corazón administrativo. Permite <strong>crear, listar y eliminar</strong> asignaturas, módulos y desafíos. Se organiza en <strong>tres pestañas</strong>: <strong>Asignaturas</strong>, <strong>Módulos</strong> y <strong>Desafíos</strong>.</p>
+<blockquote class="doc-quote">
+<p class="doc-p"><strong>Regla importante</strong>: aquí <strong>no existe la edición</strong>. Para cambiar el texto de un desafío o el título de un módulo, <strong>elimínalo y vuelve a crearlo</strong>.</p>
+</blockquote>
+<p class="doc-p"><strong>Elementos globales</strong></p>
+<ul class="doc-ul">
+<li><strong>Botón Volver</strong>: regresa al panel principal.</li>
+<li><strong>Pestañas</strong>: <strong>Asignaturas</strong>, <strong>Módulos</strong>, <strong>Desafíos</strong>.</li>
+</ul>
+<h4 class="doc-h4">3.2.1 Pestaña Asignaturas</h4>
+<p class="doc-p"><strong>Funciones disponibles</strong></p>
+<ul class="doc-ul">
+<li><strong>Crear</strong>: formulario &quot;Nueva asignatura&quot; con campos <strong>Nombre</strong> <em>(obligatorio, máx. 80)</em> y <strong>Descripción</strong> <em>(opcional, máx. 240)</em>. Botón <strong>Crear asignatura</strong>.</li>
+<li><strong>Ver/Listar</strong>: sección &quot;Asignaturas creadas&quot; con tarjetas (nombre, descripción, nº de módulos).</li>
+<li><strong>Eliminar</strong>: botón de papelera en cada tarjeta. Pide confirmación: <em>&quot;¿Eliminar esta asignatura? Se borrarán sus módulos y desafíos.&quot;</em>.</li>
+<li><strong>Editar</strong>: ❌ no disponible.</li>
+</ul>
+<p class="doc-p"><strong>Flujo de trabajo — Cómo crear una asignatura</strong></p>
+<ol class="doc-ol">
+<li>Toca la pestaña <strong>Asignaturas</strong>.</li>
+<li>En &quot;Nueva asignatura&quot;, escribe el <strong>Nombre</strong> (ej. <em>&quot;Matemáticas&quot;</em>) y, opcionalmente, una <strong>Descripción</strong>.</li>
+<li>Toca <strong>Crear asignatura</strong>.</li>
+<li>La nueva asignatura aparece en la lista &quot;Asignaturas creadas&quot;.</li>
+</ol>
+<p class="doc-p"><strong>Flujo — Cómo pasar a gestionar módulos</strong></p>
+<ol class="doc-ol">
+<li>En la tarjeta de la asignatura, toca <strong>Módulos</strong>. Esto la selecciona y te lleva a la pestaña <strong>Módulos</strong>.</li>
+</ol>
+<h4 class="doc-h4">3.2.2 Pestaña Módulos</h4>
+<p class="doc-p"><strong>Funciones disponibles</strong></p>
+<ul class="doc-ul">
+<li><strong>Crear</strong>: requiere seleccionar primero una <strong>asignatura</strong> en el desplegable. Luego, formulario &quot;Nuevo módulo&quot; con <strong>Título</strong> <em>(obligatorio, máx. 80)</em> y <strong>Nivel mínimo requerido</strong> <em>(numérico, 1–99)</em>. Botón <strong>Crear módulo</strong>.</li>
+<li><strong>Ver/Listar</strong>: sección &quot;Módulos&quot; con tarjetas (orden, título, nivel, nº de desafíos).</li>
+<li><strong>Eliminar</strong>: papelera con confirmación: <em>&quot;¿Eliminar este módulo y sus desafíos?&quot;</em>.</li>
+<li><strong>Editar</strong>: ❌ no disponible.</li>
+</ul>
+<p class="doc-p"><strong>Flujo de trabajo — Cómo crear un módulo</strong></p>
+<ol class="doc-ol">
+<li>Toca la pestaña <strong>Módulos</strong>.</li>
+<li>En el desplegable, <strong>selecciona una asignatura</strong>.</li>
+<li>Escribe el <strong>Título</strong> del módulo (ej. <em>&quot;Sumas básicas&quot;</em>) y el <strong>Nivel mínimo requerido</strong> (ej. <em>1</em>).</li>
+<li>Toca <strong>Crear módulo</strong>.</li>
+</ol>
+<blockquote class="doc-quote">
+<p class="doc-p">El <strong>Nivel mínimo requerido</strong> bloquea el módulo para estudiantes que no hayan alcanzado ese nivel. Úsalo para crear progresión pedagógica.</p>
+</blockquote>
+<h4 class="doc-h4">3.2.3 Pestaña Desafíos</h4>
+<p class="doc-p"><strong>Funciones disponibles</strong></p>
+<ul class="doc-ul">
+<li><strong>Crear</strong>: requiere seleccionar <strong>Asignatura</strong> y <strong>Módulo</strong> en dos desplegables. Formulario &quot;Nuevo desafío&quot; con:
+<ul class="doc-ul">
+<li><strong>Tipo</strong> (desplegable): <em>Selección múltiple</em>, <em>Completa el texto</em>, <em>Verdadero o falso</em>, <em>Asocia la pareja</em>, <em>Ordena la oración</em>.</li>
+<li><strong>Pregunta</strong> <em>(obligatorio, máx. 280)</em>.</li>
+<li><strong>Puntos</strong> <em>(numérico, 1–1000)</em>.</li>
+<li><strong>Opciones</strong>: lista de opciones con texto. Botón <strong>Añadir</strong> para agregar más. Cada opción tiene un botón circular para <strong>marcar la correcta</strong> (debe haber <strong>exactamente 1</strong> correcta y <strong>mínimo 2</strong> opciones con texto). Botón <strong>X</strong> para quitar una opción.</li>
+<li>Botón <strong>Crear desafío</strong>.</li>
+</ul>
+</li>
+<li><strong>Ver/Listar</strong>: sección &quot;Desafíos del módulo&quot; con tarjetas (tipo, puntos, nº de opciones, pregunta).</li>
+<li><strong>Eliminar</strong>: papelera con confirmación: <em>&quot;¿Eliminar este desafío?&quot;</em>.</li>
+<li><strong>Editar</strong>: ❌ no disponible.</li>
+</ul>
+<p class="doc-p"><strong>Validaciones al crear un desafío</strong></p>
+<ul class="doc-ul">
+<li>Si no hay módulo seleccionado: <em>&quot;Selecciona un módulo&quot;</em>.</li>
+<li>Si falta la pregunta: <em>&quot;Escribe la pregunta&quot;</em>.</li>
+<li>Si hay menos de 2 opciones con texto: <em>&quot;Agrega al menos 2 opciones con texto&quot;</em>.</li>
+<li>Si no hay exactamente 1 opción marcada como correcta: <em>&quot;Debe haber exactamente 1 opción correcta&quot;</em>.</li>
+<li>Si todo está bien: <em>&quot;¡Desafío creado!&quot;</em>.</li>
+</ul>
+<p class="doc-p"><strong>Flujo de trabajo — Cómo crear un desafío de selección múltiple</strong></p>
+<ol class="doc-ol">
+<li>Toca la pestaña <strong>Desafíos</strong>.</li>
+<li>Selecciona <strong>Asignatura</strong> y <strong>Módulo</strong> en los desplegables.</li>
+<li>En <strong>Tipo</strong>, elige <em>&quot;Selección múltiple&quot;</em>.</li>
+<li>Escribe la <strong>Pregunta</strong> (ej. <em>&quot;¿Cuánto es 7 × 6?&quot;</em>).</li>
+<li>Define los <strong>Puntos</strong> (ej. <em>10</em>).</li>
+<li>En <strong>Opciones</strong>, escribe la primera opción en el campo <em>&quot;Opción A&quot;</em>. Toca <strong>Añadir</strong> para agregar <em>&quot;Opción B&quot;</em>, y repite si necesitas más.</li>
+<li><strong>Marca la correcta</strong> tocando el botón circular junto a la opción verdadera (aparece un ✓).</li>
+<li>Toca <strong>Crear desafío</strong>.</li>
+</ol>
+<p class="doc-p"><strong>Flujo — Cómo crear un desafío Verdadero/Falso</strong></p>
+<ol class="doc-ol">
+<li>Selecciona el tipo <em>&quot;Verdadero o falso&quot;</em>.</li>
+<li>Escribe una afirmación como <strong>Pregunta</strong>.</li>
+<li>Añade dos <strong>opciones</strong>: una con texto <em>&quot;Verdadero&quot;</em> y otra <em>&quot;Falso&quot;</em> (escríbelas manualmente, no hay plantilla).</li>
+<li>Marca la opción correcta.</li>
+<li>Toca <strong>Crear desafío</strong>.</li>
+</ol>
+<blockquote class="doc-quote">
+<p class="doc-p"><strong>Tip profesional</strong>: aunque el tipo sea &quot;Completa el texto&quot;, &quot;Asocia la pareja&quot; u &quot;Ordena la oración&quot;, el formulario de creación siempre pide <strong>opciones con una correcta</strong>. Asegúrate de que el enunciado guí al estudiante sobre cómo elegir la opción adecuada.</p>
+</blockquote>
+<p class="doc-p"><strong>Flujo — Cómo modificar un desafío existente</strong></p>
+<ol class="doc-ol">
+<li>En la lista &quot;Desafíos del módulo&quot;, localiza el desafío.</li>
+<li>Toca la papelera para <strong>eliminarlo</strong> (confirma el mensaje).</li>
+<li>Vuelve a <strong>crear</strong> el desafío con los datos corregidos.</li>
+</ol>
+<div class="doc-divider"></div>
+<h3 class="doc-h3">3.3 Módulo: Banco de Desafíos</h3>
+<p class="doc-p"><strong>Propósito</strong>
+Visor curricular de <strong>30 desafíos listos</strong> (Matemáticas + Lengua) para 3.er grado. Permite <strong>filtrar, copiar y descargar</strong> el material en formato JSON o Kotlin para reutilizarlo.</p>
+<p class="doc-p"><strong>Elementos clave</strong></p>
+<ul class="doc-ul">
+<li><strong>Botón Volver al panel</strong>: regresa al panel del maestro/a.</li>
+<li><strong>Acciones globales</strong>: <strong>Descargar JSON</strong> (descarga el archivo completo) y <strong>Copiar todo</strong> (copia todo en el formato seleccionado).</li>
+<li><strong>Stats resumen</strong>: total, Matemáticas, Lengua, Fácil, Medio, Difícil.</li>
+<li><strong>Filtros</strong>: por <strong>Materia</strong> (Todas / Matemáticas / Lengua), <strong>Dificultad</strong> (Todas / Fácil / Medio / Difícil) y <strong>Mecánica</strong> (Todas / Opción Múltiple / Arrastrar y Soltar / Completar Espacio).</li>
+<li><strong>Selector de formato</strong>: pills <strong>&quot;{ } JSON&quot;</strong> / <strong>&quot;⌘ Kotlin&quot;</strong>.</li>
+<li><strong>Tarjetas de desafío</strong>: cada una muestra materia, dificultad, mecánica, ID, enunciado, opciones (la correcta con ✓), pista y botones <strong>Copiar</strong> y <strong>expandir código</strong>.</li>
+<li><strong>Mapa curricular</strong> (al final): resume qué cubre Matemáticas (15) y Lengua (15) por dificultad.</li>
+</ul>
+<p class="doc-p"><strong>Flujo de trabajo — Cómo reutilizar un desafío del banco</strong></p>
+<ol class="doc-ol">
+<li>Toca el banner <strong>Banco de Desafíos</strong> desde el panel del maestro/a.</li>
+<li>Usa los <strong>filtros</strong> para acotar por materia, dificultad o mecánica.</li>
+<li>Revisa el enunciado y las opciones en la tarjeta.</li>
+<li>Toca <strong>Copiar JSON</strong> (o Kotlin) en la tarjeta, o usa <strong>Copiar todo</strong> para llevarte todo el banco.</li>
+<li>Pega el contenido en tu herramienta externa o úsalo como referencia para crear un desafío equivalente en la <strong>Gestión de Contenido</strong>.</li>
+</ol>
+<div class="doc-divider"></div>
+<h3 class="doc-h3">3.4 Módulo: Contenido MINED — 3.er Grado</h3>
+<p class="doc-p"><strong>Propósito</strong>
+Visor del banco curricular oficial alineado al <strong>MINED de Nicaragua</strong>. Son <strong>4 módulos</strong> con <strong>55 ítems</strong> en total. Permite <strong>copiar y descargar</strong> el JSON de cada módulo.</p>
+<p class="doc-p"><strong>Elementos clave</strong></p>
+<ul class="doc-ul">
+<li><strong>Botón Volver al panel</strong>: regresa al panel del maestro/a.</li>
+<li><strong>Hero</strong>: encabezado con currículo, grado y semestre; título <em>&quot;Banco de Contenido MINED&quot;</em>; chips de elementos culturales nicaragüenses.</li>
+<li><strong>Pestañas de 4 módulos</strong>:
+<ul class="doc-ul">
+<li><strong>Módulo 1</strong> (Multiplicación y División) — Matemática.</li>
+<li><strong>Módulo 2</strong> (Fracciones y Geometría) — Matemática.</li>
+<li><strong>Módulo 3</strong> (Comprensión Lectora) — Lengua.</li>
+<li><strong>Módulo 4</strong> (Ortografía y Signos) — Lengua.</li>
+</ul>
+</li>
+<li><strong>Acciones de exportación</strong> por módulo: <strong>Copiar JSON</strong> y <strong>Descargar JSON</strong>.</li>
+</ul>
+<p class="doc-p"><strong>Contenido por módulo</strong></p>
+<ul class="doc-ul">
+<li><strong>Módulo 1</strong>: filtros <em>Todos / × Mult / ÷ Div</em>. Cada ítem incluye subtipo, contexto cultural, dificultad, enunciado, operación esperada, respuesta y distractores con explicación.</li>
+<li><strong>Módulo 2</strong>: 10 desafíos visuales (5 fracciones + 5 geometría) con &quot;Descripción Visual para UI&quot;, pregunta, opciones y explicación pedagógica.</li>
+<li><strong>Módulo 3</strong>: lecturas colapsables con texto y contexto cultural 📌; cada lectura trae preguntas (habilidad, tipo, opciones y explicación).</li>
+<li><strong>Módulo 4</strong>: tres subpestañas — <strong>B/V</strong>, <strong>Acentuación</strong> y <strong>Signos</strong>. Cada ítem muestra la palabra/oración con error, la forma correcta, la regla y el tipo de error.</li>
+</ul>
+<p class="doc-p"><strong>Flujo de trabajo — Cómo usar el contenido MINED</strong></p>
+<ol class="doc-ol">
+<li>Toca el banner <strong>Contenido MINED</strong> desde el panel del maestro/a.</li>
+<li>Selecciona el <strong>módulo</strong> que te interese.</li>
+<li>Revisa los ítems y sus explicaciones pedagógicas.</li>
+<li>Toca <strong>Copiar JSON</strong> o <strong>Descargar JSON</strong> para exportar el módulo completo.</li>
+<li>Usa el material como base para crear asignaturas y desafíos en la <strong>Gestión de Contenido</strong>.</li>
+</ol>
+<div class="doc-divider"></div>
+<h3 class="doc-h3">3.5 Módulo: Seguimiento de Estudiantes (Progreso)</h3>
+<p class="doc-p"><strong>Propósito</strong>
+Permite consultar el progreso detallado de un estudiante: puntos, nivel, porcentaje global, avance por asignatura/módulo y medallas.</p>
+<p class="doc-p"><strong>Elementos clave</strong></p>
+<ul class="doc-ul">
+<li><strong>Botón Volver</strong>: regresa al panel del maestro/a (o al del padre, según el rol).</li>
+<li><strong>Hero</strong>: nombre del estudiante + <em>&quot;Progreso detallado&quot;</em>.</li>
+<li><strong>4 tarjetas de estadísticas</strong>: <strong>Puntos</strong>, <strong>Nivel</strong>, <strong>Desafíos</strong> (completados/total) y <strong>Global</strong> (% de avance).</li>
+<li><strong>Sección &quot;Asignaturas&quot;</strong>: por cada asignatura, un porcentaje, una barra de progreso y el desglose por módulo (completados/total y puntos ganados/totales).</li>
+<li><strong>Sección &quot;Medallas&quot;</strong>: lista de medallas ganadas (título y descripción).</li>
+</ul>
+<p class="doc-p"><strong>Flujo de trabajo — Cómo revisar el avance de un estudiante</strong></p>
+<ol class="doc-ol">
+<li>Desde el <strong>Panel del Maestro/a</strong>, en &quot;Mis estudiantes&quot;, toca <strong>Ver</strong> en la tarjeta del estudiante.</li>
+<li>Revisa las <strong>4 estadísticas</strong> superiores para un diagnóstico rápido.</li>
+<li>Baja a <strong>Asignaturas</strong> para ver en qué módulos va bien y dónde tiene rezago.</li>
+<li>Consulta <strong>Medallas</strong> para reconocer logros y motivar al estudiante.</li>
+</ol>
+<p class="doc-p"><strong>Flujo — Cómo intervenir ante bajo rendimiento</strong></p>
+<ol class="doc-ol">
+<li>Identifica el módulo con menor porcentaje en la sección <strong>Asignaturas</strong>.</li>
+<li>Verifica si el estudiante tiene el <strong>nivel</strong> suficiente (revisa la tarjeta <strong>Nivel</strong>).</li>
+<li>Si el contenido es muy difícil, considera crear un <strong>módulo de refuerzo</strong> en la <strong>Gestión de Contenido</strong> con desafíos más sencillos (dificultad <em>Fácil</em> del <strong>Banco de Desafíos</strong>).</li>
+</ol>
+<div class="doc-divider"></div>
+<h2 class="doc-h2">4. Buenas Prácticas de Seguridad y Soporte</h2>
+<h3 class="doc-h3">4.1 Manejo de datos de usuarios</h3>
+<ul class="doc-ul">
+<li><strong>El PIN es información sensible</strong>. No lo solicites por escrito ni lo almacenes en archivos de texto. Pide al estudiante que lo introduzca directamente en la app.</li>
+<li><strong>Verifica identidad</strong> antes de gestionar cuentas: confirma el nombre completo del estudiante con el registro del aula.</li>
+<li><strong>Mínimo privilegio</strong>: cada maestro/a solo gestiona sus propias asignaturas y sus estudiantes asignados. No intentes acceder a contenido de otros docentes.</li>
+<li><strong>Datos de menores</strong>: EducaPlay está dirigida a niños de 8–9 años. Evita solicitar o registrar datos personales más allá del nombre y PIN necesarios para el funcionamiento.</li>
+</ul>
+<h3 class="doc-h3">4.2 Gestión responsable del contenido</h3>
+<ul class="doc-ul">
+<li><strong>Confirma antes de eliminar</strong>: la eliminación de una asignatura borra en cascada sus módulos y desafíos. Lee siempre el mensaje de confirmación (<em>&quot;¿Eliminar esta asignatura? Se borrarán sus módulos y desafíos.&quot;</em>).</li>
+<li><strong>Haz respaldos antes de cambios grandes</strong>: usa <strong>Descargar JSON</strong> del Banco de Desafíos o del Contenido MINED para conservar copias del material curricular antes de reorganizar tus asignaturas.</li>
+<li><strong>Nombra con claridad</strong>: usa títulos descriptivos para asignaturas y módulos (ej. <em>&quot;Matemáticas — Multiplicación&quot;</em> en lugar de solo <em>&quot;Mate&quot;</em>), para que estudiantes y otros docentes identifiquen el contenido.</li>
+<li><strong>Revisa las opciones correctas</strong>: al crear un desafío, asegúrate de marcar <strong>exactamente una</strong> opción como correcta. Un error aquí genera evaluaciones equivocadas.</li>
+</ul>
+<h3 class="doc-h3">4.3 Resolución de incidencias comunes</h3>
+<div class="table-wrap"><table class="doc-table">
+<thead>
+<tr>
+<th>Incidencia</th>
+<th>Causa probable</th>
+<th>Solución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>El estudiante no puede entrar</td>
+<td>Nombre o PIN incorrectos</td>
+<td>Verifica el nombre exacto (mayúsculas/minúsculas) y el PIN de 4 dígitos. Si persiste, crea una cuenta nueva.</td>
+</tr>
+<tr>
+<td>Un módulo aparece <strong>Bloqueado</strong></td>
+<td>El estudiante no alcanza el <em>Nivel mínimo requerido</em></td>
+<td>Indica al estudiante que complete desafíos más sencillos para subir de nivel (XP), o ajusta el nivel del módulo.</td>
+</tr>
+<tr>
+<td>Un desafío no se puede crear</td>
+<td>Validación de opciones</td>
+<td>Asegúrate de tener <strong>mínimo 2 opciones</strong> con texto y <strong>exactamente 1</strong> marcada como correcta.</td>
+</tr>
+<tr>
+<td>No aparecen mis estudiantes</td>
+<td>Ningún estudiante está asignado a tus asignaturas</td>
+<td>Crea al menos una asignatura; los estudiantes que la tengan asignada aparecerán en &quot;Mis estudiantes&quot;.</td>
+</tr>
+<tr>
+<td>Quiero cambiar el texto de un desafío</td>
+<td>No hay edición directa</td>
+<td><strong>Elimina</strong> el desafío y <strong>vuelve a crearlo</strong> con los datos corregidos.</td>
+</tr>
+<tr>
+<td>La app se ve desactualizada</td>
+<td>Caché del navegador</td>
+<td>Pide al usuario que recargue la página (o cierre y abra sesión).</td>
+</tr>
+</tbody>
+</table></div>
+<h3 class="doc-h3">4.4 Soporte a estudiantes</h3>
+<ul class="doc-ul">
+<li><strong>Guía, no reemplaces</strong>: ayuda al estudiante a entender la pregunta, pero deja que él responda. El aprendizaje ocurre al intentar.</li>
+<li><strong>Usa las explicaciones pedagógicas</strong>: el <strong>Contenido MINED</strong> y el <strong>Banco de Desafíos</strong> incluyen explicaciones y reglas. Aprovéchalas para retroalimentar a tus estudiantes.</li>
+<li><strong>Fomenta el uso de los minijuegos</strong>: los cinco minijuegos (<em>La Pulpería de Fracciones</em>, <em>El Camión de las Multiplicaciones</em>, <em>El Bus de las Letras</em>, <em>La Carta Mal Enviada</em>, <em>Atrapa el Acento</em>) refuerzan áreas clave de forma lúdica. Recomienda sesiones cortas y frecuentes.</li>
+</ul>
+<h3 class="doc-h3">4.5 Recomendaciones de sesión</h3>
+<ul class="doc-ul">
+<li><strong>Cierra sesión</strong> con <strong>Salir</strong> al terminar, sobre todo en equipos compartidos.</li>
+<li>Si trabajas desde un dispositivo personal, la sesión se mantiene al recargar; aun así, <strong>cambia tu PIN periódicamente</strong> si sospechas que pudo quedar expuesto.</li>
+<li>Reporta a soporte técnico cualquier error inesperado, indicando el <strong>nombre del estudiante</strong>, la <strong>pantalla</strong> donde ocurrió y el <strong>mensaje exacto</strong> del error.</li>
+</ul>
+<div class="doc-divider"></div>
+<p class="doc-p"><em>EducaPlay · Panel del Maestro/a · Documentación operativa para gestión de contenido y seguimiento de estudiantes.</em></p>
+
+</div>
+
+<!-- ENDING -->
+<div class="ending">
+  <div class="ending-logo">E</div>
+  <div class="ending-line"></div>
+  <h2 class="ending-title">EducaPlay</h2>
+  <p class="ending-sub">Aprende jugando entre las estrellas ✨<br>Hecho con cariño para estudiantes de 3.<sup>er</sup> grado.</p>
+  <div class="ending-foot">CRISTAL DEL SABER · DOCUMENTACIÓN OFICIAL</div>
+</div>
+
+</body>
+</html>
