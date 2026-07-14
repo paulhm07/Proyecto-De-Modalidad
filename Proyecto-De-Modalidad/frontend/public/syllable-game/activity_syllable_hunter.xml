@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    activity_syllable_hunter.xml
+    Minijuego "Cazador de Sílabas"
+    Layout con:
+    1) Header: puntuación, vidas, ronda
+    2) Palabra objetivo (arriba) + progreso
+    3) Área de juego (FrameLayout) donde suben los globos dinámicamente
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_sky_gradient">
+
+    <!-- ===== HEADER ===== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical"
+        android:background="#80FFFFFF">
+
+        <TextView
+            android:id="@+id/tvScore"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="⭐ 0"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#F59E0B" />
+
+        <TextView
+            android:id="@+id/tvRound"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Ronda: 1/8"
+            android:textSize="14sp"
+            android:textColor="#6B7280"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tvLives"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="❤️❤️❤️"
+            android:textSize="16sp"
+            android:gravity="end" />
+    </LinearLayout>
+
+    <!-- ===== PALABRA OBJETIVO + PROGRESO ===== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="#CCFFFFFF"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Forma esta palabra:"
+            android:textSize="13sp"
+            android:textColor="#6B7280"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tvTargetWord"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PLÁ - TA - NO"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#7C3AED"
+            android:letterSpacing="0.05" />
+
+        <TextView
+            android:id="@+id/tvProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="___ - ___ - ___"
+            android:textSize="16sp"
+            android:textColor="#16A34A"
+            android:textStyle="bold"
+            android:layout_marginTop="6dp" />
+    </LinearLayout>
+
+    <!-- ===== ÁREA DE JUEGO (donde suben los globos) ===== -->
+    <!--
+        FrameLayout con ID gameArea.
+        Los globos se agregan dinámicamente desde Kotlin.
+    -->
+    <FrameLayout
+        android:id="@+id/gameArea"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipChildren="false" />
+
+</LinearLayout>

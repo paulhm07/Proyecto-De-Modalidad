@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cazador de Sílabas - Android Game</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 50%, #93c5fd 100%);
+    min-height: 100vh;
+    padding: 24px;
+    color: #1f2937;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .header { text-align: center; margin-bottom: 20px; }
+  .badge {
+    display: inline-block;
+    background: #ede9fe;
+    color: #5b21b6;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  h1 { font-size: 26px; font-weight: 800; color: #111827; margin-bottom: 6px; }
+  .subtitle { color: #6b7280; font-size: 14px; }
+
+  /* ===== DEMO JUGABLE ===== */
+  .game-demo {
+    background: linear-gradient(180deg, #dbeafe, #93c5fd);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    border: 2px solid #93c5fd;
+  }
+  .demo-label {
+    text-align: center;
+    font-size: 11px;
+    color: #1e40af;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    padding: 10px;
+    background: rgba(255,255,255,0.5);
+  }
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.85);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .game-header .score { color: #f59e0b; }
+  .game-header .lives { color: #dc2626; }
+  .game-header .round { color: #6b7280; }
+  .target-section {
+    background: rgba(255,255,255,0.9);
+    padding: 14px;
+    text-align: center;
+  }
+  .target-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+  .target-word {
+    font-size: 30px;
+    font-weight: 800;
+    color: #7c3aed;
+    letter-spacing: 2px;
+  }
+  .target-word.shake { animation: shake 0.4s ease; color: #dc2626; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-12px); }
+    50% { transform: translateX(12px); }
+    75% { transform: translateX(-8px); }
+  }
+  .progress-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: #16a34a;
+    margin-top: 6px;
+    min-height: 22px;
+  }
+
+  /* Área de juego donde suben los globos */
+  .game-area {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(219,234,254,0.3), rgba(147,197,253,0.3));
+  }
+
+  /* Globo individual */
+  .balloon {
+    position: absolute;
+    width: 90px;
+    height: 110px;
+    cursor: pointer;
+    user-select: none;
+    transition: filter 0.1s;
+  }
+  .balloon:hover { filter: brightness(1.1); }
+  .balloon-body {
+    position: absolute;
+    top: 0; left: 0;
+    width: 90px;
+    height: 100px;
+    border-radius: 50% 50% 45% 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    box-shadow: inset -10px -15px 20px rgba(0,0,0,0.2), inset 8px 8px 15px rgba(255,255,255,0.4);
+  }
+  .balloon-string {
+    position: absolute;
+    bottom: 0; left: 50%;
+    width: 2px;
+    height: 12px;
+    background: #6b7280;
+    transform: translateX(-50%);
+  }
+  .balloon.red .balloon-body { background: radial-gradient(circle at 35% 30%, #fca5a5, #ef4444 60%, #b91c1c); }
+  .balloon.blue .balloon-body { background: radial-gradient(circle at 35% 30%, #93c5fd, #3b82f6 60%, #1d4ed8); }
+  .balloon.green .balloon-body { background: radial-gradient(circle at 35% 30%, #86efac, #22c55e 60%, #15803d); }
+  .balloon.yellow .balloon-body { background: radial-gradient(circle at 35% 30%, #fde68a, #f59e0b 60%, #b45309); }
+
+  .balloon.popping { animation: pop 0.3s ease forwards; pointer-events: none; }
+  @keyframes pop {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.6); opacity: 0.8; }
+    100% { transform: scale(0.3); opacity: 0; }
+  }
+
+  .feedback {
+    text-align: center;
+    padding: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    min-height: 30px;
+    background: rgba(255,255,255,0.9);
+  }
+  .feedback.success { color: #16a34a; }
+  .feedback.error { color: #dc2626; }
+
+  /* ===== Archivos ===== */
+  .files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .file-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+    background: #fafafa;
+  }
+  .file-card:hover { border-color: #3b82f6; box-shadow: 0 6px 18px rgba(59,130,246,0.15); }
+  .file-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: white;
+  }
+  .file-name { font-size: 12px; font-weight: 700; color: #111827; font-family: monospace; margin-bottom: 4px; word-break: break-all; }
+  .file-desc { font-size: 11px; color: #6b7280; margin-bottom: 8px; line-height: 1.4; }
+  .file-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 11px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-download { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+  .btn-download:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(29,78,216,0.4); }
+  .btn-copy { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+  .btn-copy:hover { background: #e5e7eb; }
+  .btn-copy.copied { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+
+  .code-block {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: 8px;
+    overflow: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    max-height: 450px;
+  }
+  .code-block pre { white-space: pre-wrap; word-break: break-word; }
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    background: #1e293b;
+  }
+  .code-title { color: #93c5fd; font-size: 11px; font-weight: 600; font-family: monospace; }
+  .code-section { margin-bottom: 18px; }
+  .code-section h3 {
+    font-size: 14px;
+    color: #111827;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .code-section h3 .num {
+    width: 20px; height: 20px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .note {
+    background: #dbeafe;
+    border-left: 4px solid #3b82f6;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #1e3a8a;
+  }
+  .note ul { margin: 6px 0 0 18px; line-height: 1.6; }
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">ANDROID · KOTLIN · CANVAS DINÁMICO</span>
+      <h1>🎈 Cazador de Sílabas</h1>
+      <p class="subtitle">Minijuego de Lengua para 3er grado · Reventar globos en movimiento</p>
+    </div>
+
+    <!-- ===== DEMO JUGABLE ===== -->
+    <div class="game-demo">
+      <div class="demo-label">▶ Demo jugable — toca los globos en el orden correcto</div>
+
+      <div class="game-header">
+        <span class="score" id="demoScore">⭐ 0</span>
+        <span class="round" id="demoRound">Ronda 1/8</span>
+        <span class="lives" id="demoLives">❤️❤️❤️</span>
+      </div>
+
+      <div class="target-section">
+        <div class="target-label">Forma esta palabra (toca los globos en orden):</div>
+        <div class="target-word" id="targetWord">PLÁ - TA - NO</div>
+        <div class="progress-text" id="progressText">___ - ___ - ___</div>
+      </div>
+
+      <div class="game-area" id="gameArea"></div>
+
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="note">
+      💡 <strong>Cómo integrar en Android Studio:</strong>
+      <ul>
+        <li>Copia los XML a <code>res/drawable/</code> y <code>res/layout/</code></li>
+        <li>Copia <code>SyllableHunterActivity.kt</code> a tu paquete Kotlin</li>
+        <li>Copia las imágenes <code>balloon_red/blue/green.png</code> a <code>res/drawable/</code></li>
+        <li>Declara la Activity en <code>AndroidManifest.xml</code> con permiso <code>VIBRATE</code></li>
+        <li><strong>NO necesitas MP3:</strong> los sonidos se generan con <code>ToneGenerator</code> nativo</li>
+      </ul>
+    </div>
+
+    <!-- ===== Archivos descargables ===== -->
+    <div class="files-grid">
+      <div class="file-card">
+        <div class="file-icon">1</div>
+        <div class="file-name">SyllableHunterActivity.kt</div>
+        <div class="file-desc">Lógica completa: spawn infinito, movimiento, touch, puntuación</div>
+        <div class="file-actions">
+          <a href="/syllable-game/SyllableHunterActivity.kt" download="SyllableHunterActivity.kt" class="btn-sm btn-download">⬇ Descargar</a>
+          <button class="btn-sm btn-copy" onclick="copyCode('code1', this)">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">2</div>
+        <div class="file-name">activity_syllable_hunter.xml</div>
+        <div class="file-desc">Layout con área de juego FrameLayout dinámica</div>
+        <div class="file-actions">
+          <a href="/syllable-game/activity_syllable_hunter.xml" download="activity_syllable_hunter.xml" class="btn-sm btn-download">⬇ Descargar</a>
+          <button class="btn-sm btn-copy" onclick="copyCode('code2', this)">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">3</div>
+        <div class="file-name">bg_sky_gradient.xml</div>
+        <div class="file-desc">Fondo de cielo con gradiente azul</div>
+        <div class="file-actions">
+          <a href="/syllable-game/bg_sky_gradient.xml" download="bg_sky_gradient.xml" class="btn-sm btn-download">⬇ Descargar</a>
+          <button class="btn-sm btn-copy" onclick="copyCode('code3', this)">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">4</div>
+        <div class="file-name">AndroidManifest_snippet.xml</div>
+        <div class="file-desc">Declaración de Activity + permiso VIBRATE</div>
+        <div class="file-actions">
+          <a href="/syllable-game/AndroidManifest_snippet.xml" download="AndroidManifest_snippet.xml" class="btn-sm btn-download">⬇ Descargar</a>
+          <button class="btn-sm btn-copy" onclick="copyCode('code4', this)">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">🎈</div>
+        <div class="file-name">balloon_red.png</div>
+        <div class="file-desc">Imagen del globo rojo (generada con IA)</div>
+        <div class="file-actions">
+          <a href="/syllable-game/balloon_red.png" download="balloon_red.png" class="btn-sm btn-download">⬇ Descargar</a>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">🎈</div>
+        <div class="file-name">balloon_blue.png</div>
+        <div class="file-desc">Imagen del globo azul (generada con IA)</div>
+        <div class="file-actions">
+          <a href="/syllable-game/balloon_blue.png" download="balloon_blue.png" class="btn-sm btn-download">⬇ Descargar</a>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">🎈</div>
+        <div class="file-name">balloon_green.png</div>
+        <div class="file-desc">Imagen del globo verde (generada con IA)</div>
+        <div class="file-actions">
+          <a href="/syllable-game/balloon_green.png" download="balloon_green.png" class="btn-sm btn-download">⬇ Descargar</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Código completo ===== -->
+    <div class="code-section">
+      <h3><span class="num">1</span> SyllableHunterActivity.kt — Lógica completa del juego</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">com/educaplay/syllablehunter/SyllableHunterActivity.kt</span></div>
+        <pre id="code1"></pre>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3><span class="num">2</span> activity_syllable_hunter.xml — Layout</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">res/layout/activity_syllable_hunter.xml</span></div>
+        <pre id="code2"></pre>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3><span class="num">3</span> bg_sky_gradient.xml — Fondo de cielo</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">res/drawable/bg_sky_gradient.xml</span></div>
+        <pre id="code3"></pre>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3><span class="num">4</span> AndroidManifest.xml — Permisos</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">AndroidManifest.xml (fragmento)</span></div>
+        <pre id="code4"></pre>
+      </div>
+    </div>
+
+    <div class="note">
+      ✅ <strong>Características técnicas implementadas:</strong>
+      <ul>
+        <li><strong>Lenguaje:</strong> Kotlin (recomendado por Google)</li>
+        <li><strong>API mínima:</strong> 21 (Android 5.0)</li>
+        <li><strong>1) Generación infinita:</strong> <code>Handler.postDelayed</code> cada 1500ms crea un nuevo globo con posición X aleatoria y velocidad entre 3-6 px/frame (apta para niños)</li>
+        <li><strong>2) Movimiento vertical:</strong> loop a 33 FPS que resta Y a cada globo; los que salen por arriba se eliminan</li>
+        <li><strong>3) Detector de toques:</strong> <code>setOnTouchListener</code> en cada globo dispara <code>animateExplosion</code> (scale 1→1.8 + alpha 1→0 + rotación)</li>
+        <li><strong>4) Validación de sílabas:</strong> compara con <code>currentSyllables[currentSyllableIndex]</code>; si es correcta avanza, si no, reinicia el progreso</li>
+        <li><strong>5) Banco de 12 palabras</strong> con sílabas separadas (PLÁ-TA-NO, MA-RI-PO-SA, E-LE-FAN-TE, etc.)</li>
+        <li><strong>6) Distractores inteligentes:</strong> 50% de probabilidad de generar la sílaba correcta, 50% una sílaba aleatoria de otra palabra</li>
+        <li><strong>7) Sin MP3:</strong> <code>ToneGenerator</code> nativo para sonidos pop, éxito y error</li>
+        <li><strong>8) Vibración:</strong> patrón de 3 pulsos en errores (compatible API 26+)</li>
+        <li><strong>9) Gamificación:</strong> 8 rondas, 3 vidas, +10 por sílaba, +20 bonus por palabra completada</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      🎈 Minijuego educativo Android · Kotlin + XML nativo · 3er grado
+    </div>
+  </div>
+
+<script>
+  // ===== Cargar código en bloques =====
+  const files = [
+    { id: 'code1', url: '/syllable-game/SyllableHunterActivity.kt' },
+    { id: 'code2', url: '/syllable-game/activity_syllable_hunter.xml' },
+    { id: 'code3', url: '/syllable-game/bg_sky_gradient.xml' },
+    { id: 'code4', url: '/syllable-game/AndroidManifest_snippet.xml' }
+  ];
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  files.forEach(f => {
+    fetch(f.url).then(r => r.text()).then(text => {
+      document.getElementById(f.id).innerHTML = escapeHtml(text);
+    });
+  });
+
+  function copyCode(id, btn) {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.innerHTML;
+      btn.innerHTML = '✓ Copiado';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.innerHTML = original; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // ===== Lógica del demo jugable =====
+  const wordBank = [
+    { word: 'PLÁTANO', syllables: ['PLÁ', 'TA', 'NO'] },
+    { word: 'MARIPOSA', syllables: ['MA', 'RI', 'PO', 'SA'] },
+    { word: 'ELEFANTE', syllables: ['E', 'LE', 'FAN', 'TE'] },
+    { word: 'JIRAFA', syllables: ['JI', 'RA', 'FA'] },
+    { word: 'TORTUGA', syllables: ['TOR', 'TU', 'GA'] },
+    { word: 'PELOTA', syllables: ['PE', 'LO', 'TA'] },
+    { word: 'GUITARRA', syllables: ['GUI', 'TA', 'RRA'] },
+    { word: 'VENTANA', syllables: ['VEN', 'TA', 'NA'] }
+  ];
+
+  let demoScore = 0, demoLives = 3, demoRound = 1;
+  let currentSyllables = [], currentSyllableIndex = 0;
+  let balloons = [];
+  let gameRunning = false;
+  let audioCtx;
+
+  const gameArea = document.getElementById('gameArea');
+  const colors = ['red', 'blue', 'green', 'yellow'];
+
+  function newRound() {
+    if (demoRound > 8 || demoLives <= 0) { endDemo(); return; }
+    document.getElementById('demoRound').textContent = `Ronda ${demoRound}/8`;
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+
+    const entry = wordBank[Math.floor(Math.random() * wordBank.length)];
+    currentSyllables = entry.syllables;
+    currentSyllableIndex = 0;
+    document.getElementById('targetWord').textContent = currentSyllables.join(' - ');
+    updateProgress();
+
+    // Limpiar globos existentes
+    balloons.forEach(b => b.el.remove());
+    balloons = [];
+
+    gameRunning = true;
+    spawnLoop();
+    moveLoop();
+  }
+
+  function updateProgress() {
+    const parts = currentSyllables.map((s, i) => i < currentSyllableIndex ? `✓${s}` : '___');
+    document.getElementById('progressText').textContent = parts.join(' - ');
+  }
+
+  function spawnLoop() {
+    if (!gameRunning) return;
+    spawnBalloon();
+    setTimeout(spawnLoop, 1500);
+  }
+
+  function moveLoop() {
+    if (!gameRunning) return;
+    balloons.forEach(b => {
+      b.y -= b.speed;
+      b.el.style.top = b.y + 'px';
+      if (b.y < -120) {
+        b.el.remove();
+        balloons = balloons.filter(x => x !== b);
+      }
+    });
+    requestAnimationFrame(moveLoop);
+  }
+
+  function spawnBalloon() {
+    if (!gameRunning || !gameArea.offsetWidth) return;
+
+    // 50% sílaba correcta, 50% distractor
+    let syllable;
+    if (Math.random() < 0.5 && currentSyllableIndex < currentSyllables.length) {
+      syllable = currentSyllables[currentSyllableIndex];
+    } else {
+      const rw = wordBank[Math.floor(Math.random() * wordBank.length)];
+      syllable = rw.syllables[Math.floor(Math.random() * rw.syllables.length)];
+    }
+
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const maxX = gameArea.offsetWidth - 90;
+    const x = Math.max(0, Math.floor(Math.random() * maxX));
+    const y = gameArea.offsetHeight;
+    const speed = 1.5 + Math.random() * 1.5;
+
+    const el = document.createElement('div');
+    el.className = `balloon ${color}`;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.innerHTML = `
+      <div class="balloon-body">${syllable}</div>
+      <div class="balloon-string"></div>
+    `;
+    el.addEventListener('click', () => popBalloon(el, syllable, b));
+    gameArea.appendChild(el);
+
+    const b = { el, syllable, y, speed, color };
+    balloons.push(b);
+  }
+
+  function popBalloon(el, syllable, balloon) {
+    el.classList.add('popping');
+    playPop();
+    setTimeout(() => {
+      el.remove();
+      balloons = balloons.filter(x => x !== balloon);
+      validateSyllable(syllable);
+    }, 300);
+  }
+
+  function validateSyllable(syllable) {
+    if (currentSyllableIndex >= currentSyllables.length) return;
+    if (syllable === currentSyllables[currentSyllableIndex]) {
+      onCorrect();
+    } else {
+      onWrong();
+    }
+  }
+
+  function onCorrect() {
+    demoScore += 10;
+    currentSyllableIndex++;
+    document.getElementById('demoScore').textContent = `⭐ ${demoScore}`;
+    updateProgress();
+    playSuccess();
+    document.getElementById('feedback').textContent = '✓ ¡Bien! Sigue';
+    document.getElementById('feedback').className = 'feedback success';
+
+    if (currentSyllableIndex >= currentSyllables.length) {
+      demoScore += 20;
+      document.getElementById('demoScore').textContent = `⭐ ${demoScore}`;
+      document.getElementById('feedback').textContent = '🎉 ¡Palabra completada! +20 bonus';
+      setTimeout(() => {
+        demoRound++;
+        newRound();
+      }, 1200);
+    }
+  }
+
+  function onWrong() {
+    demoLives--;
+    document.getElementById('demoLives').textContent = '❤️'.repeat(demoLives) + '🖤'.repeat(3 - demoLives);
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+    playFail();
+    document.getElementById('targetWord').classList.add('shake');
+    setTimeout(() => document.getElementById('targetWord').classList.remove('shake'), 400);
+    currentSyllableIndex = 0;
+    updateProgress();
+    document.getElementById('feedback').textContent = '✗ Sílaba incorrecta. ¡Empieza de nuevo!';
+    document.getElementById('feedback').className = 'feedback error';
+
+    if (demoLives <= 0) {
+      setTimeout(endDemo, 1000);
+    }
+  }
+
+  function endDemo() {
+    gameRunning = false;
+    balloons.forEach(b => b.el.remove());
+    balloons = [];
+    playWin();
+    const msg = demoScore >= 80 ? '¡Excelente cazador! 🏆' : demoScore >= 50 ? '¡Muy bien! 🎉' : '¡Sigue practicando! 💪';
+    document.getElementById('feedback').textContent = `${msg} Puntuación: ${demoScore}`;
+    document.getElementById('feedback').className = 'feedback success';
+    setTimeout(() => {
+      demoScore = 0; demoLives = 3; demoRound = 1;
+      document.getElementById('demoScore').textContent = '⭐ 0';
+      document.getElementById('demoLives').textContent = '❤️❤️❤️';
+      newRound();
+    }, 3000);
+  }
+
+  // Sonidos con Web Audio API
+  function playPop() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'square';
+      o.frequency.setValueAtTime(800, audioCtx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.08);
+      g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      o.start();
+      o.stop(audioCtx.currentTime + 0.1);
+    } catch(e) {}
+  }
+
+  function playSuccess() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      [523, 659, 784].forEach((freq, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine';
+        o.frequency.value = freq;
+        const t = audioCtx.currentTime + i * 0.1;
+        g.gain.setValueAtTime(0.2, t);
+        g.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+        o.start(t);
+        o.stop(t + 0.15);
+      });
+    } catch(e) {}
+  }
+
+  function playFail() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(200, audioCtx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+      g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      o.start();
+      o.stop(audioCtx.currentTime + 0.3);
+    } catch(e) {}
+  }
+
+  function playWin() {
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      [523, 659, 784, 1047].forEach((freq, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine';
+        o.frequency.value = freq;
+        const t = audioCtx.currentTime + i * 0.12;
+        g.gain.setValueAtTime(0.25, t);
+        g.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+        o.start(t);
+        o.stop(t + 0.2);
+      });
+    } catch(e) {}
+  }
+
+  // Iniciar
+  newRound();
+</script>
+</body>
+</html>

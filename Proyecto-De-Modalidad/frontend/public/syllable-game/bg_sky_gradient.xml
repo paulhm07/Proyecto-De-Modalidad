@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    bg_sky_gradient.xml
+    Fondo de cielo del minijuego (gradiente azul claro).
+    Ubicación: res/drawable/bg_sky_gradient.xml
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:startColor="#DBEAFE"
+        android:centerColor="#BFDBFE"
+        android:endColor="#93C5FD"
+        android:angle="270"
+        android:type="linear" />
+</shape>
