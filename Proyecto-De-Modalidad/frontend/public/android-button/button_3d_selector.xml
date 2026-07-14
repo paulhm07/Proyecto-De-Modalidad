@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    button_3d_selector.xml
+    Selector que gestiona los estados visuales del botón 3D.
+    - pressed  -> estado hundido (button_3d_pressed)
+    - disabled -> estado normal atenuado (opcional, usa el normal)
+    - default  -> estado normal (button_3d_normal)
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Botón presionado (hundido) -->
+    <item
+        android:state_pressed="true"
+        android:drawable="@drawable/button_3d_pressed" />
+
+    <!-- Botón deshabilitado (opcional: usa el normal, se atenúa por código) -->
+    <item
+        android:state_enabled="false"
+        android:drawable="@drawable/button_3d_normal" />
+
+    <!-- Estado por defecto (normal / levantado) -->
+    <item android:drawable="@drawable/button_3d_normal" />
+
+</selector>

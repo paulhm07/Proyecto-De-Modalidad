@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Botón 3D Plastilina - Android UI</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fdba74 100%);
+    min-height: 100vh;
+    padding: 24px;
+    color: #1f2937;
+  }
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .header { text-align: center; margin-bottom: 32px; }
+  .badge {
+    display: inline-block;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: 28px; font-weight: 800; color: #111827; margin-bottom: 8px; }
+  .subtitle { color: #6b7280; font-size: 15px; }
+
+  /* ===== Vista previa del botón (simulación CSS del XML) ===== */
+  .preview-section {
+    background: linear-gradient(135deg, #fff8e1, #fff3cd);
+    border-radius: 18px;
+    padding: 48px 24px;
+    text-align: center;
+    margin-bottom: 32px;
+    border: 1px solid #fde68a;
+  }
+  .preview-label {
+    font-size: 12px;
+    color: #92400e;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+
+  /* Botón 3D plastilina (réplica CSS del drawable XML) */
+  .btn-3d {
+    display: inline-block;
+    width: 240px;
+    height: 72px;
+    line-height: 72px;
+    background: linear-gradient(180deg, #FFAB40 0%, #FF6E40 50%, #F4511E 100%);
+    color: white;
+    border: 1.5px solid #FFE0B2;
+    border-radius: 24px;
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+    text-shadow: 0 2px 3px rgba(191,54,12,0.6);
+    box-shadow:
+      0 6px 0 0 rgba(0,0,0,0.12),
+      0 8px 16px rgba(0,0,0,0.15),
+      inset 0 4px 12px rgba(255,255,255,0.5),
+      inset 0 -6px 12px rgba(0,0,0,0.08);
+    transition: all 0.08s ease;
+    position: relative;
+    top: 0;
+  }
+  .btn-3d::before {
+    content: '';
+    position: absolute;
+    top: 6px; left: 6px; right: 6px;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0));
+    border-radius: 20px 20px 14px 14px;
+    pointer-events: none;
+  }
+  .btn-3d:active {
+    transform: translateY(4px);
+    box-shadow:
+      0 2px 0 0 rgba(0,0,0,0.08),
+      0 3px 8px rgba(0,0,0,0.15),
+      inset 0 2px 6px rgba(255,255,255,0.25),
+      inset 0 -3px 6px rgba(0,0,0,0.05);
+  }
+
+  /* ===== Lista de archivos ===== */
+  .files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .file-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 20px;
+    transition: all 0.2s;
+    background: #fafafa;
+  }
+  .file-card:hover { border-color: #f59e0b; box-shadow: 0 8px 24px rgba(245,158,11,0.15); }
+  .file-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    margin-bottom: 12px;
+    color: white;
+  }
+  .file-name { font-size: 14px; font-weight: 700; color: #111827; font-family: monospace; margin-bottom: 4px; word-break: break-all; }
+  .file-desc { font-size: 12px; color: #6b7280; margin-bottom: 12px; line-height: 1.4; }
+  .file-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-download {
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: white;
+  }
+  .btn-download:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(234,88,12,0.4); }
+  .btn-copy {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+  .btn-copy:hover { background: #e5e7eb; }
+  .btn-copy.copied { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+
+  /* ===== Bloques de código ===== */
+  .code-block {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+    overflow-x: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    position: relative;
+  }
+  .code-block pre { white-space: pre-wrap; word-break: break-word; }
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #334155;
+  }
+  .code-title { color: #fbbf24; font-size: 12px; font-weight: 600; font-family: monospace; }
+  .code-section { margin-bottom: 24px; }
+  .code-section h3 {
+    font-size: 15px;
+    color: #111827;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .code-section h3 .num {
+    width: 24px; height: 24px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .note {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: #78350f;
+  }
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">ANDROID UI · CLAYMORPHISM</span>
+      <h1>🧸 Botón 3D Plastilina</h1>
+      <p class="subtitle">Diseño infantil moderno con relieve 3D usando únicamente XML nativo</p>
+    </div>
+
+    <!-- Vista previa interactiva -->
+    <div class="preview-section">
+      <div class="preview-label">▶ Vista previa interactiva — haz clic</div>
+      <div class="btn-3d" id="demoBtn">¡JUGAR!</div>
+    </div>
+
+    <div class="note">
+      💡 <strong>Cómo usar:</strong> descarga los 3 XML (<code>button_3d_normal.xml</code>, <code>button_3d_pressed.xml</code>, <code>button_3d_selector.xml</code>) en la carpeta <code>res/drawable/</code> de tu proyecto Android. Copia el layout de ejemplo en <code>res/layout/</code>. ¡Sin dependencias externas!
+    </div>
+
+    <!-- Tarjetas de archivos descargables -->
+    <div class="files-grid">
+      <div class="file-card">
+        <div class="file-icon">1</div>
+        <div class="file-name">button_3d_normal.xml</div>
+        <div class="file-desc">Estado normal con gradiente, sombra externa y brillo plástico</div>
+        <div class="file-actions">
+          <a href="/android-button/button_3d_normal.xml" download="button_3d_normal.xml" class="btn-sm btn-download">⬇ Descargar</a>
+          <button class="btn-sm btn-copy" onclick="copyCode('code1', this)">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">2</div>
+        <div class="file-name">button_3d_pressed.xml</div>
+        <div class="file-desc">Estado presionado: sombra reducida y cuerpo hundido</div>
+        <div class="file-actions">
+          <a href="/android-button/button_3d_pressed.xml" download="button_3d_pressed.xml" class="btn-sm btn-download">⬇ Descargar</a>
+          <button class="btn-sm btn-copy" onclick="copyCode('code2', this)">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">3</div>
+        <div class="file-name">button_3d_selector.xml</div>
+        <div class="file-desc">Selector que gestiona los estados pressed / default</div>
+        <div class="file-actions">
+          <a href="/android-button/button_3d_selector.xml" download="button_3d_selector.xml" class="btn-sm btn-download">⬇ Descargar</a>
+          <button class="btn-sm btn-copy" onclick="copyCode('code3', this)">📋 Copiar</button>
+        </div>
+      </div>
+
+      <div class="file-card">
+        <div class="file-icon">4</div>
+        <div class="file-name">activity_main_example.xml</div>
+        <div class="file-desc">Layout de ejemplo con tamaño táctil accesible para niños</div>
+        <div class="file-actions">
+          <a href="/android-button/activity_main_example.xml" download="activity_main_example.xml" class="btn-sm btn-download">⬇ Descargar</a>
+          <button class="btn-sm btn-copy" onclick="copyCode('code4', this)">📋 Copiar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloques de código para copiar -->
+    <div class="code-section">
+      <h3><span class="num">1</span> button_3d_normal.xml — Estado normal</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">res/drawable/button_3d_normal.xml</span></div>
+        <pre id="code1">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;layer-list xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+
+    &lt;!-- 1) Sombra exterior difuminada (base del relieve) --&gt;
+    &lt;item&gt;
+        &lt;shape android:shape="rectangle"&gt;
+            &lt;solid android:color="#1F000000" /&gt;
+            &lt;corners android:radius="28dp" /&gt;
+        &lt;/shape&gt;
+    &lt;/item&gt;
+
+    &lt;!-- 2) Capa intermedia de sombra desplazada hacia abajo --&gt;
+    &lt;item android:top="2dp" android:left="2dp" android:right="2dp"&gt;
+        &lt;shape android:shape="rectangle"&gt;
+            &lt;solid android:color="#14000000" /&gt;
+            &lt;corners android:radius="26dp" /&gt;
+        &lt;/shape&gt;
+    &lt;/item&gt;
+
+    &lt;!-- 3) Cuerpo principal del botón con gradiente vibrante --&gt;
+    &lt;item android:top="2dp" android:left="2dp" android:right="2dp" android:bottom="6dp"&gt;
+        &lt;shape android:shape="rectangle"&gt;
+            &lt;gradient
+                android:startColor="#FFAB40"
+                android:centerColor="#FF6E40"
+                android:endColor="#F4511E"
+                android:angle="270"
+                android:type="linear" /&gt;
+            &lt;corners android:radius="24dp" /&gt;
+            &lt;stroke android:width="1.5dp" android:color="#FFE0B2" /&gt;
+        &lt;/shape&gt;
+    &lt;/item&gt;
+
+    &lt;!-- 4) Brillo superior interno (efecto plastilina brillante) --&gt;
+    &lt;item android:top="4dp" android:left="6dp" android:right="6dp" android:bottom="12dp"&gt;
+        &lt;shape android:shape="rectangle"&gt;
+            &lt;gradient
+                android:startColor="#80FFFFFF"
+                android:centerColor="#33FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="90"
+                android:type="linear" /&gt;
+            &lt;corners android:radius="20dp" /&gt;
+        &lt;/shape&gt;
+    &lt;/item&gt;
+
+&lt;/layer-list&gt;</pre>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3><span class="num">2</span> button_3d_pressed.xml — Estado presionado (hundido)</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">res/drawable/button_3d_pressed.xml</span></div>
+        <pre id="code2">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;layer-list xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+
+    &lt;!-- 1) Sombra exterior reducida (botón hundido) --&gt;
+    &lt;item android:left="2dp" android:right="2dp"&gt;
+        &lt;shape android:shape="rectangle"&gt;
+            &lt;solid android:color="#0A000000" /&gt;
+            &lt;corners android:radius="26dp" /&gt;
+        &lt;/shape&gt;
+    &lt;/item&gt;
+
+    &lt;!-- 2) Cuerpo desplazado hacia abajo (simula hundimiento) --&gt;
+    &lt;item android:top="6dp" android:left="2dp" android:right="2dp" android:bottom="2dp"&gt;
+        &lt;shape android:shape="rectangle"&gt;
+            &lt;gradient
+                android:startColor="#FF8A65"
+                android:centerColor="#F4511E"
+                android:endColor="#D84315"
+                android:angle="270"
+                android:type="linear" /&gt;
+            &lt;corners android:radius="24dp" /&gt;
+            &lt;stroke android:width="1.5dp" android:color="#FFCC80" /&gt;
+        &lt;/shape&gt;
+    &lt;/item&gt;
+
+    &lt;!-- 3) Brillo superior atenuado --&gt;
+    &lt;item android:top="8dp" android:left="6dp" android:right="6dp" android:bottom="6dp"&gt;
+        &lt;shape android:shape="rectangle"&gt;
+            &lt;gradient
+                android:startColor="#40FFFFFF"
+                android:centerColor="#1AFFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="90"
+                android:type="linear" /&gt;
+            &lt;corners android:radius="18dp" /&gt;
+        &lt;/shape&gt;
+    &lt;/item&gt;
+
+&lt;/layer-list&gt;</pre>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3><span class="num">3</span> button_3d_selector.xml — Selector de estados</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">res/drawable/button_3d_selector.xml</span></div>
+        <pre id="code3">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;selector xmlns:android="http://schemas.android.com/apk/res/android"&gt;
+
+    &lt;!-- Botón presionado (hundido) --&gt;
+    &lt;item android:state_pressed="true"
+          android:drawable="@drawable/button_3d_pressed" /&gt;
+
+    &lt;!-- Botón deshabilitado --&gt;
+    &lt;item android:state_enabled="false"
+          android:drawable="@drawable/button_3d_normal" /&gt;
+
+    &lt;!-- Estado por defecto (normal / levantado) --&gt;
+    &lt;item android:drawable="@drawable/button_3d_normal" /&gt;
+
+&lt;/selector&gt;</pre>
+      </div>
+    </div>
+
+    <div class="code-section">
+      <h3><span class="num">4</span> activity_main_example.xml — Layout con tamaño táctil accesible</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">res/layout/activity_main.xml</span></div>
+        <pre id="code4">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="#FFF8E1"&gt;
+
+    &lt;!--
+        Botón infantil 3D estilo plastilina.
+        - minHeight 72dp: objetivo táctil accesible para niños (&gt;48dp mínimo)
+        - stateListAnimator="@null": desactiva elevación Material por defecto
+        - elevation="0dp": evita conflicto con sombra del sistema
+    --&gt;
+    &lt;Button
+        android:id="@+id/btnJugar"
+        android:layout_width="240dp"
+        android:layout_height="72dp"
+        android:minHeight="72dp"
+        android:minWidth="160dp"
+        android:background="@drawable/button_3d_selector"
+        android:text="¡JUGAR!"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-black"
+        android:letterSpacing="0.05"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:stateListAnimator="@null"
+        android:elevation="0dp"
+        android:shadowColor="#BF360C"
+        android:shadowDx="0"
+        android:shadowDy="2"
+        android:shadowRadius="3"
+        android:textAllCaps="false"
+        android:clickable="true"
+        android:focusable="true" /&gt;
+
+&lt;/LinearLayout&gt;</pre>
+      </div>
+    </div>
+
+    <div class="note">
+      ✅ <strong>Características técnicas:</strong>
+      <ul style="margin: 8px 0 0 20px; line-height: 1.7;">
+        <li>Compatibilidad: <strong>API 21+ (Android 5.0 Lollipop)</strong> sin dependencias externas</li>
+        <li>Esquinas redondeadas de <strong>24dp</strong> (estilo Claymorphism)</li>
+        <li>Gradiente cálido de 3 colores (naranja → coral → naranja oscuro)</li>
+        <li>Sombra externa de 2 capas para relieve 3D realista</li>
+        <li>Brillo interno superior para efecto plastilina brillante</li>
+        <li>En estado presionado: <strong>sombra reducida + cuerpo desplazado 4dp hacia abajo</strong></li>
+        <li>Tamaño táctil: <strong>72dp de alto</strong> (recomendado para niños, mínimo 48dp)</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      🤖 Diseño Android UI Senior · Claymorphism / Plastilina 3D · 100% XML nativo
+    </div>
+  </div>
+
+<script>
+  // Copiar código al portapapeles
+  function copyCode(id, btn) {
+    const pre = document.getElementById(id);
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.innerHTML;
+      btn.innerHTML = '✓ Copiado';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerHTML = original;
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  // Feedback visual en el botón demo
+  const demoBtn = document.getElementById('demoBtn');
+  let count = 0;
+  demoBtn.addEventListener('click', () => {
+    count++;
+    const messages = ['¡JUGAR!', '¡BIEN!', '¡OTRA!', '¡GENIAL!', '¡EXCELENTE!'];
+    demoBtn.textContent = messages[count % messages.length];
+    setTimeout(() => { demoBtn.textContent = '¡JUGAR!'; }, 800);
+  });
+</script>
+</body>
+</html>

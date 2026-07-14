@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    activity_main.xml
+    Ejemplo de declaración del botón 3D en el layout principal.
+    - Tamaño táctil accesible para niños: altura mínima 72dp (recomendado >48dp)
+    - stateListAnimator="@null" para que Android no aplique su elevación Material
+      por defecto y nuestro efecto 3D custom se vea correctamente
+    - elevation="0dp" evita conflicto con el shadow del sistema
+    - El padding interno se ajusta para que el texto no toque los bordes
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="#FFF8E1">
+
+    <!--
+        Botón infantil 3D estilo plastilina.
+        - minHeight 72dp garantiza un objetivo táctil cómodo para niños
+        - minSdk: funciona desde API 21+ (sin dependencias externas)
+    -->
+    <Button
+        android:id="@+id/btnJugar"
+        android:layout_width="240dp"
+        android:layout_height="72dp"
+        android:minHeight="72dp"
+        android:minWidth="160dp"
+        android:background="@drawable/button_3d_selector"
+        android:text="¡JUGAR!"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-black"
+        android:letterSpacing="0.05"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:stateListAnimator="@null"
+        android:elevation="0dp"
+        android:shadowColor="#BF360C"
+        android:shadowDx="0"
+        android:shadowDy="2"
+        android:shadowRadius="3"
+        android:textAllCaps="false"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>
