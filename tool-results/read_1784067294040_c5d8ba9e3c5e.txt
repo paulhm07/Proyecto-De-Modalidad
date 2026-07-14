@@ -1,0 +1,846 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useMemo, useState } from "react";
+     4→import {
+     5→  ArrowLeft,
+     6→  BookOpen,
+     7→  Calculator,
+     8→  PenLine,
+     9→  Hash,
+    10→  Download,
+    11→  Copy,
+    12→  CheckCircle2,
+    13→  Circle,
+    14→  Triangle,
+    15→  Square,
+    16→  Coffee,
+    17→  Sparkles,
+    18→  Lightbulb,
+    19→  AlertCircle,
+    20→  Layers,
+    21→} from "lucide-react";
+    22→import { useApp } from "@/context/AppContext";
+    23→
+    24→// ---- Tipos para el contenido MINED ----------------------------------------
+    25→
+    26→interface ManifestModulo {
+    27→  id: string;
+    28→  archivo: string;
+    29→  titulo: string;
+    30→  asignatura: string;
+    31→  total_items: number;
+    32→  total_preguntas?: number;
+    33→  total_palabras?: number;
+    34→  total_oraciones?: number;
+    35→  descripcion: string;
+    36→}
+    37→
+    38→interface Manifest {
+    39→  titulo: string;
+    40→  descripcion: string;
+    41→  grado: string;
+    42→  semestre: string;
+    43→  curriculum: string;
+    44→  total_modulos: number;
+    45→  modulos: ManifestModulo[];
+    46→  elementos_culturales_nicaraguenses: string[];
+    47→}
+    48→
+    49→interface ProblemaMat {
+    50→  id: string;
+    51→  tipo_operacion: string;
+    52→  subtipo: string;
+    53→  enunciado: string;
+    54→  operacion_vertical_esperada: string;
+    55→  respuesta_correcta: number;
+    56→  residuo: number;
+    57→  distractores: number[];
+    58→  explicacion_distractores: Record<string, string>;
+    59→  contexto_cultural: string;
+    60→  dificultad: string;
+    61→}
+    62→
+    63→interface ModuloMat {
+    64→  modulo: number;
+    65→  titulo: string;
+    66→  problemas: ProblemaMat[];
+    67→}
+    68→
+    69→interface DesafioVisual {
+    70→  nivel: number;
+    71→  tema: string;
+    72→  descripcion_visual_para_ui: string;
+    73→  pregunta_para_el_nino: string;
+    74→  opcion_correcta: string;
+    75→  opciones_incorrectas: string[];
+    76→  explicacion_pedagogica: string;
+    77→  contexto_cultural: string;
+    78→}
+    79→
+    80→interface PreguntaLectura {
+    81→  id: string;
+    82→  tipo: string;
+    83→  habilidad: string;
+    84→  pregunta: string;
+    85→  opcion_correcta: string;
+    86→  opciones_incorrectas: string[];
+    87→  explicacion_pedagogica: string;
+    88→}
+    89→
+    90→interface Lectura {
+    91→  id: string;
+    92→  titulo: string;
+    93→  tipo: string;
+    94→  texto: string;
+    95→  palabras: number;
+    96→  contexto_cultural: string;
+    97→  preguntas: PreguntaLectura[];
+    98→}
+    99→
+   100→interface PalabraOrt {
+   101→  id: string;
+   102→  categoria: string;
+   103→  item_con_error: string;
+   104→  palabra_correcta: string;
+   105→  letra_o_signo_faltante: string;
+   106→  regla_ortografica_aplicada: string;
+   107→  tipo_de_error: string;
+   108→}
+   109→
+   110→interface OracionSigno {
+   111→  id: string;
+   112→  categoria: string;
+   113→  tipo_oracion: string;
+   114→  item_con_error: string;
+   115→  oracion_correcta: string;
+   116→  letra_o_signo_faltante: string;
+   117→  regla_ortografica_aplicada: string;
+   118→  tipo_de_error: string;
+   119→}
+   120→
+   121→// ---- Componente -------------------------------------------------------------
+   122→
+   123→type TabModulo = "m1" | "m2" | "m3" | "m4";
+   124→
+   125→const ICONOS_MODULO: Record<TabModulo, typeof Calculator> = {
+   126→  m1: Calculator,
+   127→  m2: Triangle,
+   128→  m3: BookOpen,
+   129→  m4: PenLine,
+   130→};
+   131→
+   132→const COLORES_MODULO: Record<
+   133→  TabModulo,
+   134→  { bg: string; ring: string; text: string; grad: string }
+   135→> = {
+   136→  m1: {
+   137→    bg: "bg-cyan-500/15",
+   138→    ring: "ring-cyan-400/40",
+   139→    text: "text-cyan-300",
+   140→    grad: "from-cyan-500 to-blue-600",
+   141→  },
+   142→  m2: {
+   143→    bg: "bg-emerald-500/15",
+   144→    ring: "ring-emerald-400/40",
+   145→    text: "text-emerald-300",
+   146→    grad: "from-emerald-500 to-teal-600",
+   147→  },
+   148→  m3: {
+   149→    bg: "bg-orange-500/15",
+   150→    ring: "ring-orange-400/40",
+   151→    text: "text-orange-300",
+   152→    grad: "from-orange-500 to-rose-600",
+   153→  },
+   154→  m4: {
+   155→    bg: "bg-fuchsia-500/15",
+   156→    ring: "ring-fuchsia-400/40",
+   157→    text: "text-fuchsia-300",
+   158→    grad: "from-fuchsia-500 to-purple-600",
+   159→  },
+   160→};
+   161→
+   162→export function ContenidoMINEDViewer() {
+   163→  const { setVista, mostrarToast } = useApp();
+   164→  const [tab, setTab] = useState<TabModulo>("m1");
+   165→  const [manifest, setManifest] = useState<Manifest | null>(null);
+   166→  const [m1, setM1] = useState<{ problemas: ProblemaMat[]; titulo: string } | null>(null);
+   167→  const [m2, setM2] = useState<{ desafios: DesafioVisual[]; titulo: string } | null>(null);
+   168→  const [m3, setM3] = useState<{ lecturas: Lectura[]; titulo: string } | null>(null);
+   169→  const [m4, setM4] = useState<{
+   170→    palabras: PalabraOrt[];
+   171→    oraciones: OracionSigno[];
+   172→    titulo: string;
+   173→  } | null>(null);
+   174→  const [cargando, setCargando] = useState(true);
+   175→
+   176→  useEffect(() => {
+   177→    let cancelado = false;
+   178→    (async () => {
+   179→      setCargando(true);
+   180→      try {
+   181→        const [manRes, m1Res, m2Res, m3Res, m4Res] = await Promise.all([
+   182→          fetch("/contenido-mined/index.json"),
+   183→          fetch("/contenido-mined/modulo1-multiplicacion-division.json"),
+   184→          fetch("/contenido-mined/modulo2-fracciones-geometria.json"),
+   185→          fetch("/contenido-mined/modulo3-comprension-sintaxis.json"),
+   186→          fetch("/contenido-mined/modulo4-ortografia-signos.json"),
+   187→        ]);
+   188→        if (cancelado) return;
+   189→        const [man, d1, d2, d3, d4] = await Promise.all([
+   190→          manRes.json(),
+   191→          m1Res.json(),
+   192→          m2Res.json(),
+   193→          m3Res.json(),
+   194→          m4Res.json(),
+   195→        ]);
+   196→        setManifest(man);
+   197→        setM1({ problemas: d1.problemas, titulo: d1.titulo });
+   198→        setM2({ desafios: d2.desafios, titulo: d2.titulo });
+   199→        setM3({ lecturas: d3.lecturas, titulo: d3.titulo });
+   200→        setM4({
+   201→          palabras: d4.palabras,
+   202→          oraciones: d4.oraciones,
+   203→          titulo: d4.titulo,
+   204→        });
+   205→      } catch (err) {
+   206→        if (!cancelado) {
+   207→          mostrarToast(
+   208→            err instanceof Error ? err.message : "Error al cargar contenido MINED",
+   209→            "error",
+   210→          );
+   211→        }
+   212→      } finally {
+   213→        if (!cancelado) setCargando(false);
+   214→      }
+   215→    })();
+   216→    return () => {
+   217→      cancelado = true;
+   218→    };
+   219→  }, [mostrarToast]);
+   220→
+   221→  const copiarJSON = async (modulo: TabModulo) => {
+   222→    const archivo = {
+   223→      m1: "modulo1-multiplicacion-division.json",
+   224→      m2: "modulo2-fracciones-geometria.json",
+   225→      m3: "modulo3-comprension-sintaxis.json",
+   226→      m4: "modulo4-ortografia-signos.json",
+   227→    }[modulo];
+   228→    try {
+   229→      const res = await fetch(`/contenido-mined/${archivo}`);
+   230→      const text = await res.text();
+   231→      await navigator.clipboard.writeText(text);
+   232→      mostrarToast(`JSON del módulo copiado al portapapeles`, "exito");
+   233→    } catch {
+   234→      mostrarToast("No se pudo copiar el JSON", "error");
+   235→    }
+   236→  };
+   237→
+   238→  const descargarJSON = (modulo: TabModulo) => {
+   239→    const archivo = {
+   240→      m1: "modulo1-multiplicacion-division.json",
+   241→      m2: "modulo2-fracciones-geometria.json",
+   242→      m3: "modulo3-comprension-sintaxis.json",
+   243→      m4: "modulo4-ortografia-signos.json",
+   244→    }[modulo];
+   245→    const a = document.createElement("a");
+   246→    a.href = `/contenido-mined/${archivo}`;
+   247→    a.download = archivo;
+   248→    a.click();
+   249→    mostrarToast(`Descargando ${archivo}`, "info");
+   250→  };
+   251→
+   252→  if (cargando || !manifest) {
+   253→    return (
+   254→      <div className="mx-auto flex max-w-5xl items-center justify-center px-4 py-20">
+   255→        <div className="flex flex-col items-center gap-3">
+   256→          <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-400/30 border-t-cyan-400" />
+   257→          <p className="text-sm font-bold text-cyan-200">Cargando contenido MINED…</p>
+   258→        </div>
+   259→      </div>
+   260→    );
+   261→  }
+   262→
+   263→  return (
+   264→    <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+   265→      {/* Botón volver */}
+   266→      <button
+   267→        onClick={() => setVista("maestro")}
+   268→        className="subject-back-btn mb-4 inline-flex items-center gap-1.5 px-3 py-2 text-sm"
+   269→      >
+   270→        <ArrowLeft size={16} strokeWidth={2.5} /> Volver al panel
+   271→      </button>
+   272→
+   273→      {/* Hero */}
+   274→      <section className="subject-hero mb-6 rounded-3xl p-6">
+   275→        <div className="flex items-start gap-4">
+   276→          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-600 shadow-lg ring-2 ring-white/30">
+   277→            <BookOpen size={28} className="text-white" strokeWidth={2.5} />
+   278→          </div>
+   279→          <div className="flex-1 min-w-0">
+   280→            <p className="label-on-dark text-xs uppercase tracking-widest">
+   281→              {manifest.curriculum} · {manifest.grado} · {manifest.semestre}
+   282→            </p>
+   283→            <h1 className="subject-hero-title mt-1 text-3xl sm:text-4xl">
+   284→              Banco de Contenido MINED
+   285→            </h1>
+   286→            <p className="subject-hero-subtitle mt-2 text-sm sm:text-base">
+   287→              {manifest.descripcion}
+   288→            </p>
+   289→            <div className="mt-3 flex flex-wrap gap-2">
+   290→              {manifest.elementos_culturales_nicaraguenses.slice(0, 6).map((el, i) => (
+   291→                <span
+   292→                  key={i}
+   293→                  className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-cyan-100 ring-1 ring-cyan-300/30"
+   294→                >
+   295→                  {el}
+   296→                </span>
+   297→              ))}
+   298→            </div>
+   299→          </div>
+   300→        </div>
+   301→      </section>
+   302→
+   303→      {/* Tabs de módulos */}
+   304→      <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+   305→        {(["m1", "m2", "m3", "m4"] as TabModulo[]).map((m) => {
+   306→          const Icon = ICONOS_MODULO[m];
+   307→          const c = COLORES_MODULO[m];
+   308→          const activo = tab === m;
+   309→          const mod = manifest.modulos[Number(m.slice(1)) - 1];
+   310→          return (
+   311→            <button
+   312→              key={m}
+   313→              onClick={() => setTab(m)}
+   314→              className={`flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all ${
+   315→                activo
+   316→                  ? `bg-gradient-to-br ${c.grad} text-white shadow-lg ring-2 ring-white/40`
+   317→                  : `${c.bg} ${c.text} ring-1 ${c.ring} hover:scale-[1.02]`
+   318→              }`}
+   319→            >
+   320→              <Icon size={22} strokeWidth={2.5} />
+   321→              <span className="text-[11px] font-black uppercase tracking-wide">
+   322→                Módulo {m.slice(1)}
+   323→              </span>
+   324→              <span className={`text-[10px] font-semibold ${activo ? "text-white/80" : "opacity-70"}`}>
+   325→                {mod.asignatura === "Matemática" ? "Mat" : "Lengua"}
+   326→              </span>
+   327→            </button>
+   328→          );
+   329→        })}
+   330→      </div>
+   331→
+   332→      {/* Acciones de exportación */}
+   333→      <div className="mb-5 flex flex-wrap gap-2">
+   334→        <button
+   335→          onClick={() => copiarJSON(tab)}
+   336→          className="glass-on-dark inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-cyan-100 ring-1 ring-cyan-300/30 transition-all hover:scale-105"
+   337→        >
+   338→          <Copy size={13} strokeWidth={2.5} /> Copiar JSON
+   339→        </button>
+   340→        <button
+   341→          onClick={() => descargarJSON(tab)}
+   342→          className="glass-on-dark inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-cyan-100 ring-1 ring-cyan-300/30 transition-all hover:scale-105"
+   343→        >
+   344→          <Download size={13} strokeWidth={2.5} /> Descargar JSON
+   345→        </button>
+   346→      </div>
+   347→
+   348→      {/* Contenido según tab */}
+   349→      {tab === "m1" && m1 && <Modulo1View problemas={m1.problemas} titulo={m1.titulo} />}
+   350→      {tab === "m2" && m2 && <Modulo2View desafios={m2.desafios} titulo={m2.titulo} />}
+   351→      {tab === "m3" && m3 && <Modulo3View lecturas={m3.lecturas} titulo={m3.titulo} />}
+   352→      {tab === "m4" && m4 && (
+   353→        <Modulo4View palabras={m4.palabras} oraciones={m4.oraciones} titulo={m4.titulo} />
+   354→      )}
+   355→    </div>
+   356→  );
+   357→}
+   358→
+   359→// ===== Módulo 1: Multiplicación y División ===================================
+   360→
+   361→function Modulo1View({ problemas, titulo }: { problemas: ProblemaMat[]; titulo: string }) {
+   362→  const [filtro, setFiltro] = useState<"todos" | "multiplicacion" | "division">("todos");
+   363→  const filtrados = useMemo(
+   364→    () => (filtro === "todos" ? problemas : problemas.filter((p) => p.tipo_operacion === filtro)),
+   365→    [problemas, filtro],
+   366→  );
+   367→
+   368→  return (
+   369→    <section>
+   370→      <div className="challenge-board-sm mb-4 rounded-2xl p-4">
+   371→        <div className="flex flex-wrap items-center justify-between gap-3">
+   372→          <div>
+   373→            <h2 className="challenge-text text-xl">{titulo}</h2>
+   374→            <p className="label-on-dark mt-1 text-xs">
+   375→              {problemas.length} problemas · 5 multiplicación + 10 división · contexto nicaragüense
+   376→            </p>
+   377→          </div>
+   378→          <div className="flex gap-1.5">
+   379→            {(["todos", "multiplicacion", "division"] as const).map((f) => (
+   380→              <button
+   381→                key={f}
+   382→                onClick={() => setFiltro(f)}
+   383→                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+   384→                  filtro === f
+   385→                    ? "bg-cyan-400 text-slate-900"
+   386→                    : "glass-on-dark text-cyan-100 ring-1 ring-cyan-300/30"
+   387→                }`}
+   388→              >
+   389→                {f === "todos" ? "Todos" : f === "multiplicacion" ? "× Mult" : "÷ Div"}
+   390→              </button>
+   391→            ))}
+   392→          </div>
+   393→        </div>
+   394→      </div>
+   395→
+   396→      <div className="space-y-3">
+   397→        {filtrados.map((p, i) => (
+   398→          <article
+   399→            key={p.id}
+   400→            className="mission-card animate-pop rounded-2xl p-4"
+   401→            style={{ animationDelay: `${i * 40}ms` }}
+   402→          >
+   403→            <div className="flex flex-wrap items-start justify-between gap-2">
+   404→              <div className="flex items-center gap-2">
+   405→                <span
+   406→                  className={`mission-num ${
+   407→                    p.tipo_operacion === "multiplicacion"
+   408→                      ? "mission-num-math"
+   409→                      : "mission-num-lang"
+   410→                  }`}
+   411→                >
+   412→                  {p.id.split("-")[1]}
+   413→                </span>
+   414→                <div>
+   415→                  <p className="label-on-dark text-[11px] uppercase tracking-wide">
+   416→                    {p.subtipo}
+   417→                  </p>
+   418→                  <p className="text-xs font-bold text-cyan-200">
+   419→                    {p.contexto_cultural}
+   420→                  </p>
+   421→                </div>
+   422→              </div>
+   423→              <span
+   424→                className={`mission-tag ${
+   425→                  p.dificultad === "baja"
+   426→                    ? "mission-tag-cyan"
+   427→                    : p.dificultad === "media"
+   428→                      ? "mission-tag-amber"
+   429→                      : "mission-tag-fuchsia"
+   430→                }`}
+   431→              >
+   432→                {p.dificultad}
+   433→              </span>
+   434→            </div>
+   435→
+   436→            <p className="challenge-text mt-3 text-base leading-snug">{p.enunciado}</p>
+   437→
+   438→            <div className="mt-3 flex flex-wrap items-center gap-3">
+   439→              <div className="flex items-center gap-2 rounded-xl bg-slate-950/60 px-3 py-2 ring-1 ring-cyan-400/30">
+   440→                <Hash size={14} className="text-cyan-300" strokeWidth={2.5} />
+   441→                <span className="font-mono text-lg font-black text-cyan-300">
+   442→                  {p.operacion_vertical_esperada}
+   443→                </span>
+   444→              </div>
+   445→              <div className="flex items-center gap-1.5">
+   446→                <span className="label-on-dark text-[11px]">Respuesta:</span>
+   447→                <span className="rounded-lg bg-emerald-400/20 px-2.5 py-1 text-base font-black text-emerald-200 ring-1 ring-emerald-400/50">
+   448→                  {p.respuesta_correcta}
+   449→                </span>
+   450→                {p.residuo > 0 && (
+   451→                  <span className="rounded-lg bg-amber-400/20 px-2.5 py-1 text-sm font-black text-amber-200 ring-1 ring-amber-400/50">
+   452→                    residuo {p.residuo}
+   453→                  </span>
+   454→                )}
+   455→              </div>
+   456→            </div>
+   457→
+   458→            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+   459→              {p.distractores.map((d) => (
+   460→                <div
+   461→                  key={d}
+   462→                  className="rounded-lg bg-rose-500/10 px-2.5 py-1.5 ring-1 ring-rose-400/30"
+   463→                >
+   464→                  <p className="text-sm font-black text-rose-200">✗ {d}</p>
+   465→                  <p className="mt-0.5 text-[10px] leading-tight text-rose-100/70">
+   466→                    {p.explicacion_distractores[String(d)] ?? "Distractor numérico"}
+   467→                  </p>
+   468→                </div>
+   469→              ))}
+   470→            </div>
+   471→          </article>
+   472→        ))}
+   473→      </div>
+   474→    </section>
+   475→  );
+   476→}
+   477→
+   478→// ===== Módulo 2: Fracciones y Geometría =====================================
+   479→
+   480→function Modulo2View({ desafios, titulo }: { desafios: DesafioVisual[]; titulo: string }) {
+   481→  return (
+   482→    <section>
+   483→      <div className="challenge-board-sm mb-4 rounded-2xl p-4">
+   484→        <h2 className="challenge-text text-xl">{titulo}</h2>
+   485→        <p className="label-on-dark mt-1 text-xs">
+   486→          {desafios.length} desafíos visuales · 5 fracciones + 5 geometría · descripción UI incluida
+   487→        </p>
+   488→      </div>
+   489→
+   490→      <div className="space-y-3">
+   491→        {desafios.map((d, i) => {
+   492→          const esFraccion = d.tema.toLowerCase().includes("fracc");
+   493→          return (
+   494→            <article
+   495→              key={d.nivel}
+   496→              className="mission-card animate-pop rounded-2xl p-4"
+   497→              style={{ animationDelay: `${i * 40}ms` }}
+   498→            >
+   499→              <div className="flex flex-wrap items-start justify-between gap-2">
+   500→                <div className="flex items-center gap-2">
+   501→                  <span
+   502→                    className={`mission-num ${esFraccion ? "mission-num-math" : "mission-num-lang"}`}
+   503→                  >
+   504→                    {d.nivel}
+   505→                  </span>
+   506→                  <div>
+   507→                    <p className="label-on-dark text-[11px] uppercase tracking-wide">
+   508→                      {esFraccion ? "Fracciones" : "Geometría"}
+   509→                    </p>
+   510→                    <p className="text-xs font-bold text-cyan-200">{d.contexto_cultural}</p>
+   511→                  </div>
+   512→                </div>
+   513→                <span className="mission-tag mission-tag-cyan">{d.tema}</span>
+   514→              </div>
+   515→
+   516→              {/* Descripción visual para UI */}
+   517→              <div className="mt-3 rounded-xl bg-indigo-950/50 p-3 ring-1 ring-cyan-400/20">
+   518→                <p className="mb-1 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-cyan-300">
+   519→                  <Sparkles size={12} strokeWidth={2.5} /> Descripción Visual para UI
+   520→                </p>
+   521→                <p className="text-sm leading-snug text-cyan-50">{d.descripcion_visual_para_ui}</p>
+   522→              </div>
+   523→
+   524→              {/* Pregunta */}
+   525→              <p className="challenge-text mt-3 text-base leading-snug">{d.pregunta_para_el_nino}</p>
+   526→
+   527→              {/* Opciones */}
+   528→              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+   529→                <div className="challenge-option rounded-xl px-3 py-2">
+   530→                  <p className="flex items-center gap-1.5 text-sm font-black">
+   531→                    <CheckCircle2 size={14} className="text-emerald-600" strokeWidth={2.5} />
+   532→                    {d.opcion_correcta}
+   533→                  </p>
+   534→                </div>
+   535→                {d.opciones_incorrectas.map((opt) => (
+   536→                  <div
+   537→                    key={opt}
+   538→                    className="rounded-xl bg-rose-500/10 px-3 py-2 ring-1 ring-rose-400/30"
+   539→                  >
+   540→                    <p className="flex items-center gap-1.5 text-sm font-black text-rose-200">
+   541→                      <Circle size={14} className="text-rose-400" strokeWidth={2.5} />
+   542→                      {opt}
+   543→                    </p>
+   544→                  </div>
+   545→                ))}
+   546→              </div>
+   547→
+   548→              <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-tight text-amber-200/80">
+   549→                <Lightbulb size={12} className="mt-0.5 shrink-0" strokeWidth={2.5} />
+   550→                {d.explicacion_pedagogica}
+   551→              </p>
+   552→            </article>
+   553→          );
+   554→        })}
+   555→      </div>
+   556→    </section>
+   557→  );
+   558→}
+   559→
+   560→// ===== Módulo 3: Comprensión Lectora ========================================
+   561→
+   562→function Modulo3View({ lecturas, titulo }: { lecturas: Lectura[]; titulo: string }) {
+   563→  const [abierta, setAbierta] = useState<string | null>(lecturas[0]?.id ?? null);
+   564→
+   565→  return (
+   566→    <section>
+   567→      <div className="challenge-board-sm mb-4 rounded-2xl p-4">
+   568→        <h2 className="challenge-text text-xl">{titulo}</h2>
+   569→        <p className="label-on-dark mt-1 text-xs">
+   570→          {lecturas.length} lecturas · {lecturas.reduce((a, l) => a + l.preguntas.length, 0)} preguntas
+   571→          · estructura + gramática + pronombres
+   572→        </p>
+   573→      </div>
+   574→
+   575→      <div className="space-y-3">
+   576→        {lecturas.map((l, i) => {
+   577→          const abiertaEsta = abierta === l.id;
+   578→          return (
+   579→            <article
+   580→              key={l.id}
+   581→              className="mission-card animate-pop rounded-2xl p-4"
+   582→              style={{ animationDelay: `${i * 40}ms` }}
+   583→            >
+   584→              <button
+   585→                onClick={() => setAbierta(abiertaEsta ? null : l.id)}
+   586→                className="flex w-full items-center justify-between gap-2 text-left"
+   587→              >
+   588→                <div className="flex items-center gap-2">
+   589→                  <span className="mission-num mission-num-lang">{i + 1}</span>
+   590→                  <div>
+   591→                    <p className="label-on-dark text-[11px] uppercase tracking-wide">
+   592→                      {l.tipo} · {l.palabras} palabras
+   593→                    </p>
+   594→                    <h3 className="challenge-text text-lg">{l.titulo}</h3>
+   595→                  </div>
+   596→                </div>
+   597→                <span className="text-cyan-200">{abiertaEsta ? "▲" : "▼"}</span>
+   598→              </button>
+   599→
+   600→              {abiertaEsta && (
+   601→                <div className="mt-3 space-y-3">
+   602→                  {/* Texto de la lectura */}
+   603→                  <div className="rounded-xl bg-indigo-950/50 p-3 ring-1 ring-orange-400/30">
+   604→                    <p className="mb-1 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-orange-300">
+   605→                      <BookOpen size={12} strokeWidth={2.5} /> Lectura
+   606→                    </p>
+   607→                    <p className="text-sm leading-relaxed text-orange-50">{l.texto}</p>
+   608→                    <p className="mt-2 text-[10px] italic text-orange-200/60">
+   609→                      📌 {l.contexto_cultural}
+   610→                    </p>
+   611→                  </div>
+   612→
+   613→                  {/* Preguntas */}
+   614→                  {l.preguntas.map((q, qi) => (
+   615→                    <div
+   616→                      key={q.id}
+   617→                      className="rounded-xl bg-slate-950/40 p-3 ring-1 ring-cyan-400/20"
+   618→                    >
+   619→                      <div className="mb-2 flex items-center gap-2">
+   620→                        <span className="mission-num mission-num-math text-xs">{qi + 1}</span>
+   621→                        <div>
+   622→                          <p className="text-[10px] font-bold uppercase tracking-wide text-cyan-300">
+   623→                            {q.habilidad}
+   624→                          </p>
+   625→                          <p className="text-[10px] text-cyan-100/60">{q.tipo}</p>
+   626→                        </div>
+   627→                      </div>
+   628→                      <p className="challenge-text text-sm leading-snug">{q.pregunta}</p>
+   629→                      <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+   630→                        <div className="challenge-option rounded-lg px-2.5 py-1.5">
+   631→                          <p className="flex items-center gap-1.5 text-xs font-black">
+   632→                            <CheckCircle2 size={12} className="text-emerald-600" strokeWidth={2.5} />
+   633→                            {q.opcion_correcta}
+   634→                          </p>
+   635→                        </div>
+   636→                        {q.opciones_incorrectas.map((opt) => (
+   637→                          <div
+   638→                            key={opt}
+   639→                            className="rounded-lg bg-rose-500/10 px-2.5 py-1.5 ring-1 ring-rose-400/30"
+   640→                          >
+   641→                            <p className="flex items-center gap-1.5 text-xs font-black text-rose-200">
+   642→                              <Circle size={12} className="text-rose-400" strokeWidth={2.5} />
+   643→                              {opt}
+   644→                            </p>
+   645→                          </div>
+   646→                        ))}
+   647→                      </div>
+   648→                      <p className="mt-1.5 flex items-start gap-1.5 text-[10px] leading-tight text-amber-200/70">
+   649→                        <Lightbulb size={11} className="mt-0.5 shrink-0" strokeWidth={2.5} />
+   650→                        {q.explicacion_pedagogica}
+   651→                      </p>
+   652→                    </div>
+   653→                  ))}
+   654→                </div>
+   655→              )}
+   656→            </article>
+   657→          );
+   658→        })}
+   659→      </div>
+   660→    </section>
+   661→  );
+   662→}
+   663→
+   664→// ===== Módulo 4: Ortografía y Signos ========================================
+   665→
+   666→function Modulo4View({
+   667→  palabras,
+   668→  oraciones,
+   669→  titulo,
+   670→}: {
+   671→  palabras: PalabraOrt[];
+   672→  oraciones: OracionSigno[];
+   673→  titulo: string;
+   674→}) {
+   675→  const [subtab, setSubtab] = useState<"bv" | "acento" | "signos">("bv");
+   676→
+   677→  const palabrasBV = palabras.filter((p) => p.categoria === "uso_b_v");
+   678→  const palabrasAcento = palabras.filter((p) => p.categoria.startsWith("acentuacion"));
+   679→
+   680→  const CATEGORIA_ESTILO: Record<string, { label: string; color: string }> = {
+   681→    uso_b_v: { label: "B/V", color: "bg-cyan-400/20 text-cyan-200 ring-cyan-400/40" },
+   682→    acentuacion_aguda: { label: "Aguda", color: "bg-amber-400/20 text-amber-200 ring-amber-400/40" },
+   683→    acentuacion_grave: { label: "Grave", color: "bg-emerald-400/20 text-emerald-200 ring-emerald-400/40" },
+   684→    acentuacion_esdrujula: {
+   685→      label: "Esdrújula",
+   686→      color: "bg-fuchsia-400/20 text-fuchsia-200 ring-fuchsia-400/40",
+   687→    },
+   688→  };
+   689→
+   690→  return (
+   691→    <section>
+   692→      <div className="challenge-board-sm mb-4 rounded-2xl p-4">
+   693→        <h2 className="challenge-text text-xl">{titulo}</h2>
+   694→        <p className="label-on-dark mt-1 text-xs">
+   695→          {palabras.length} palabras + {oraciones.length} oraciones · B/V + acentuación + signos ¡!¿?
+   696→        </p>
+   697→      </div>
+   698→
+   699→      {/* Subtabs */}
+   700→      <div className="mb-4 flex gap-2">
+   701→        {([
+   702→          ["bv", `B/V (${palabrasBV.length})`],
+   703→          ["acento", `Acentuación (${palabrasAcento.length})`],
+   704→          ["signos", `Signos (${oraciones.length})`],
+   705→        ] as const).map(([k, lbl]) => (
+   706→          <button
+   707→            key={k}
+   708→            onClick={() => setSubtab(k)}
+   709→            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+   710→              subtab === k
+   711→                ? "bg-fuchsia-400 text-slate-900"
+   712→                : "glass-on-dark text-fuchsia-100 ring-1 ring-fuchsia-300/30"
+   713→            }`}
+   714→          >
+   715→            {lbl}
+   716→          </button>
+   717→        ))}
+   718→      </div>
+   719→
+   720→      {/* Palabras B/V */}
+   721→      {subtab === "bv" && (
+   722→        <div className="space-y-2.5">
+   723→          {palabrasBV.map((p, i) => (
+   724→            <article
+   725→              key={p.id}
+   726→              className="mission-card animate-pop rounded-xl p-3"
+   727→              style={{ animationDelay: `${i * 30}ms` }}
+   728→            >
+   729→              <div className="flex flex-wrap items-center gap-2">
+   730→                <span className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-mono text-sm font-black text-rose-200 line-through ring-1 ring-rose-400/40">
+   731→                  {p.item_con_error}
+   732→                </span>
+   733→                <span className="text-cyan-200">→</span>
+   734→                <span className="rounded-lg bg-emerald-500/20 px-2.5 py-1 font-mono text-sm font-black text-emerald-200 ring-1 ring-emerald-400/40">
+   735→                  {p.palabra_correcta}
+   736→                </span>
+   737→                <span
+   738→                  className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
+   739→                    CATEGORIA_ESTILO[p.categoria]?.color ?? ""
+   740→                  }`}
+   741→                >
+   742→                  {CATEGORIA_ESTILO[p.categoria]?.label}
+   743→                </span>
+   744→              </div>
+   745→              <p className="mt-2 text-xs leading-snug text-cyan-100">
+   746→                <span className="font-black text-amber-300">Falta: </span>
+   747→                {p.letra_o_signo_faltante}
+   748→              </p>
+   749→              <p className="mt-1 text-xs leading-snug text-cyan-100">
+   750→                <span className="font-black text-cyan-300">Regla: </span>
+   751→                {p.regla_ortografica_aplicada}
+   752→              </p>
+   753→              <p className="mt-0.5 text-[10px] text-cyan-200/60">{p.tipo_de_error}</p>
+   754→            </article>
+   755→          ))}
+   756→        </div>
+   757→      )}
+   758→
+   759→      {/* Palabras Acentuación */}
+   760→      {subtab === "acento" && (
+   761→        <div className="space-y-2.5">
+   762→          {palabrasAcento.map((p, i) => (
+   763→            <article
+   764→              key={p.id}
+   765→              className="mission-card animate-pop rounded-xl p-3"
+   766→              style={{ animationDelay: `${i * 30}ms` }}
+   767→            >
+   768→              <div className="flex flex-wrap items-center gap-2">
+   769→                <span className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-mono text-sm font-black text-rose-200 ring-1 ring-rose-400/40">
+   770→                  {p.item_con_error}
+   771→                </span>
+   772→                <span className="text-cyan-200">→</span>
+   773→                <span className="rounded-lg bg-emerald-500/20 px-2.5 py-1 font-mono text-sm font-black text-emerald-200 ring-1 ring-emerald-400/40">
+   774→                  {p.palabra_correcta}
+   775→                </span>
+   776→                <span
+   777→                  className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
+   778→                    CATEGORIA_ESTILO[p.categoria]?.color ?? ""
+   779→                  }`}
+   780→                >
+   781→                  {CATEGORIA_ESTILO[p.categoria]?.label}
+   782→                </span>
+   783→              </div>
+   784→              <p className="mt-2 text-xs leading-snug text-cyan-100">
+   785→                <span className="font-black text-amber-300">Falta: </span>
+   786→                {p.letra_o_signo_faltante}
+   787→              </p>
+   788→              <p className="mt-1 text-xs leading-snug text-cyan-100">
+   789→                <span className="font-black text-cyan-300">Regla: </span>
+   790→                {p.regla_ortografica_aplicada}
+   791→              </p>
+   792→              <p className="mt-0.5 text-[10px] text-cyan-200/60">{p.tipo_de_error}</p>
+   793→            </article>
+   794→          ))}
+   795→        </div>
+   796→      )}
+   797→
+   798→      {/* Oraciones Signos */}
+   799→      {subtab === "signos" && (
+   800→        <div className="space-y-2.5">
+   801→          {oraciones.map((o, i) => {
+   802→            const esInterrog = o.tipo_oracion === "interrogativa";
+   803→            return (
+   804→              <article
+   805→                key={o.id}
+   806→                className="mission-card animate-pop rounded-xl p-3"
+   807→                style={{ animationDelay: `${i * 30}ms` }}
+   808→              >
+   809→                <div className="flex items-center gap-2">
+   810→                  <span
+   811→                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${
+   812→                      esInterrog
+   813→                        ? "bg-cyan-400/20 text-cyan-200 ring-cyan-400/40"
+   814→                        : "bg-orange-400/20 text-orange-200 ring-orange-400/40"
+   815→                    }`}
+   816→                  >
+   817→                    {esInterrog ? "¿? Interrogativa" : "¡! Exclamativa"}
+   818→                  </span>
+   819→                </div>
+   820→                <div className="mt-2 flex flex-wrap items-center gap-2">
+   821→                  <span className="rounded-lg bg-rose-500/20 px-2.5 py-1 text-sm font-black text-rose-200 ring-1 ring-rose-400/40">
+   822→                    {o.item_con_error}
+   823→                  </span>
+   824→                  <span className="text-cyan-200">→</span>
+   825→                  <span className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-sm font-black text-emerald-200 ring-1 ring-emerald-400/40">
+   826→                    {o.oracion_correcta}
+   827→                  </span>
+   828→                </div>
+   829→                <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-200">
+   830→                  <AlertCircle size={12} className="shrink-0" strokeWidth={2.5} />
+   831→                  <span className="font-black">Falta: </span>
+   832→                  {o.letra_o_signo_faltante}
+   833→                </p>
+   834→                <p className="mt-1 text-xs leading-snug text-cyan-100">
+   835→                  <span className="font-black text-cyan-300">Regla: </span>
+   836→                  {o.regla_ortografica_aplicada}
+   837→                </p>
+   838→              </article>
+   839→            );
+   840→          })}
+   841→        </div>
+   842→      )}
+   843→    </section>
+   844→  );
+   845→}
+   846→

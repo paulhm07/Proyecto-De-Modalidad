@@ -1,0 +1,884 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState } from "react";
+     4→import {
+     5→  ArrowLeft,
+     6→  BookOpen,
+     7→  Layers,
+     8→  ListChecks,
+     9→  Plus,
+    10→  Trash2,
+    11→  Loader2,
+    12→  ChevronDown,
+    13→  Check,
+    14→  X,
+    15→} from "lucide-react";
+    16→import { api } from "@/lib/api";
+    17→import { useApp } from "@/context/AppContext";
+    18→import type { Asignatura, Desafio, Modulo, TipoDesafio } from "@/lib/types";
+    19→
+    20→type Tab = "asignaturas" | "modulos" | "desafios";
+    21→
+    22→const TIPOS: { value: TipoDesafio; label: string }[] = [
+    23→  { value: "SELECCION_MULTIPLE", label: "Selección múltiple" },
+    24→  { value: "COMPLETAR_TEXTO", label: "Completa el texto" },
+    25→  { value: "VERDADERO_FALSO", label: "Verdadero o falso" },
+    26→  { value: "ASOCIAR_PAREJAS", label: "Asocia la pareja" },
+    27→  { value: "ORDENAR_PALABRAS", label: "Ordena la oración" },
+    28→];
+    29→
+    30→export function ContentManager() {
+    31→  const { usuario, setVista, mostrarToast } = useApp();
+    32→  const [tab, setTab] = useState<Tab>("asignaturas");
+    33→
+    34→  const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
+    35→  const [asignaturaSel, setAsignaturaSel] = useState<string | null>(null);
+    36→  const [modulos, setModulos] = useState<Modulo[]>([]);
+    37→  const [moduloSel, setModuloSel] = useState<string | null>(null);
+    38→  const [desafios, setDesafios] = useState<Desafio[]>([]);
+    39→  const [cargando, setCargando] = useState(false);
+    40→
+    41→  const cargarAsignaturas = async () => {
+    42→    if (!usuario) return;
+    43→    setCargando(true);
+    44→    try {
+    45→      const data = await api.obtenerAsignaturasMaestro(usuario.id);
+    46→      setAsignaturas(data);
+    47→    } catch (err) {
+    48→      mostrarToast(err instanceof Error ? err.message : "Error al cargar asignaturas", "error");
+    49→    } finally {
+    50→      setCargando(false);
+    51→    }
+    52→  };
+    53→
+    54→  const cargarModulos = async (asignaturaId: string) => {
+    55→    setCargando(true);
+    56→    try {
+    57→      const data = await api.obtenerModulos(asignaturaId);
+    58→      setModulos(data);
+    59→    } catch (err) {
+    60→      mostrarToast(err instanceof Error ? err.message : "Error al cargar módulos", "error");
+    61→    } finally {
+    62→      setCargando(false);
+    63→    }
+    64→  };
+    65→
+    66→  const cargarDesafios = async (moduloId: string) => {
+    67→    setCargando(true);
+    68→    try {
+    69→      const data = await api.obtenerDesafios(moduloId);
+    70→      setDesafios(data);
+    71→    } catch (err) {
+    72→      mostrarToast(err instanceof Error ? err.message : "Error al cargar desafíos", "error");
+    73→    } finally {
+    74→      setCargando(false);
+    75→    }
+    76→  };
+    77→
+    78→  useEffect(() => {
+    79→    cargarAsignaturas();
+    80→    // eslint-disable-next-line react-hooks/exhaustive-deps
+    81→  }, [usuario?.id]);
+    82→
+    83→  useEffect(() => {
+    84→    if (asignaturaSel) cargarModulos(asignaturaSel);
+    85→    else setModulos([]);
+    86→  }, [asignaturaSel]);
+    87→
+    88→  useEffect(() => {
+    89→    if (moduloSel) cargarDesafios(moduloSel);
+    90→    else setDesafios([]);
+    91→  }, [moduloSel]);
+    92→
+    93→  if (!usuario) return null;
+    94→
+    95→  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    96→    { id: "asignaturas", label: "Asignaturas", icon: <BookOpen size={15} strokeWidth={2.5} /> },
+    97→    { id: "modulos", label: "Módulos", icon: <Layers size={15} strokeWidth={2.5} /> },
+    98→    { id: "desafios", label: "Desafíos", icon: <ListChecks size={15} strokeWidth={2.5} /> },
+    99→  ];
+   100→
+   101→  return (
+   102→    <div className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
+   103→      <button
+   104→        onClick={() => setVista("dashboard")}
+   105→        className="mb-4 inline-flex items-center gap-1.5 rounded-xl bg-white/70 px-3 py-2 text-sm font-bold text-stone-700 transition-all hover:scale-105 hover:bg-white"
+   106→      >
+   107→        <ArrowLeft size={16} strokeWidth={2.5} /> Volver
+   108→      </button>
+   109→
+   110→      <div className="card-premium animate-bounce-in mb-5 rounded-3xl p-5">
+   111→        <h1 className="text-2xl font-black text-stone-800">Gestión de contenido</h1>
+   112→        <p className="text-sm font-semibold text-stone-600">
+   113→          Crea asignaturas, módulos y desafíos para tus estudiantes.
+   114→        </p>
+   115→      </div>
+   116→
+   117→      {/* Tabs */}
+   118→      <div className="mb-5 flex flex-wrap gap-2">
+   119→        {tabs.map((t) => {
+   120→          const activo = tab === t.id;
+   121→          return (
+   122→            <button
+   123→              key={t.id}
+   124→              onClick={() => setTab(t.id)}
+   125→              className={`flex items-center gap-1.5 rounded-2xl px-4 py-2 text-sm font-bold transition-all hover:scale-105 ${
+   126→                activo
+   127→                  ? "bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow-md"
+   128→                  : "bg-white/70 text-stone-700 hover:bg-white"
+   129→              }`}
+   130→            >
+   131→              {t.icon}
+   132→              {t.label}
+   133→            </button>
+   134→          );
+   135→        })}
+   136→      </div>
+   137→
+   138→      {cargando && (
+   139→        <div className="mb-4 flex items-center justify-center py-4">
+   140→          <Loader2 className="h-7 w-7 animate-spin text-fuchsia-500" />
+   141→        </div>
+   142→      )}
+   143→
+   144→      {tab === "asignaturas" && (
+   145→        <AsignaturasTab
+   146→          asignaturas={asignaturas}
+   147→          usuarioId={usuario.id}
+   148→          onChange={cargarAsignaturas}
+   149→          onSeleccionar={(id) => {
+   150→            setAsignaturaSel(id);
+   151→            setTab("modulos");
+   152→          }}
+   153→          mostrarToast={mostrarToast}
+   154→        />
+   155→      )}
+   156→
+   157→      {tab === "modulos" && (
+   158→        <ModulosTab
+   159→          asignaturas={asignaturas}
+   160→          asignaturaSel={asignaturaSel}
+   161→          setAsignaturaSel={setAsignaturaSel}
+   162→          modulos={modulos}
+   163→          onChange={() => asignaturaSel && cargarModulos(asignaturaSel)}
+   164→          onSeleccionar={(id) => {
+   165→            setModuloSel(id);
+   166→            setTab("desafios");
+   167→          }}
+   168→          mostrarToast={mostrarToast}
+   169→        />
+   170→      )}
+   171→
+   172→      {tab === "desafios" && (
+   173→        <DesafiosTab
+   174→          asignaturas={asignaturas}
+   175→          asignaturaSel={asignaturaSel}
+   176→          setAsignaturaSel={(id) => {
+   177→            setAsignaturaSel(id);
+   178→            setModuloSel(null);
+   179→          }}
+   180→          modulos={modulos}
+   181→          moduloSel={moduloSel}
+   182→          setModuloSel={setModuloSel}
+   183→          desafios={desafios}
+   184→          onChange={() => moduloSel && cargarDesafios(moduloSel)}
+   185→          mostrarToast={mostrarToast}
+   186→        />
+   187→      )}
+   188→    </div>
+   189→  );
+   190→}
+   191→
+   192→/* -------------------------- Asignaturas Tab -------------------------- */
+   193→
+   194→function AsignaturasTab({
+   195→  asignaturas,
+   196→  usuarioId,
+   197→  onChange,
+   198→  onSeleccionar,
+   199→  mostrarToast,
+   200→}: {
+   201→  asignaturas: Asignatura[];
+   202→  usuarioId: string;
+   203→  onChange: () => void;
+   204→  onSeleccionar: (id: string) => void;
+   205→  mostrarToast: (m: string, t?: "exito" | "error" | "info") => void;
+   206→}) {
+   207→  const [nombre, setNombre] = useState("");
+   208→  const [descripcion, setDescripcion] = useState("");
+   209→  const [guardando, setGuardando] = useState(false);
+   210→
+   211→  const crear = async (e: React.FormEvent) => {
+   212→    e.preventDefault();
+   213→    if (!nombre.trim()) {
+   214→      mostrarToast("Escribe un nombre", "error");
+   215→      return;
+   216→    }
+   217→    setGuardando(true);
+   218→    try {
+   219→      await api.crearAsignatura(nombre.trim(), descripcion.trim() || null, usuarioId);
+   220→      mostrarToast("¡Asignatura creada!", "exito");
+   221→      setNombre("");
+   222→      setDescripcion("");
+   223→      onChange();
+   224→    } catch (err) {
+   225→      mostrarToast(err instanceof Error ? err.message : "Error al crear asignatura", "error");
+   226→    } finally {
+   227→      setGuardando(false);
+   228→    }
+   229→  };
+   230→
+   231→  const eliminar = async (id: string) => {
+   232→    if (!confirm("¿Eliminar esta asignatura? Se borrarán sus módulos y desafíos.")) return;
+   233→    try {
+   234→      await api.eliminarAsignatura(id);
+   235→      mostrarToast("Asignatura eliminada", "info");
+   236→      onChange();
+   237→    } catch (err) {
+   238→      mostrarToast(err instanceof Error ? err.message : "Error al eliminar", "error");
+   239→    }
+   240→  };
+   241→
+   242→  return (
+   243→    <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
+   244→      <form onSubmit={crear} className="card-premium rounded-3xl p-5">
+   245→        <div className="mb-3 flex items-center gap-2">
+   246→          <Plus size={16} className="text-fuchsia-500" strokeWidth={2.5} />
+   247→          <h2 className="text-base font-black text-stone-800">Nueva asignatura</h2>
+   248→        </div>
+   249→        <div className="space-y-3">
+   250→          <div>
+   251→            <label className="mb-1 block text-xs font-bold text-stone-600">Nombre *</label>
+   252→            <input
+   253→              type="text"
+   254→              value={nombre}
+   255→              onChange={(e) => setNombre(e.target.value)}
+   256→              placeholder="Ej: Matemáticas"
+   257→              maxLength={80}
+   258→              className="w-full rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 text-sm font-bold text-stone-800 outline-none transition-all placeholder:font-medium placeholder:text-stone-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   259→            />
+   260→          </div>
+   261→          <div>
+   262→            <label className="mb-1 block text-xs font-bold text-stone-600">Descripción</label>
+   263→            <textarea
+   264→              value={descripcion}
+   265→              onChange={(e) => setDescripcion(e.target.value)}
+   266→              placeholder="Breve descripción de la asignatura"
+   267→              rows={3}
+   268→              maxLength={240}
+   269→              className="w-full resize-none rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 text-sm font-medium text-stone-800 outline-none transition-all placeholder:font-medium placeholder:text-stone-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   270→            />
+   271→          </div>
+   272→          <button
+   273→            type="submit"
+   274→            disabled={guardando}
+   275→            className="btn-3d flex w-full items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-rose-500 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:scale-[1.02] disabled:opacity-60"
+   276→          >
+   277→            {guardando ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} strokeWidth={2.5} />}
+   278→            Crear asignatura
+   279→          </button>
+   280→        </div>
+   281→      </form>
+   282→
+   283→      <div>
+   284→        <div className="mb-3 flex items-center gap-2">
+   285→          <BookOpen size={16} className="text-orange-500" strokeWidth={2.5} />
+   286→          <h2 className="text-base font-black text-stone-800">
+   287→            Asignaturas creadas
+   288→          </h2>
+   289→          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">
+   290→            {asignaturas.length}
+   291→          </span>
+   292→        </div>
+   293→        {asignaturas.length === 0 ? (
+   294→          <div className="card-premium rounded-3xl p-6 text-center">
+   295→            <BookOpen size={32} className="mx-auto mb-2 text-orange-300" />
+   296→            <p className="text-sm font-bold text-stone-600">Aún no has creado asignaturas.</p>
+   297→          </div>
+   298→        ) : (
+   299→          <div className="space-y-2.5">
+   300→            {asignaturas.map((a, i) => (
+   301→              <div
+   302→                key={a.id}
+   303→                className="card-premium animate-pop flex items-center gap-3 rounded-2xl p-3.5"
+   304→                style={{ animationDelay: `${i * 50}ms` }}
+   305→              >
+   306→                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-400 to-rose-500 text-sm font-black text-white">
+   307→                  {a.nombre?.charAt(0)?.toUpperCase() ?? "📚"}
+   308→                </div>
+   309→                <div className="flex-1 min-w-0">
+   310→                  <p className="truncate text-sm font-black text-stone-800">{a.nombre}</p>
+   311→                  {a.descripcion && (
+   312→                    <p className="truncate text-xs font-medium text-stone-500">{a.descripcion}</p>
+   313→                  )}
+   314→                  <span className="mt-0.5 inline-block rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-bold text-orange-700">
+   315→                    {a._count?.modulos ?? 0} módulos
+   316→                  </span>
+   317→                </div>
+   318→                <button
+   319→                  onClick={() => onSeleccionar(a.id)}
+   320→                  className="btn-3d rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 px-3 py-2 text-xs font-bold text-white shadow-md transition-all hover:scale-105"
+   321→                >
+   322→                  Módulos
+   323→                </button>
+   324→                <button
+   325→                  onClick={() => eliminar(a.id)}
+   326→                  className="rounded-xl border-2 border-rose-200 bg-white p-2 text-rose-500 transition-all hover:scale-105 hover:bg-rose-50"
+   327→                  aria-label="Eliminar"
+   328→                >
+   329→                  <Trash2 size={14} strokeWidth={2.5} />
+   330→                </button>
+   331→              </div>
+   332→            ))}
+   333→          </div>
+   334→        )}
+   335→      </div>
+   336→    </div>
+   337→  );
+   338→}
+   339→
+   340→/* -------------------------- Módulos Tab -------------------------- */
+   341→
+   342→function ModulosTab({
+   343→  asignaturas,
+   344→  asignaturaSel,
+   345→  setAsignaturaSel,
+   346→  modulos,
+   347→  onChange,
+   348→  onSeleccionar,
+   349→  mostrarToast,
+   350→}: {
+   351→  asignaturas: Asignatura[];
+   352→  asignaturaSel: string | null;
+   353→  setAsignaturaSel: (id: string | null) => void;
+   354→  modulos: Modulo[];
+   355→  onChange: () => void;
+   356→  onSeleccionar: (id: string) => void;
+   357→  mostrarToast: (m: string, t?: "exito" | "error" | "info") => void;
+   358→}) {
+   359→  const [titulo, setTitulo] = useState("");
+   360→  const [nivelMinimo, setNivelMinimo] = useState(1);
+   361→  const [guardando, setGuardando] = useState(false);
+   362→
+   363→  const crear = async (e: React.FormEvent) => {
+   364→    e.preventDefault();
+   365→    if (!asignaturaSel) {
+   366→      mostrarToast("Selecciona una asignatura", "error");
+   367→      return;
+   368→    }
+   369→    if (!titulo.trim()) {
+   370→      mostrarToast("Escribe un título para el módulo", "error");
+   371→      return;
+   372→    }
+   373→    setGuardando(true);
+   374→    try {
+   375→      await api.crearModulo(asignaturaSel, titulo.trim(), nivelMinimo);
+   376→      mostrarToast("¡Módulo creado!", "exito");
+   377→      setTitulo("");
+   378→      setNivelMinimo(1);
+   379→      onChange();
+   380→    } catch (err) {
+   381→      mostrarToast(err instanceof Error ? err.message : "Error al crear módulo", "error");
+   382→    } finally {
+   383→      setGuardando(false);
+   384→    }
+   385→  };
+   386→
+   387→  const eliminar = async (id: string) => {
+   388→    if (!confirm("¿Eliminar este módulo y sus desafíos?")) return;
+   389→    try {
+   390→      await api.eliminarModulo(id);
+   391→      mostrarToast("Módulo eliminado", "info");
+   392→      onChange();
+   393→    } catch (err) {
+   394→      mostrarToast(err instanceof Error ? err.message : "Error al eliminar", "error");
+   395→    }
+   396→  };
+   397→
+   398→  return (
+   399→    <div>
+   400→      {/* Selector de asignatura */}
+   401→      <div className="card-premium mb-4 rounded-3xl p-4">
+   402→        <label className="mb-2 block text-xs font-bold text-stone-600">
+   403→          Asignatura
+   404→        </label>
+   405→        <div className="relative">
+   406→          <select
+   407→            value={asignaturaSel ?? ""}
+   408→            onChange={(e) => setAsignaturaSel(e.target.value || null)}
+   409→            className="w-full appearance-none rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-stone-800 outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   410→          >
+   411→            <option value="">— Selecciona una asignatura —</option>
+   412→            {asignaturas.map((a) => (
+   413→              <option key={a.id} value={a.id}>
+   414→                {a.nombre}
+   415→              </option>
+   416→            ))}
+   417→          </select>
+   418→          <ChevronDown
+   419→            size={16}
+   420→            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-stone-400"
+   421→          />
+   422→        </div>
+   423→      </div>
+   424→
+   425→      {!asignaturaSel ? (
+   426→        <div className="card-premium rounded-3xl p-8 text-center">
+   427→          <Layers size={32} className="mx-auto mb-2 text-orange-300" />
+   428→          <p className="text-sm font-bold text-stone-600">
+   429→            Selecciona una asignatura para gestionar sus módulos.
+   430→          </p>
+   431→        </div>
+   432→      ) : (
+   433→        <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
+   434→          <form onSubmit={crear} className="card-premium rounded-3xl p-5">
+   435→            <div className="mb-3 flex items-center gap-2">
+   436→              <Plus size={16} className="text-fuchsia-500" strokeWidth={2.5} />
+   437→              <h2 className="text-base font-black text-stone-800">Nuevo módulo</h2>
+   438→            </div>
+   439→            <div className="space-y-3">
+   440→              <div>
+   441→                <label className="mb-1 block text-xs font-bold text-stone-600">Título *</label>
+   442→                <input
+   443→                  type="text"
+   444→                  value={titulo}
+   445→                  onChange={(e) => setTitulo(e.target.value)}
+   446→                  placeholder="Ej: Sumas básicas"
+   447→                  maxLength={80}
+   448→                  className="w-full rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 text-sm font-bold text-stone-800 outline-none transition-all placeholder:font-medium placeholder:text-stone-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   449→                />
+   450→              </div>
+   451→              <div>
+   452→                <label className="mb-1 block text-xs font-bold text-stone-600">
+   453→                  Nivel mínimo requerido
+   454→                </label>
+   455→                <input
+   456→                  type="number"
+   457→                  min={1}
+   458→                  max={99}
+   459→                  value={nivelMinimo}
+   460→                  onChange={(e) => setNivelMinimo(Math.max(1, Number(e.target.value) || 1))}
+   461→                  className="w-full rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 text-sm font-bold text-stone-800 outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   462→                />
+   463→              </div>
+   464→              <button
+   465→                type="submit"
+   466→                disabled={guardando}
+   467→                className="btn-3d flex w-full items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-rose-500 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:scale-[1.02] disabled:opacity-60"
+   468→              >
+   469→                {guardando ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} strokeWidth={2.5} />}
+   470→                Crear módulo
+   471→              </button>
+   472→            </div>
+   473→          </form>
+   474→
+   475→          <div>
+   476→            <div className="mb-3 flex items-center gap-2">
+   477→              <Layers size={16} className="text-orange-500" strokeWidth={2.5} />
+   478→              <h2 className="text-base font-black text-stone-800">Módulos</h2>
+   479→              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">
+   480→                {modulos.length}
+   481→              </span>
+   482→            </div>
+   483→            {modulos.length === 0 ? (
+   484→              <div className="card-premium rounded-3xl p-6 text-center">
+   485→                <Layers size={32} className="mx-auto mb-2 text-orange-300" />
+   486→                <p className="text-sm font-bold text-stone-600">Aún no hay módulos en esta asignatura.</p>
+   487→              </div>
+   488→            ) : (
+   489→              <div className="space-y-2.5">
+   490→                {modulos.map((m, i) => (
+   491→                  <div
+   492→                    key={m.id}
+   493→                    className="card-premium animate-pop flex items-center gap-3 rounded-2xl p-3.5"
+   494→                    style={{ animationDelay: `${i * 50}ms` }}
+   495→                  >
+   496→                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-sm font-black text-white">
+   497→                      {m.orden || i + 1}
+   498→                    </div>
+   499→                    <div className="flex-1 min-w-0">
+   500→                      <p className="truncate text-sm font-black text-stone-800">{m.titulo}</p>
+   501→                      <div className="mt-0.5 flex flex-wrap gap-1">
+   502→                        <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+   503→                          Nivel {m.nivelMinimo}
+   504→                        </span>
+   505→                        <span className="rounded-full bg-fuchsia-100 px-1.5 py-0.5 text-[10px] font-bold text-fuchsia-700">
+   506→                          {m._count?.desafios ?? 0} desafíos
+   507→                        </span>
+   508→                      </div>
+   509→                    </div>
+   510→                    <button
+   511→                      onClick={() => onSeleccionar(m.id)}
+   512→                      className="btn-3d rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 px-3 py-2 text-xs font-bold text-white shadow-md transition-all hover:scale-105"
+   513→                    >
+   514→                      Desafíos
+   515→                    </button>
+   516→                    <button
+   517→                      onClick={() => eliminar(m.id)}
+   518→                      className="rounded-xl border-2 border-rose-200 bg-white p-2 text-rose-500 transition-all hover:scale-105 hover:bg-rose-50"
+   519→                      aria-label="Eliminar"
+   520→                    >
+   521→                      <Trash2 size={14} strokeWidth={2.5} />
+   522→                    </button>
+   523→                  </div>
+   524→                ))}
+   525→              </div>
+   526→            )}
+   527→          </div>
+   528→        </div>
+   529→      )}
+   530→    </div>
+   531→  );
+   532→}
+   533→
+   534→/* -------------------------- Desafíos Tab -------------------------- */
+   535→
+   536→function DesafiosTab({
+   537→  asignaturas,
+   538→  asignaturaSel,
+   539→  setAsignaturaSel,
+   540→  modulos,
+   541→  moduloSel,
+   542→  setModuloSel,
+   543→  desafios,
+   544→  onChange,
+   545→  mostrarToast,
+   546→}: {
+   547→  asignaturas: Asignatura[];
+   548→  asignaturaSel: string | null;
+   549→  setAsignaturaSel: (id: string | null) => void;
+   550→  modulos: Modulo[];
+   551→  moduloSel: string | null;
+   552→  setModuloSel: (id: string | null) => void;
+   553→  desafios: Desafio[];
+   554→  onChange: () => void;
+   555→  mostrarToast: (m: string, t?: "exito" | "error" | "info") => void;
+   556→}) {
+   557→  const [pregunta, setPregunta] = useState("");
+   558→  const [tipo, setTipo] = useState<TipoDesafio>("SELECCION_MULTIPLE");
+   559→  const [puntos, setPuntos] = useState(10);
+   560→  const [opciones, setOpciones] = useState<{ texto: string; esCorrecta: boolean }[]>([
+   561→    { texto: "", esCorrecta: true },
+   562→    { texto: "", esCorrecta: false },
+   563→  ]);
+   564→  const [guardando, setGuardando] = useState(false);
+   565→
+   566→  const resetForm = () => {
+   567→    setPregunta("");
+   568→    setTipo("SELECCION_MULTIPLE");
+   569→    setPuntos(10);
+   570→    setOpciones([
+   571→      { texto: "", esCorrecta: true },
+   572→      { texto: "", esCorrecta: false },
+   573→    ]);
+   574→  };
+   575→
+   576→  const actualizarOpcion = (idx: number, campo: "texto" | "esCorrecta", valor: string | boolean) => {
+   577→    setOpciones((prev) =>
+   578→      prev.map((o, i) => {
+   579→        if (i !== idx) return o;
+   580→        // Si marcamos una como correcta, las demás se vuelven incorrectas (solo 1 correcta)
+   581→        if (campo === "esCorrecta" && valor === true) {
+   582→          return { ...o, esCorrecta: true };
+   583→        }
+   584→        return { ...o, [campo]: valor };
+   585→      }),
+   586→    );
+   587→    // Asegurar única correcta
+   588→    if (campo === "esCorrecta" && valor === true) {
+   589→      setOpciones((prev) => prev.map((o, i) => (i === idx ? o : { ...o, esCorrecta: false })));
+   590→    }
+   591→  };
+   592→
+   593→  const agregarOpcion = () => {
+   594→    setOpciones((prev) => [...prev, { texto: "", esCorrecta: false }]);
+   595→  };
+   596→
+   597→  const quitarOpcion = (idx: number) => {
+   598→    setOpciones((prev) => prev.filter((_, i) => i !== idx));
+   599→  };
+   600→
+   601→  const crear = async (e: React.FormEvent) => {
+   602→    e.preventDefault();
+   603→    if (!moduloSel) {
+   604→      mostrarToast("Selecciona un módulo", "error");
+   605→      return;
+   606→    }
+   607→    if (!pregunta.trim()) {
+   608→      mostrarToast("Escribe la pregunta", "error");
+   609→      return;
+   610→    }
+   611→    const opsValidas = opciones.filter((o) => o.texto.trim().length > 0);
+   612→    if (opsValidas.length < 2) {
+   613→      mostrarToast("Agrega al menos 2 opciones con texto", "error");
+   614→      return;
+   615→    }
+   616→    const correctas = opsValidas.filter((o) => o.esCorrecta).length;
+   617→    if (correctas !== 1) {
+   618→      mostrarToast("Debe haber exactamente 1 opción correcta", "error");
+   619→      return;
+   620→    }
+   621→    setGuardando(true);
+   622→    try {
+   623→      await api.crearDesafio({
+   624→        moduloId: moduloSel,
+   625→        tipo,
+   626→        pregunta: pregunta.trim(),
+   627→        puntos,
+   628→        opciones: opsValidas.map((o) => ({ texto: o.texto.trim(), esCorrecta: o.esCorrecta })),
+   629→      });
+   630→      mostrarToast("¡Desafío creado!", "exito");
+   631→      resetForm();
+   632→      onChange();
+   633→    } catch (err) {
+   634→      mostrarToast(err instanceof Error ? err.message : "Error al crear desafío", "error");
+   635→    } finally {
+   636→      setGuardando(false);
+   637→    }
+   638→  };
+   639→
+   640→  const eliminar = async (id: string) => {
+   641→    if (!confirm("¿Eliminar este desafío?")) return;
+   642→    try {
+   643→      await api.eliminarDesafio(id);
+   644→      mostrarToast("Desafío eliminado", "info");
+   645→      onChange();
+   646→    } catch (err) {
+   647→      mostrarToast(err instanceof Error ? err.message : "Error al eliminar", "error");
+   648→    }
+   649→  };
+   650→
+   651→  return (
+   652→    <div>
+   653→      {/* Selectores */}
+   654→      <div className="card-premium mb-4 rounded-3xl p-4">
+   655→        <div className="grid gap-3 sm:grid-cols-2">
+   656→          <div>
+   657→            <label className="mb-1 block text-xs font-bold text-stone-600">Asignatura</label>
+   658→            <div className="relative">
+   659→              <select
+   660→                value={asignaturaSel ?? ""}
+   661→                onChange={(e) => {
+   662→                  setAsignaturaSel(e.target.value || null);
+   663→                  setModuloSel(null);
+   664→                }}
+   665→                className="w-full appearance-none rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-stone-800 outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   666→              >
+   667→                <option value="">— Selecciona —</option>
+   668→                {asignaturas.map((a) => (
+   669→                  <option key={a.id} value={a.id}>
+   670→                    {a.nombre}
+   671→                  </option>
+   672→                ))}
+   673→              </select>
+   674→              <ChevronDown
+   675→                size={16}
+   676→                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-stone-400"
+   677→              />
+   678→            </div>
+   679→          </div>
+   680→          <div>
+   681→            <label className="mb-1 block text-xs font-bold text-stone-600">Módulo</label>
+   682→            <div className="relative">
+   683→              <select
+   684→                value={moduloSel ?? ""}
+   685→                onChange={(e) => setModuloSel(e.target.value || null)}
+   686→                disabled={!asignaturaSel}
+   687→                className="w-full appearance-none rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-stone-800 outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-200 disabled:opacity-50"
+   688→              >
+   689→                <option value="">— Selecciona —</option>
+   690→                {modulos.map((m, i) => (
+   691→                  <option key={m.id} value={m.id}>
+   692→                    {m.titulo} (Nivel {m.nivelMinimo}) · {m._count?.desafios ?? 0} desafíos
+   693→                  </option>
+   694→                ))}
+   695→              </select>
+   696→              <ChevronDown
+   697→                size={16}
+   698→                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-stone-400"
+   699→              />
+   700→            </div>
+   701→          </div>
+   702→        </div>
+   703→      </div>
+   704→
+   705→      {!moduloSel ? (
+   706→        <div className="card-premium rounded-3xl p-8 text-center">
+   707→          <ListChecks size={32} className="mx-auto mb-2 text-orange-300" />
+   708→          <p className="text-sm font-bold text-stone-600">
+   709→            Selecciona una asignatura y un módulo para gestionar sus desafíos.
+   710→          </p>
+   711→        </div>
+   712→      ) : (
+   713→        <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
+   714→          {/* Form crear */}
+   715→          <form onSubmit={crear} className="card-premium rounded-3xl p-5">
+   716→            <div className="mb-3 flex items-center gap-2">
+   717→              <Plus size={16} className="text-fuchsia-500" strokeWidth={2.5} />
+   718→              <h2 className="text-base font-black text-stone-800">Nuevo desafío</h2>
+   719→            </div>
+   720→            <div className="space-y-3">
+   721→              <div>
+   722→                <label className="mb-1 block text-xs font-bold text-stone-600">Tipo</label>
+   723→                <div className="relative">
+   724→                  <select
+   725→                    value={tipo}
+   726→                    onChange={(e) => setTipo(e.target.value as TipoDesafio)}
+   727→                    className="w-full appearance-none rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-stone-800 outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   728→                  >
+   729→                    {TIPOS.map((t) => (
+   730→                      <option key={t.value} value={t.value}>
+   731→                        {t.label}
+   732→                      </option>
+   733→                    ))}
+   734→                  </select>
+   735→                  <ChevronDown
+   736→                    size={16}
+   737→                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-stone-400"
+   738→                  />
+   739→                </div>
+   740→              </div>
+   741→              <div>
+   742→                <label className="mb-1 block text-xs font-bold text-stone-600">Pregunta *</label>
+   743→                <textarea
+   744→                  value={pregunta}
+   745→                  onChange={(e) => setPregunta(e.target.value)}
+   746→                  placeholder="Escribe la pregunta"
+   747→                  rows={2}
+   748→                  maxLength={280}
+   749→                  className="w-full resize-none rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 text-sm font-medium text-stone-800 outline-none transition-all placeholder:font-medium placeholder:text-stone-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   750→                />
+   751→              </div>
+   752→              <div>
+   753→                <label className="mb-1 block text-xs font-bold text-stone-600">Puntos</label>
+   754→                <input
+   755→                  type="number"
+   756→                  min={1}
+   757→                  max={1000}
+   758→                  value={puntos}
+   759→                  onChange={(e) => setPuntos(Math.max(1, Number(e.target.value) || 1))}
+   760→                  className="w-full rounded-2xl border-2 border-orange-200 bg-white px-4 py-2.5 text-sm font-bold text-stone-800 outline-none transition-all focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   761→                />
+   762→              </div>
+   763→              <div>
+   764→                <div className="mb-1 flex items-center justify-between">
+   765→                  <label className="text-xs font-bold text-stone-600">
+   766→                    Opciones (marca 1 correcta)
+   767→                  </label>
+   768→                  <button
+   769→                    type="button"
+   770→                    onClick={agregarOpcion}
+   771→                    className="flex items-center gap-1 rounded-lg bg-orange-100 px-2 py-1 text-[11px] font-bold text-orange-700 transition-all hover:scale-105"
+   772→                  >
+   773→                    <Plus size={11} strokeWidth={2.5} /> Añadir
+   774→                  </button>
+   775→                </div>
+   776→                <div className="space-y-2">
+   777→                  {opciones.map((op, i) => (
+   778→                    <div key={i} className="flex items-center gap-2">
+   779→                      <button
+   780→                        type="button"
+   781→                        onClick={() => actualizarOpcion(i, "esCorrecta", true)}
+   782→                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-all ${
+   783→                          op.esCorrecta
+   784→                            ? "bg-emerald-500 text-white shadow-md"
+   785→                            : "border-2 border-orange-200 bg-white text-stone-400 hover:border-emerald-300"
+   786→                        }`}
+   787→                        aria-label="Marcar como correcta"
+   788→                      >
+   789→                        {op.esCorrecta ? <Check size={14} strokeWidth={3} /> : String.fromCharCode(65 + i)}
+   790→                      </button>
+   791→                      <input
+   792→                        type="text"
+   793→                        value={op.texto}
+   794→                        onChange={(e) => actualizarOpcion(i, "texto", e.target.value)}
+   795→                        placeholder={`Opción ${String.fromCharCode(65 + i)}`}
+   796→                        maxLength={120}
+   797→                        className="flex-1 rounded-xl border-2 border-orange-200 bg-white px-3 py-2 text-sm font-medium text-stone-800 outline-none transition-all placeholder:font-medium placeholder:text-stone-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+   798→                      />
+   799→                      {opciones.length > 2 && (
+   800→                        <button
+   801→                          type="button"
+   802→                          onClick={() => quitarOpcion(i)}
+   803→                          className="rounded-xl border-2 border-rose-200 bg-white p-2 text-rose-500 transition-all hover:scale-105 hover:bg-rose-50"
+   804→                          aria-label="Quitar opción"
+   805→                        >
+   806→                          <X size={12} strokeWidth={2.5} />
+   807→                        </button>
+   808→                      )}
+   809→                    </div>
+   810→                  ))}
+   811→                </div>
+   812→                <p className="mt-1 text-[11px] font-medium text-stone-500">
+   813→                  Debe haber exactamente 1 opción marcada como correcta.
+   814→                </p>
+   815→              </div>
+   816→              <button
+   817→                type="submit"
+   818→                disabled={guardando}
+   819→                className="btn-3d flex w-full items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-rose-500 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:scale-[1.02] disabled:opacity-60"
+   820→              >
+   821→                {guardando ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} strokeWidth={2.5} />}
+   822→                Crear desafío
+   823→              </button>
+   824→            </div>
+   825→          </form>
+   826→
+   827→          {/* Lista desafíos */}
+   828→          <div>
+   829→            <div className="mb-3 flex items-center gap-2">
+   830→              <ListChecks size={16} className="text-orange-500" strokeWidth={2.5} />
+   831→              <h2 className="text-base font-black text-stone-800">Desafíos del módulo</h2>
+   832→              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-700">
+   833→                {desafios.length}
+   834→              </span>
+   835→            </div>
+   836→            {desafios.length === 0 ? (
+   837→              <div className="card-premium rounded-3xl p-6 text-center">
+   838→                <ListChecks size={32} className="mx-auto mb-2 text-orange-300" />
+   839→                <p className="text-sm font-bold text-stone-600">
+   840→                  Aún no hay desafíos en este módulo.
+   841→                </p>
+   842→              </div>
+   843→            ) : (
+   844→              <div className="space-y-2.5">
+   845→                {desafios.map((d, i) => (
+   846→                  <div
+   847→                    key={d.id}
+   848→                    className="card-premium animate-pop rounded-2xl p-3.5"
+   849→                    style={{ animationDelay: `${i * 40}ms` }}
+   850→                  >
+   851→                    <div className="flex items-start gap-2">
+   852→                      <div className="flex-1 min-w-0">
+   853→                        <div className="mb-1 flex flex-wrap items-center gap-1.5">
+   854→                          <span className="rounded-full bg-fuchsia-100 px-2 py-0.5 text-[10px] font-bold text-fuchsia-700">
+   855→                            {TIPOS.find((t) => t.value === d.tipo)?.label ?? d.tipo}
+   856→                          </span>
+   857→                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+   858→                            {d.puntos} pts
+   859→                          </span>
+   860→                          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">
+   861→                            {d.opciones.length} opciones
+   862→                          </span>
+   863→                        </div>
+   864→                        <p className="text-sm font-bold text-stone-800 line-clamp-2">{d.pregunta}</p>
+   865→                      </div>
+   866→                      <button
+   867→                        onClick={() => eliminar(d.id)}
+   868→                        className="shrink-0 rounded-xl border-2 border-rose-200 bg-white p-2 text-rose-500 transition-all hover:scale-105 hover:bg-rose-50"
+   869→                        aria-label="Eliminar"
+   870→                      >
+   871→                        <Trash2 size={14} strokeWidth={2.5} />
+   872→                      </button>
+   873→                    </div>
+   874→                  </div>
+   875→                ))}
+   876→              </div>
+   877→            )}
+   878→          </div>
+   879→        </div>
+   880→      )}
+   881→    </div>
+   882→  );
+   883→}
+   884→
