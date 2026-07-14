@@ -16,6 +16,8 @@ import {
   Bus,
   Mail,
   Target,
+  Utensils,
+  Wind,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
@@ -521,6 +523,96 @@ function StudentDashboard() {
 
               <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-fuchsia-400 via-violet-400 to-amber-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
                 <Target size={14} strokeWidth={2.5} /> ¡Atrapar!
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
+
+          {/* Tarjeta: Alimenta al Monstruo */}
+          <button
+            onClick={() => setVista("monstruo")}
+            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+            style={{ animationDelay: "360ms" }}
+            aria-label="Jugar Alimenta al Monstruo"
+          >
+            <div className="relative z-10 flex h-full flex-col">
+              <div
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-300 via-amber-400 to-rose-500 text-2xl shadow-lg shadow-orange-500/40"
+                style={{
+                  boxShadow:
+                    "0 8px 20px -6px rgba(251,146,60,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+                }}
+              >
+                🦷
+              </div>
+
+              <h3 className="font-display text-base font-bold text-white">
+                Alimenta al Monstruo
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+                Arrastra la respuesta correcta a la boca del monstruo
+                hambriento. ¡Multiplicación y división!
+              </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="rounded-full bg-orange-400/15 px-2 py-0.5 text-orange-200">
+                  10 rondas
+                </span>
+                <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-amber-200">
+                  Multiplicación
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+                  3er grado
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-orange-400 via-amber-400 to-rose-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+                <Utensils size={14} strokeWidth={2.5} /> ¡Alimentar!
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
+
+          {/* Tarjeta: Cazador de Sílabas */}
+          <button
+            onClick={() => setVista("silabas")}
+            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+            style={{ animationDelay: "420ms" }}
+            aria-label="Jugar Cazador de Sílabas"
+          >
+            <div className="relative z-10 flex h-full flex-col">
+              <div
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-300 via-cyan-400 to-teal-400 text-2xl shadow-lg shadow-blue-500/40"
+                style={{
+                  boxShadow:
+                    "0 8px 20px -6px rgba(59,130,246,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+                }}
+              >
+                🎈
+              </div>
+
+              <h3 className="font-display text-base font-bold text-white">
+                Cazador de Sílabas
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+                Reventa los globos en el orden correcto para formar la
+                palabra. ¡Que no se te escapen!
+              </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="rounded-full bg-blue-400/15 px-2 py-0.5 text-blue-200">
+                  8 palabras
+                </span>
+                <span className="rounded-full bg-cyan-400/15 px-2 py-0.5 text-cyan-200">
+                  Sílabas
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+                  3er grado
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+                <Wind size={14} strokeWidth={2.5} /> ¡Cazar!
                 <ArrowRight size={14} strokeWidth={2.5} />
               </div>
             </div>

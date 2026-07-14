@@ -29,7 +29,9 @@ export type Vista =
   | "camion"
   | "bus"
   | "carta"
-  | "atrapa";
+  | "atrapa"
+  | "monstruo"
+  | "silabas";
 
 export interface Toast {
   id: string;

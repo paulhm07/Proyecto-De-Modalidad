@@ -19,6 +19,8 @@ import { CamionMultiplicacionesWrapper } from "@/components/CamionMultiplicacion
 import { BusLetrasWrapper } from "@/components/BusLetrasWrapper";
 import { CartaOrtografiaWrapper } from "@/components/CartaOrtografiaWrapper";
 import { AtrapaAcentoWrapper } from "@/components/AtrapaAcentoWrapper";
+import { AlimentaMonstruoWrapper } from "@/components/AlimentaMonstruoWrapper";
+import { CazadorSilabasWrapper } from "@/components/CazadorSilabasWrapper";
 import { Header } from "@/components/Header";
 import { ToastContainer } from "@/components/Toasts";
 
@@ -81,6 +83,12 @@ function Router() {
       break;
     case "atrapa":
       contenido = <AtrapaAcentoWrapper />;
+      break;
+    case "monstruo":
+      contenido = <AlimentaMonstruoWrapper />;
+      break;
+    case "silabas":
+      contenido = <CazadorSilabasWrapper />;
       break;
     default:
       contenido = <Dashboard />;
