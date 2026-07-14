@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    monster_highlight.xml
+    Drawable que resalta el área del monstruo cuando se está arrastrando
+    una respuesta hacia él. Borde naranja brillante con fondo translúcido.
+    Ubicación: res/drawable/monster_highlight.xml
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#33F59E0B" />
+    <corners android:radius="20dp" />
+    <stroke
+        android:width="4dp"
+        android:color="#F59E0B"
+        android:dashWidth="12dp"
+        android:dashGap="8dp" />
+</shape>

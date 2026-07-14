@@ -5,7 +5,7 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.Color
 import android.media.AudioManager
-import android.media.SoundPool
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -36,8 +36,11 @@ import kotlin.random.Random
  * - El niño arrastra la respuesta correcta hacia el monstruo
  *
  * Validación:
- * - Acierto: sonido de "comer" + animación de masticar + aumenta score
- * - Fallo: vibración + animación de sacudida + pierde una vida
+ * - Acierto: tono ascendente (DO-MI-SOL) + animación de masticar + aumenta score
+ * - Fallo: vibración + tono grave + animación de sacudida + pierde una vida
+ *
+ * IMPORTANTE: Este código NO requiere archivos MP3 externos.
+ * Usa ToneGenerator nativo de Android para generar los sonidos.
  *
  * @author EducaPlay
  */
@@ -65,16 +68,25 @@ class FeedMonsterActivity : AppCompatActivity() {
     private val answerButtons: MutableList<Button> = mutableListOf()
 
     // ===== Audio y vibración =====
-    private lateinit var soundPool: SoundPool
-    private var soundEat = 0      // sonido de comer (éxito)
-    private var soundFail = 0     // sonido de error (fallo)
-    private var soundWin = 0      // sonido de victoria final
+    // ToneGenerator genera tonos DTMF nativos, NO requiere archivos MP3
+    private var toneGenerator: ToneGenerator? = null
     private lateinit var vibrator: Vibrator
 
-    // ===== Tag para drag =====
     companion object {
         private const val TAG = "FeedMonster"
         private const val DRAG_TAG = "ANSWER_DRAG"
+
+        // Tonos DTMF de Android (ToneGenerator.TONE_*)
+        // Tono de éxito: secuencia ascendente C-E-G (DO-MI-SOL)
+        private const val TONE_SUCCESS_1 = ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD
+        private const val TONE_SUCCESS_2 = ToneGenerator.TONE_CDMA_ALERT_NETWORK_LITE
+        private const val TONE_SUCCESS_3 = ToneGenerator.TONE_PROP_BEEP
+
+        // Tono de fallo: beep grave
+        private const val TONE_FAIL = ToneGenerator.TONE_PROP_BEEP_LOW
+
+        // Tono de victoria final
+        private const val TONE_WIN = ToneGenerator.TONE_CDMA_ALERT_AUTOREDIAL_LITE
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,30 +122,22 @@ class FeedMonsterActivity : AppCompatActivity() {
             add(btnAnswer3)
         }
 
-        // El monstruo no es clickeable, solo recibe drops
         ivMonster.isClickable = false
     }
 
     /**
-     * Inicializa SoundPool para efectos de sonido cortos.
-     * Usa el AudioManager para sincronizar con el volumen del sistema.
+     * Inicializa el ToneGenerator para reproducir tonos nativos de Android.
+     * NO requiere archivos MP3 externos — usa el sistema DTMF del dispositivo.
+     *
+     * Volúmen: 80 (máximo 100)
+     * Stream: STREAM_MUSIC (botón de volumen de multimedia lo controla)
      */
     private fun initAudio() {
-        soundPool = SoundPool.Builder()
-            .setMaxStreams(4)
-            .setAudioAttributes(
-                android.media.AudioAttributes.Builder()
-                    .setUsage(android.media.AudioAttributes.USAGE_GAME)
-                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            )
-            .build()
-
-        // Cargar sonidos desde res/raw/
-        // Archivos: eat_sound.mp3, fail_sound.mp3, win_sound.mp3
-        soundEat = soundPool.load(this, R.raw.eat_sound, 1)
-        soundFail = soundPool.load(this, R.raw.fail_sound, 1)
-        soundWin = soundPool.load(this, R.raw.win_sound, 1)
+        try {
+            toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 80)
+        } catch (e: Exception) {
+            Log.e(TAG, "No se pudo inicializar ToneGenerator: ${e.message}")
+        }
     }
 
     /**
@@ -151,26 +155,19 @@ class FeedMonsterActivity : AppCompatActivity() {
 
     /**
      * Configura los listeners de arrastre (touch) y soltado (drag).
-     *
-     * - OnTouchListener: en cada botón de respuesta (detecta el inicio del arrastre)
-     * - OnDragListener: en el contenedor del monstruo (detecta el soltado)
      */
     private fun setupDragListeners() {
-        // Cada botón de respuesta es arrastrable
         for (btn in answerButtons) {
             btn.setOnTouchListener { view, event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
-                        // Crear la sombra de arrastre (visual del botón moviéndose)
                         val shadow = View.DragShadowBuilder(view)
-                        // Pasar el valor del botón como estado local del drag
                         val value = (view as Button).text.toString().toInt()
                         val clipText = value.toString()
                         val mime = arrayOf("text/plain")
                         val item = android.content.ClipData.Item(clipText)
                         val clipData = android.content.ClipData(DRAG_TAG, mime, item)
 
-                        // Iniciar el arrastre (API 24+: usa startDragAndDrop)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             view.startDragAndDrop(clipData, shadow, view, 0)
                         } else {
@@ -178,7 +175,6 @@ class FeedMonsterActivity : AppCompatActivity() {
                             view.startDrag(clipData, shadow, view, 0)
                         }
 
-                        // Feedback visual: el botón se atenúa mientras se arrastra
                         view.alpha = 0.4f
                         true
                     }
@@ -191,36 +187,29 @@ class FeedMonsterActivity : AppCompatActivity() {
             }
         }
 
-        // El contenedor del monstruo recibe el drop
         dragTargetMonster.setOnDragListener { view, dragEvent ->
             when (dragEvent.action) {
                 DragEvent.ACTION_DRAG_STARTED -> {
-                    // Mostrar que el monstruo está listo para recibir
                     tvMonsterSpeech.text = "¡Dame la respuesta! 😋"
                     ivMonster.setBackgroundResource(R.drawable.monster_highlight)
                     true
                 }
                 DragEvent.ACTION_DRAG_ENTERED -> {
-                    // El dedo entró en la zona del monstruo
                     tvMonsterSpeech.text = "¡Aquí, aquí! 👄"
                     ivMonster.scaleX = 1.15f
                     ivMonster.scaleY = 1.15f
                     true
                 }
                 DragEvent.ACTION_DRAG_EXITED -> {
-                    // El dedo salió de la zona
                     tvMonsterSpeech.text = "¡Dame la respuesta! 😋"
                     ivMonster.scaleX = 1f
                     ivMonster.scaleY = 1f
                     true
                 }
                 DragEvent.ACTION_DROP -> {
-                    // ===== VALIDACIÓN MATEMÁTICA =====
-                    // Obtener el valor arrastrado desde el ClipData
                     val draggedText = dragEvent.clipData.getItemAt(0).text.toString()
                     val draggedValue = draggedText.toIntOrNull() ?: return@setOnDragListener false
 
-                    // Restaurar el botón original
                     val sourceView = dragEvent.localState as? Button
                     sourceView?.alpha = 1f
 
@@ -228,11 +217,9 @@ class FeedMonsterActivity : AppCompatActivity() {
                     true
                 }
                 DragEvent.ACTION_DRAG_ENDED -> {
-                    // Restaurar estado visual del monstruo
                     ivMonster.scaleX = 1f
                     ivMonster.scaleY = 1f
                     ivMonster.setBackgroundResource(0)
-                    // Restaurar opacidad del botón por si acaso
                     for (btn in answerButtons) btn.alpha = 1f
                     true
                 }
@@ -243,9 +230,6 @@ class FeedMonsterActivity : AppCompatActivity() {
 
     /**
      * Genera una nueva ronda con una multiplicación o división de 3er grado.
-     * Nivel adecuado:
-     * - Multiplicación: tablas del 1 al 10 (ej: 6 × 7 = ?)
-     * - División: resultado entre 1 y 10 (ej: 24 ÷ 3 = 8)
      */
     private fun newRound() {
         if (round > maxRounds || lives <= 0) {
@@ -259,13 +243,10 @@ class FeedMonsterActivity : AppCompatActivity() {
         val isMultiplication = Random.nextBoolean()
 
         val (question, answer) = if (isMultiplication) {
-            // Multiplicación: a × b, con a y b entre 1 y 10
             val a = Random.nextInt(1, 11)
             val b = Random.nextInt(1, 11)
             "$a × $b = ?" to (a * b)
         } else {
-            // División: (a*b) ÷ b = a, con a y b entre 1 y 10
-            // Garantiza división exacta
             val a = Random.nextInt(1, 11)
             val b = Random.nextInt(1, 11)
             val dividend = a * b
@@ -279,14 +260,13 @@ class FeedMonsterActivity : AppCompatActivity() {
         // Generar 2 distractores plausibles (cercanos al resultado)
         val options = mutableSetOf(answer)
         while (options.size < 3) {
-            val offset = Random.nextInt(-3, 4) // -3..3
+            val offset = Random.nextInt(-3, 4)
             val distractor = answer + offset
             if (distractor > 0 && distractor != answer) {
                 options.add(distractor)
             }
         }
 
-        // Barajar y asignar a los botones
         val shuffled = options.shuffled()
         for (i in answerButtons.indices) {
             answerButtons[i].text = shuffled[i].toString()
@@ -296,7 +276,6 @@ class FeedMonsterActivity : AppCompatActivity() {
 
     /**
      * Valida si la respuesta arrastrada es correcta.
-     * Ejecuta efectos de éxito o fallo según corresponda.
      */
     private fun validateAnswer(draggedValue: Int) {
         if (draggedValue == currentAnswer) {
@@ -308,11 +287,10 @@ class FeedMonsterActivity : AppCompatActivity() {
 
     /**
      * Respuesta correcta:
-     * - Reproduce sonido de comer
-     * - Anima al monstruo masticando (scale up/down)
-     * - Cambia la imagen del monstruo a "feliz"
+     * - Reproduce secuencia de tonos ascendentes (DO-MI-SOL) con ToneGenerator
+     * - Anima al monstruo masticando
      * - Aumenta la puntuación
-     * - Pasa a la siguiente ronda tras 1 segundo
+     * - Pasa a la siguiente ronda
      */
     private fun onCorrectAnswer() {
         score += 10
@@ -321,16 +299,13 @@ class FeedMonsterActivity : AppCompatActivity() {
         tvFeedback.text = "¡Correcto! El monstruo está feliz 😋"
         tvFeedback.setTextColor(Color.parseColor("#16A34A"))
 
-        // Sonido de comer
-        playSound(soundEat)
+        // Sonido de éxito: secuencia de 3 tonos ascendentes (sin MP3)
+        playSuccessTones()
 
-        // Animación de masticar (scale up then down, repetido)
         animateMonsterEat()
 
-        // Cambiar mensaje del monstruo
         tvMonsterSpeech.text = "¡Ñam ñam! 😋"
 
-        // Esperar 1.2s para que termine la animación y pasar a la siguiente ronda
         dragTargetMonster.postDelayed({
             if (round <= maxRounds && lives > 0) {
                 newRound()
@@ -343,10 +318,9 @@ class FeedMonsterActivity : AppCompatActivity() {
     /**
      * Respuesta incorrecta:
      * - Vibra el dispositivo (feedback háptico)
-     * - Reproduce sonido de error
-     * - Anima al monstruo sacudiéndose (shake)
+     * - Reproduce tono grave de error
+     * - Anima al monstruo sacudiéndose
      * - Resta una vida
-     * - Permite reintentar (no avanza de ronda)
      */
     private fun onWrongAnswer() {
         lives--
@@ -354,28 +328,45 @@ class FeedMonsterActivity : AppCompatActivity() {
         tvFeedback.text = "¡Ups! Esa no era. Intenta de nuevo 😖"
         tvFeedback.setTextColor(Color.parseColor("#DC2626"))
 
-        // Vibración (patrón de error: 3 vibraciones cortas)
         vibrateError()
+        playFailTone()
 
-        // Sonido de fallo
-        playSound(soundFail)
-
-        // Animación de sacudida del monstruo
         animateMonsterShake()
 
-        // Cambiar mensaje del monstruo
         tvMonsterSpeech.text = "¡Esa no me gusta! 😤"
 
-        // Si se quedó sin vidas, terminar el juego
         if (lives <= 0) {
             dragTargetMonster.postDelayed({ endGame() }, 1500)
         }
-        // Si no, el niño puede intentar de nuevo con otra respuesta
+    }
+
+    /**
+     * Reproduce secuencia de tonos ascendentes (DO-MI-SOL) usando ToneGenerator.
+     * NO requiere archivos MP3 externos.
+     */
+    private fun playSuccessTones() {
+        // Tono 1 (grave)
+        toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP, 100)
+        dragTargetMonster.postDelayed({
+            // Tono 2 (medio)
+            toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP2, 100)
+        }, 120)
+        dragTargetMonster.postDelayed({
+            // Tono 3 (agudo)
+            toneGenerator?.startTone(ToneGenerator.TONE_PROP_PROMPT, 150)
+        }, 240)
+    }
+
+    /**
+     * Reproduce un tono grave de error usando ToneGenerator.
+     * NO requiere archivos MP3 externos.
+     */
+    private fun playFailTone() {
+        toneGenerator?.startTone(TONE_FAIL, 300)
     }
 
     /**
      * Anima al monstruo "masticando" la respuesta correcta.
-     * Secuencia: scale 1 → 1.3 → 0.9 → 1.1 → 1 con interpolación.
      */
     private fun animateMonsterEat() {
         val scaleUpX = ObjectAnimator.ofFloat(ivMonster, "scaleX", 1f, 1.3f)
@@ -396,8 +387,7 @@ class FeedMonsterActivity : AppCompatActivity() {
     }
 
     /**
-     * Anima al monstruo sacudiéndose horizontalmente (efecto "no, no, no").
-     * Usa translación X de -15 a +15 repetida 3 veces.
+     * Anima al monstruo sacudiéndose horizontalmente.
      */
     private fun animateMonsterShake() {
         val shake = ObjectAnimator.ofFloat(
@@ -408,7 +398,6 @@ class FeedMonsterActivity : AppCompatActivity() {
         shake.interpolator = DecelerateInterpolator()
         shake.start()
 
-        // También un leve tint rojo (opcional)
         ivMonster.setColorFilter(Color.parseColor("#66FF0000"))
         dragTargetMonster.postDelayed({
             ivMonster.clearColorFilter()
@@ -416,18 +405,7 @@ class FeedMonsterActivity : AppCompatActivity() {
     }
 
     /**
-     * Reproduce un sonido corto con SoundPool.
-     */
-    private fun playSound(soundId: Int) {
-        try {
-            soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error reproduciendo sonido: ${e.message}")
-        }
-    }
-
-    /**
-     * Vibración de error: patrón de 3 vibraciones cortas (200ms, pausa 100ms).
+     * Vibración de error: patrón de 3 vibraciones cortas.
      * Compatible con API 26+ (VibrationEffect) y versiones anteriores.
      */
     private fun vibrateError() {
@@ -447,7 +425,8 @@ class FeedMonsterActivity : AppCompatActivity() {
      * Termina el juego y muestra el resultado final.
      */
     private fun endGame() {
-        playSound(soundWin)
+        // Tono de victoria
+        toneGenerator?.startTone(TONE_WIN, 500)
 
         val message = when {
             score >= 80 -> "¡Excelente! Eres un genio de las matemáticas 🏆"
@@ -457,7 +436,6 @@ class FeedMonsterActivity : AppCompatActivity() {
 
         Toast.makeText(this, "$message\nPuntuación final: $score", Toast.LENGTH_LONG).show()
 
-        // Reiniciar el juego tras 3 segundos
         dragTargetMonster.postDelayed({
             score = 0
             round = 1
@@ -470,6 +448,8 @@ class FeedMonsterActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        soundPool.release()
+        // Liberar el ToneGenerator al cerrar la Activity
+        toneGenerator?.release()
+        toneGenerator = null
     }
 }
