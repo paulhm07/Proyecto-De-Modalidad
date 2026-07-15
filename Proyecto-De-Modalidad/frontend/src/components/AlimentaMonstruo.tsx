@@ -283,7 +283,15 @@ export function AlimentaMonstruo() {
     return (
       <div className="relative flex min-h-[80vh] flex-col items-center justify-center bg-gradient-to-b from-amber-50 via-orange-50 to-rose-50 p-6 text-center">
         {confettiOn && <Confetti />}
-        <div className="text-7xl">🏆</div>
+        <div className="flex items-end justify-center gap-2">
+          <div className="text-6xl">🏆</div>
+          <img
+            src="/game-assets/dona_chispas.png"
+            alt="Dona de recompensa"
+            className="h-16 w-16 object-contain mix-blend-multiply"
+            draggable={false}
+          />
+        </div>
         <h2 className="mt-4 font-display text-2xl font-bold text-orange-700">
           ¡Juego terminado!
         </h2>
@@ -349,9 +357,9 @@ export function AlimentaMonstruo() {
           {fraseMonstruo}
         </div>
 
-        {/* Monstruo emoji */}
+        {/* Monstruo (recurso gráfico claymorphic) */}
         <div
-          className={`text-[110px] leading-none transition-transform ${
+          className={`relative transition-transform ${
             monstruoAnim === "comiendo"
               ? "animate-[eat_0.6s_ease]"
               : monstruoAnim === "sacudiendo"
@@ -360,7 +368,21 @@ export function AlimentaMonstruo() {
           }`}
           style={{ filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.2))" }}
         >
-          {monstruoAnim === "sacudiendo" ? "😤" : "🦷"}
+          <img
+            src="/game-assets/monstruo_hambriento.png"
+            alt="Monstruo morado hambriento con la boca abierta"
+            className="h-44 w-44 select-none object-contain mix-blend-multiply sm:h-48 sm:w-48"
+            draggable={false}
+          />
+          {/* Dona de recompensa que salta al comer correctamente */}
+          {monstruoAnim === "comiendo" && (
+            <img
+              src="/game-assets/dona_chispas.png"
+              alt="Dona de recompensa"
+              className="pointer-events-none absolute -right-4 -top-2 h-14 w-14 animate-[eat_0.6s_ease] object-contain mix-blend-multiply"
+              draggable={false}
+            />
+          )}
         </div>
 
         {/* Indicador de selección */}
@@ -378,8 +400,8 @@ export function AlimentaMonstruo() {
         </p>
       </div>
 
-      {/* Botones de respuesta (DRAG SOURCE) */}
-      <div className="flex justify-center gap-3 px-4 pb-4">
+      {/* Galletas de respuesta (DRAG SOURCE) */}
+      <div className="flex justify-center gap-4 px-4 pb-4">
         {pregunta.opciones.map((op, i) => (
           <button
             key={`${ronda}-${i}`}
@@ -387,15 +409,25 @@ export function AlimentaMonstruo() {
             onDragStart={(e) => onDragStart(e, op)}
             onDragEnd={onDragEnd}
             onClick={() => onClickBoton(op)}
-            className={`flex h-20 w-24 select-none items-center justify-center rounded-2xl bg-gradient-to-b from-violet-400 to-violet-600 text-3xl font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95 ${
-              botonSeleccionado === op ? "ring-4 ring-amber-400" : ""
+            className={`group relative flex h-28 w-28 select-none items-center justify-center rounded-full transition-all hover:scale-105 hover:-rotate-3 active:scale-95 ${
+              botonSeleccionado === op ? "scale-105 ring-4 ring-amber-400" : ""
             }`}
             style={{
               boxShadow:
-                "0 5px 0 #5b21b6, 0 8px 16px rgba(0,0,0,0.2)",
+                "0 6px 0 rgba(180,83,9,0.35), 0 10px 18px rgba(0,0,0,0.18)",
             }}
+            aria-label={`Galleta con el número ${op}. Arrastra al monstruo.`}
           >
-            {op}
+            <img
+              src="/game-assets/galleta_chispas.png"
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full rounded-full object-cover mix-blend-multiply"
+              draggable={false}
+            />
+            <span className="relative z-10 font-display text-3xl font-black text-amber-950 drop-shadow-[0_1px_2px_rgba(255,255,255,0.85)]">
+              {op}
+            </span>
           </button>
         ))}
       </div>

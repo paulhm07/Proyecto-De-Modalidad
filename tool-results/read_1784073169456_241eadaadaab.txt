@@ -1,0 +1,658 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState } from "react";
+     4→import {
+     5→  Sparkles,
+     6→  Trophy,
+     7→  Star,
+     8→  Play,
+     9→  Loader2,
+    10→  BookOpen,
+    11→  ArrowRight,
+    12→  ChevronRight,
+    13→  Store,
+    14→  Gamepad2,
+    15→  Truck,
+    16→  Bus,
+    17→  Mail,
+    18→  Target,
+    19→  Utensils,
+    20→  Wind,
+    21→} from "lucide-react";
+    22→import { api } from "@/lib/api";
+    23→import { useApp } from "@/context/AppContext";
+    24→import { AvatarSVG } from "@/components/AvatarSVG";
+    25→import { ParentDashboard } from "@/components/ParentDashboard";
+    26→import { TeacherDashboard } from "@/components/TeacherDashboard";
+    27→import { RunicCoin } from "@/components/RunicCoin";
+    28→import { EssenceCrystal } from "@/components/EssenceCrystal";
+    29→import { FuelTubeXP } from "@/components/FuelTubeXP";
+    30→import type { Asignatura } from "@/lib/types";
+    31→
+    32→export function Dashboard() {
+    33→  const { usuario } = useApp();
+    34→
+    35→  if (usuario?.rol === "PADRE") return <ParentDashboard />;
+    36→  if (usuario?.rol === "MAESTRO") return <TeacherDashboard />;
+    37→
+    38→  return <StudentDashboard />;
+    39→}
+    40→
+    41→function StudentDashboard() {
+    42→  const { usuario, setVista, setAsignaturaId, mostrarToast } = useApp();
+    43→  const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
+    44→  const [cargando, setCargando] = useState(true);
+    45→
+    46→  useEffect(() => {
+    47→    let cancelado = false;
+    48→    (async () => {
+    49→      setCargando(true);
+    50→      try {
+    51→        const data = await api.obtenerAsignaturas();
+    52→        if (!cancelado) setAsignaturas(data);
+    53→      } catch (err) {
+    54→        if (!cancelado) {
+    55→          const msg = err instanceof Error ? err.message : "Error al cargar asignaturas";
+    56→          mostrarToast(msg, "error");
+    57→        }
+    58→      } finally {
+    59→        if (!cancelado) setCargando(false);
+    60→      }
+    61→    })();
+    62→    return () => {
+    63→      cancelado = true;
+    64→    };
+    65→  }, [mostrarToast]);
+    66→
+    67→  if (!usuario) return null;
+    68→
+    69→  const nivel = Math.floor(usuario.experiencia / 100) + 1;
+    70→  const xpEnNivel = usuario.experiencia % 100;
+    71→
+    72→  const jugarAsignatura = (a: Asignatura) => {
+    73→    setAsignaturaId(a.id);
+    74→    setVista("asignatura");
+    75→  };
+    76→
+    77→  // Determine subject accent: Math = cyan, Language = coral-gold
+    78→  const esMatematicas = (nombre: string) =>
+    79→    /matem/i.test(nombre ?? "");
+    80→
+    81→  return (
+    82→    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+    83→      {/* Greeting */}
+    84→      <div className="mb-6 animate-pop">
+    85→        <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">
+    86→          ¡Hola,{" "}
+    87→          <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-violet-300 bg-clip-text text-transparent text-glow-cyan">
+    88→            {usuario.nombre}
+    89→          </span>
+    90→          ! 👋
+    91→        </h1>
+    92→        <p className="mt-1.5 text-sm font-semibold text-cyan-100/70">
+    93→          ¿Listo para una nueva aventura de aprendizaje entre las estrellas?
+    94→        </p>
+    95→      </div>
+    96→
+    97→      {/* Bento grid — avatar LEFT, progress + fuel tube RIGHT */}
+    98→      <div className="grid gap-4 lg:grid-cols-3">
+    99→        {/* ===== AVATAR PANEL (left) ===== */}
+   100→        <div className="glass-panel animate-bounce-in rounded-3xl p-5 lg:col-span-1">
+   101→          <div className="relative z-10">
+   102→            {/* Avatar stage */}
+   103→            <div className="relative mx-auto mb-4 flex h-48 w-48 items-center justify-center">
+   104→              {/* Glowing ring behind avatar */}
+   105→              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-400/30 via-violet-500/25 to-rose-400/25 blur-2xl animate-glow" />
+   106→              <div className="absolute inset-2 rounded-full border border-cyan-300/40 bg-violet-950/40 backdrop-blur-sm" />
+   107→              <div className="absolute inset-0 rounded-full" style={{
+   108→                background: "conic-gradient(from 0deg, rgba(34,211,238,0.5), rgba(139,92,246,0.4), rgba(251,113,133,0.4), rgba(34,211,238,0.5))",
+   109→                mask: "radial-gradient(transparent 62%, black 64%)",
+   110→                WebkitMask: "radial-gradient(transparent 62%, black 64%)",
+   111→                opacity: 0.6,
+   112→              }} />
+   113→              <AvatarSVG config={usuario.avatarConfig} size={150} className="relative z-10 animate-float" />
+   114→            </div>
+   115→
+   116→            <h2 className="text-center font-display text-xl font-bold text-white">
+   117→              {usuario.nombre}
+   118→            </h2>
+   119→            <p className="mt-0.5 text-center text-xs font-semibold text-cyan-200/60">
+   120→              Aprendiz del Cristal del Saber
+   121→            </p>
+   122→
+   123→            {/* Wallet: Runic Coin + Essence Crystal */}
+   124→            <div className="mt-4 grid grid-cols-2 gap-2">
+   125→              <div className="glass-soft flex items-center justify-center gap-2 rounded-2xl px-3 py-2.5">
+   126→                <RunicCoin size={26} className="animate-float" />
+   127→                <span className="font-display text-lg font-bold text-amber-200 text-glow-gold">
+   128→                  {usuario.monedas}
+   129→                </span>
+   130→              </div>
+   131→              <div className="glass-soft flex items-center justify-center gap-2 rounded-2xl px-3 py-2.5">
+   132→                <EssenceCrystal size={24} tint="violet" />
+   133→                <span className="font-display text-lg font-bold text-violet-200">
+   134→                  {usuario.gemas}
+   135→                </span>
+   136→              </div>
+   137→            </div>
+   138→
+   139→            <button
+   140→              onClick={() => setVista("avatar")}
+   141→              className="btn-cosmic mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 py-2.5 text-sm font-bold text-white transition-all hover:scale-[1.02]"
+   142→            >
+   143→              <Sparkles size={16} strokeWidth={2.5} /> Personalizar mi avatar
+   144→            </button>
+   145→          </div>
+   146→        </div>
+   147→
+   148→        {/* ===== PROGRESS PANEL (right) — fuel tube XP ===== */}
+   149→        <div className="glass-panel animate-bounce-in rounded-3xl p-5 lg:col-span-2" style={{ animationDelay: "80ms" }}>
+   150→          <div className="relative z-10">
+   151→            <div className="flex items-center justify-between">
+   152→              <h2 className="font-display text-xl font-bold text-white">Mi progreso</h2>
+   153→              <span className="flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs font-bold text-cyan-200">
+   154→                <Star size={12} fill="currentColor" strokeWidth={0} /> Nivel {nivel}
+   155→              </span>
+   156→            </div>
+   157→
+   158→            {/* Stat boxes */}
+   159→            <div className="mt-4 grid grid-cols-3 gap-2.5">
+   160→              <StatBox
+   161→                label="Puntos"
+   162→                value={usuario.puntos}
+   163→                icon={<Star size={16} strokeWidth={2.5} />}
+   164→                tint="amber"
+   165→              />
+   166→              <StatBox
+   167→                label="Experiencia"
+   168→                value={usuario.experiencia}
+   169→                icon={<Trophy size={16} strokeWidth={2.5} />}
+   170→                tint="rose"
+   171→              />
+   172→              <StatBox
+   173→                label="Nivel"
+   174→                value={nivel}
+   175→                icon={<Sparkles size={16} strokeWidth={2.5} />}
+   176→                tint="cyan"
+   177→              />
+   178→            </div>
+   179→
+   180→            {/* Fuel tube XP */}
+   181→            <div className="mt-5">
+   182→              <FuelTubeXP
+   183→                value={xpEnNivel}
+   184→                max={100}
+   185→                label={`Energía para Nivel ${nivel + 1}`}
+   186→                targetLabel="XP"
+   187→              />
+   188→            </div>
+   189→
+   190→            {/* Action buttons */}
+   191→            <div className="mt-5 flex flex-wrap gap-2">
+   192→              <button
+   193→                onClick={() => setVista("ranking")}
+   194→                className="btn-cosmic flex items-center gap-1.5 rounded-2xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-200 transition-all hover:scale-105 hover:bg-cyan-400/20"
+   195→              >
+   196→                <Trophy size={15} strokeWidth={2.5} /> Ver ranking
+   197→              </button>
+   198→              <button
+   199→                onClick={() => setVista("perfil")}
+   200→                className="btn-cosmic flex items-center gap-1.5 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-2 text-sm font-bold text-amber-200 transition-all hover:scale-105 hover:bg-amber-400/20"
+   201→              >
+   202→                <Sparkles size={15} strokeWidth={2.5} /> Mis medallas
+   203→              </button>
+   204→            </div>
+   205→          </div>
+   206→        </div>
+   207→      </div>
+   208→
+   209→      {/* ===== SUBJECTS (adventures) ===== */}
+   210→      <div className="mt-8">
+   211→        <div className="mb-4 flex items-center gap-2">
+   212→          <BookOpen size={20} className="text-cyan-300" strokeWidth={2.5} />
+   213→          <h2 className="font-display text-xl font-bold text-white">Mis aventuras</h2>
+   214→        </div>
+   215→
+   216→        {cargando ? (
+   217→          <div className="flex items-center justify-center py-10">
+   218→            <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
+   219→          </div>
+   220→        ) : asignaturas.length === 0 ? (
+   221→          <div className="glass-panel rounded-3xl p-8 text-center">
+   222→            <p className="font-display text-base font-semibold text-cyan-100/70">
+   223→              Aún no hay aventuras disponibles. ¡Vuelve pronto!
+   224→            </p>
+   225→          </div>
+   226→        ) : (
+   227→          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+   228→            {asignaturas.map((a, i) => {
+   229→              const mat = esMatematicas(a.nombre);
+   230→              const accent = mat ? "cyan" : "coral";
+   231→              return (
+   232→                <div
+   233→                  key={a.id}
+   234→                  className="glass-panel animate-pop group relative rounded-3xl p-5 transition-all hover:scale-[1.02]"
+   235→                  style={{ animationDelay: `${i * 70}ms` }}
+   236→                >
+   237→                  <div className="relative z-10 flex h-full flex-col">
+   238→                    {/* 3D-ish initial badge */}
+   239→                    <div
+   240→                      className={`mb-3 flex h-12 w-12 items-center justify-center rounded-2xl font-display text-xl font-bold text-white shadow-lg ${
+   241→                        mat
+   242→                          ? "bg-gradient-to-br from-cyan-300 to-cyan-600 shadow-cyan-500/40"
+   243→                          : "bg-gradient-to-br from-amber-300 via-rose-400 to-rose-500 shadow-rose-500/40"
+   244→                      }`}
+   245→                      style={{
+   246→                        boxShadow: mat
+   247→                          ? "0 8px 20px -6px rgba(34,211,238,0.6), inset 0 2px 4px rgba(255,255,255,0.5)"
+   248→                          : "0 8px 20px -6px rgba(251,113,133,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+   249→                      }}
+   250→                    >
+   251→                      {a.nombre?.charAt(0)?.toUpperCase() ?? "📚"}
+   252→                    </div>
+   253→
+   254→                    <h3 className="font-display text-base font-bold text-white">{a.nombre}</h3>
+   255→                    {a.descripcion && (
+   256→                      <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+   257→                        {a.descripcion}
+   258→                      </p>
+   259→                    )}
+   260→
+   261→                    <div className="mt-2 flex items-center gap-2 text-xs font-bold">
+   262→                      <span
+   263→                        className={`rounded-full px-2 py-0.5 ${
+   264→                          mat
+   265→                            ? "bg-cyan-400/15 text-cyan-200"
+   266→                            : "bg-rose-400/15 text-rose-200"
+   267→                        }`}
+   268→                      >
+   269→                        {a._count?.modulos ?? 0} módulos
+   270→                      </span>
+   271→                      <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+   272→                        {accent === "cyan" ? "Lógica" : "Creatividad"}
+   273→                      </span>
+   274→                    </div>
+   275→
+   276→                    <button
+   277→                      onClick={() => jugarAsignatura(a)}
+   278→                      className={`btn-cosmic mt-4 flex items-center justify-center gap-1.5 rounded-2xl py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02] ${
+   279→                        mat
+   280→                          ? "bg-gradient-to-r from-cyan-400 via-cyan-500 to-violet-500"
+   281→                          : "bg-gradient-to-r from-amber-400 via-rose-400 to-rose-500"
+   282→                      }`}
+   283→                    >
+   284→                      <Play size={14} fill="white" strokeWidth={0} /> Jugar
+   285→                      <ArrowRight size={14} strokeWidth={2.5} />
+   286→                    </button>
+   287→                  </div>
+   288→                </div>
+   289→              );
+   290→            })}
+   291→          </div>
+   292→        )}
+   293→      </div>
+   294→
+   295→      {/* ===== MINI-JUEGOS ===== */}
+   296→      <div className="mt-8">
+   297→        <div className="mb-4 flex items-center gap-2">
+   298→          <Gamepad2 size={20} className="text-amber-300" strokeWidth={2.5} />
+   299→          <h2 className="font-display text-xl font-bold text-white">Mini-juegos</h2>
+   300→        </div>
+   301→
+   302→        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+   303→          {/* Tarjeta: La Pulpería de Fracciones */}
+   304→          <button
+   305→            onClick={() => setVista("pulperia")}
+   306→            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+   307→            style={{ animationDelay: "60ms" }}
+   308→            aria-label="Jugar La Pulpería de Fracciones"
+   309→          >
+   310→            <div className="relative z-10 flex h-full flex-col">
+   311→              {/* Badge con emoji */}
+   312→              <div
+   313→                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 via-orange-400 to-rose-500 text-2xl shadow-lg shadow-orange-500/40"
+   314→                style={{
+   315→                  boxShadow:
+   316→                    "0 8px 20px -6px rgba(251,146,60,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+   317→                }}
+   318→              >
+   319→                🍉
+   320→              </div>
+   321→
+   322→              <h3 className="font-display text-base font-bold text-white">
+   323→                La Pulpería de Fracciones
+   324→              </h3>
+   325→              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+   326→                Atiende a los clientes partiendo sandías, pasteles y piñas en fracciones iguales.
+   327→              </p>
+   328→
+   329→              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+   330→                <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-amber-200">
+   331→                  10 niveles
+   332→                </span>
+   333→                <span className="rounded-full bg-rose-400/15 px-2 py-0.5 text-rose-200">
+   334→                  Fracciones
+   335→                </span>
+   336→                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+   337→                  3er grado
+   338→                </span>
+   339→              </div>
+   340→
+   341→              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+   342→                <Store size={14} strokeWidth={2.5} /> ¡Vender!
+   343→                <ArrowRight size={14} strokeWidth={2.5} />
+   344→              </div>
+   345→            </div>
+   346→          </button>
+   347→
+   348→          {/* Tarjeta: El Camión de las Multiplicaciones */}
+   349→          <button
+   350→            onClick={() => setVista("camion")}
+   351→            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+   352→            style={{ animationDelay: "120ms" }}
+   353→            aria-label="Jugar El Camión de las Multiplicaciones"
+   354→          >
+   355→            <div className="relative z-10 flex h-full flex-col">
+   356→              {/* Badge con emoji */}
+   357→              <div
+   358→                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-300 via-emerald-400 to-lime-500 text-2xl shadow-lg shadow-emerald-500/40"
+   359→                style={{
+   360→                  boxShadow:
+   361→                    "0 8px 20px -6px rgba(16,185,129,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+   362→                }}
+   363→              >
+   364→                🚚
+   365→              </div>
+   366→
+   367→              <h3 className="font-display text-base font-bold text-white">
+   368→                El Camión de las Multiplicaciones
+   369→              </h3>
+   370→              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+   371→                Carga cajitas en el camión para aprender a multiplicar en el mercado nicaragüense.
+   372→              </p>
+   373→
+   374→              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+   375→                <span className="rounded-full bg-teal-400/15 px-2 py-0.5 text-teal-200">
+   376→                  10 niveles
+   377→                </span>
+   378→                <span className="rounded-full bg-lime-400/15 px-2 py-0.5 text-lime-200">
+   379→                  Multiplicación
+   380→                </span>
+   381→                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+   382→                  3er grado
+   383→                </span>
+   384→              </div>
+   385→
+   386→              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-teal-400 via-emerald-400 to-lime-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+   387→                <Truck size={14} strokeWidth={2.5} /> ¡Cargar!
+   388→                <ArrowRight size={14} strokeWidth={2.5} />
+   389→              </div>
+   390→            </div>
+   391→          </button>
+   392→
+   393→          {/* Tarjeta: El Bus de las Letras */}
+   394→          <button
+   395→            onClick={() => setVista("bus")}
+   396→            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+   397→            style={{ animationDelay: "180ms" }}
+   398→            aria-label="Jugar El Bus de las Letras"
+   399→          >
+   400→            <div className="relative z-10 flex h-full flex-col">
+   401→              {/* Badge con emoji */}
+   402→              <div
+   403→                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-300 via-fuchsia-400 to-amber-400 text-2xl shadow-lg shadow-fuchsia-500/40"
+   404→                style={{
+   405→                  boxShadow:
+   406→                    "0 8px 20px -6px rgba(217,70,239,0.55), inset 0 2px 4px rgba(255,255,255,0.5)",
+   407→                }}
+   408→              >
+   409→                🚌
+   410→              </div>
+   411→
+   412→              <h3 className="font-display text-base font-bold text-white">
+   413→                El Bus de las Letras
+   414→              </h3>
+   415→              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+   416→                Lleva a los pasajeros al bus identificando sujetos, predicados y
+   417→                pronombres en cada parada.
+   418→              </p>
+   419→
+   420→              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+   421→                <span className="rounded-full bg-rose-400/15 px-2 py-0.5 text-rose-200">
+   422→                  10 niveles
+   423→                </span>
+   424→                <span className="rounded-full bg-fuchsia-400/15 px-2 py-0.5 text-fuchsia-200">
+   425→                  Lengua y Literatura
+   426→                </span>
+   427→                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+   428→                  3er grado
+   429→                </span>
+   430→              </div>
+   431→
+   432→              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-rose-400 via-fuchsia-400 to-amber-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+   433→                <Bus size={14} strokeWidth={2.5} /> ¡Subir!
+   434→                <ArrowRight size={14} strokeWidth={2.5} />
+   435→              </div>
+   436→            </div>
+   437→          </button>
+   438→
+   439→          {/* Tarjeta: La Carta Mal Enviada */}
+   440→          <button
+   441→            onClick={() => setVista("carta")}
+   442→            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+   443→            style={{ animationDelay: "240ms" }}
+   444→            aria-label="Jugar La Carta Mal Enviada"
+   445→          >
+   446→            <div className="relative z-10 flex h-full flex-col">
+   447→              {/* Badge con emoji */}
+   448→              <div
+   449→                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 via-orange-400 to-rose-500 text-2xl shadow-lg shadow-orange-500/40"
+   450→                style={{
+   451→                  boxShadow:
+   452→                    "0 8px 20px -6px rgba(249,115,22,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+   453→                }}
+   454→              >
+   455→                ✉️
+   456→              </div>
+   457→
+   458→              <h3 className="font-display text-base font-bold text-white">
+   459→                La Carta Mal Enviada
+   460→              </h3>
+   461→              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+   462→                Sella las cartas corrigiendo errores de b/v, acentos y signos ¡!
+   463→                ¿? en la oficina de correos.
+   464→              </p>
+   465→
+   466→              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+   467→                <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-amber-200">
+   468→                  10 niveles
+   469→                </span>
+   470→                <span className="rounded-full bg-orange-400/15 px-2 py-0.5 text-orange-200">
+   471→                  Ortografía
+   472→                </span>
+   473→                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+   474→                  3er grado
+   475→                </span>
+   476→              </div>
+   477→
+   478→              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+   479→                <Mail size={14} strokeWidth={2.5} /> ¡Sell!
+   480→                <ArrowRight size={14} strokeWidth={2.5} />
+   481→              </div>
+   482→            </div>
+   483→          </button>
+   484→
+   485→          {/* Tarjeta: Atrapa el Acento */}
+   486→          <button
+   487→            onClick={() => setVista("atrapa")}
+   488→            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+   489→            style={{ animationDelay: "300ms" }}
+   490→            aria-label="Jugar Atrapa el Acento"
+   491→          >
+   492→            <div className="relative z-10 flex h-full flex-col">
+   493→              {/* Badge con emoji */}
+   494→              <div
+   495→                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-300 via-violet-400 to-amber-300 text-2xl shadow-lg shadow-fuchsia-500/40"
+   496→                style={{
+   497→                  boxShadow:
+   498→                    "0 8px 20px -6px rgba(217,70,239,0.55), inset 0 2px 4px rgba(255,255,255,0.5)",
+   499→                }}
+   500→              >
+   501→                🎯
+   502→              </div>
+   503→
+   504→              <h3 className="font-display text-base font-bold text-white">
+   505→                Atrapa el Acento
+   506→              </h3>
+   507→              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+   508→                Atrapa la vocal con tilde correcta mientras flota por la
+   509→                pantalla. ¡Rápido, antes de que se escape!
+   510→              </p>
+   511→
+   512→              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+   513→                <span className="rounded-full bg-fuchsia-400/15 px-2 py-0.5 text-fuchsia-200">
+   514→                  20 palabras
+   515→                </span>
+   516→                <span className="rounded-full bg-violet-400/15 px-2 py-0.5 text-violet-200">
+   517→                  Acentos
+   518→                </span>
+   519→                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+   520→                  3er grado
+   521→                </span>
+   522→              </div>
+   523→
+   524→              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-fuchsia-400 via-violet-400 to-amber-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+   525→                <Target size={14} strokeWidth={2.5} /> ¡Atrapar!
+   526→                <ArrowRight size={14} strokeWidth={2.5} />
+   527→              </div>
+   528→            </div>
+   529→          </button>
+   530→
+   531→          {/* Tarjeta: Alimenta al Monstruo */}
+   532→          <button
+   533→            onClick={() => setVista("monstruo")}
+   534→            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+   535→            style={{ animationDelay: "360ms" }}
+   536→            aria-label="Jugar Alimenta al Monstruo"
+   537→          >
+   538→            <div className="relative z-10 flex h-full flex-col">
+   539→              <div
+   540→                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-300 via-amber-400 to-rose-500 text-2xl shadow-lg shadow-orange-500/40"
+   541→                style={{
+   542→                  boxShadow:
+   543→                    "0 8px 20px -6px rgba(251,146,60,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+   544→                }}
+   545→              >
+   546→                🦷
+   547→              </div>
+   548→
+   549→              <h3 className="font-display text-base font-bold text-white">
+   550→                Alimenta al Monstruo
+   551→              </h3>
+   552→              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+   553→                Arrastra la respuesta correcta a la boca del monstruo
+   554→                hambriento. ¡Multiplicación y división!
+   555→              </p>
+   556→
+   557→              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+   558→                <span className="rounded-full bg-orange-400/15 px-2 py-0.5 text-orange-200">
+   559→                  10 rondas
+   560→                </span>
+   561→                <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-amber-200">
+   562→                  Multiplicación
+   563→                </span>
+   564→                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+   565→                  3er grado
+   566→                </span>
+   567→              </div>
+   568→
+   569→              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-orange-400 via-amber-400 to-rose-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+   570→                <Utensils size={14} strokeWidth={2.5} /> ¡Alimentar!
+   571→                <ArrowRight size={14} strokeWidth={2.5} />
+   572→              </div>
+   573→            </div>
+   574→          </button>
+   575→
+   576→          {/* Tarjeta: Cazador de Sílabas */}
+   577→          <button
+   578→            onClick={() => setVista("silabas")}
+   579→            className="group glass-panel animate-pop relative rounded-3xl p-5 text-left transition-all hover:scale-[1.02]"
+   580→            style={{ animationDelay: "420ms" }}
+   581→            aria-label="Jugar Cazador de Sílabas"
+   582→          >
+   583→            <div className="relative z-10 flex h-full flex-col">
+   584→              <div
+   585→                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-300 via-cyan-400 to-teal-400 text-2xl shadow-lg shadow-blue-500/40"
+   586→                style={{
+   587→                  boxShadow:
+   588→                    "0 8px 20px -6px rgba(59,130,246,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
+   589→                }}
+   590→              >
+   591→                🎈
+   592→              </div>
+   593→
+   594→              <h3 className="font-display text-base font-bold text-white">
+   595→                Cazador de Sílabas
+   596→              </h3>
+   597→              <p className="mt-1 line-clamp-2 text-xs font-medium text-cyan-100/60">
+   598→                Reventa los globos en el orden correcto para formar la
+   599→                palabra. ¡Que no se te escapen!
+   600→              </p>
+   601→
+   602→              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+   603→                <span className="rounded-full bg-blue-400/15 px-2 py-0.5 text-blue-200">
+   604→                  8 palabras
+   605→                </span>
+   606→                <span className="rounded-full bg-cyan-400/15 px-2 py-0.5 text-cyan-200">
+   607→                  Sílabas
+   608→                </span>
+   609→                <span className="text-[10px] font-semibold uppercase tracking-wide text-cyan-100/40">
+   610→                  3er grado
+   611→                </span>
+   612→              </div>
+   613→
+   614→              <div className="mt-4 flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 py-2.5 text-sm font-bold text-white transition-all group-hover:scale-[1.02]">
+   615→                <Wind size={14} strokeWidth={2.5} /> ¡Cazar!
+   616→                <ArrowRight size={14} strokeWidth={2.5} />
+   617→              </div>
+   618→            </div>
+   619→          </button>
+   620→        </div>
+   621→      </div>
+   622→
+   623→      {/* Decorative chevron hint */}
+   624→      <div className="mt-8 flex justify-center">
+   625→        <ChevronRight size={18} className="rotate-90 text-cyan-300/40 animate-float" />
+   626→      </div>
+   627→    </div>
+   628→  );
+   629→}
+   630→
+   631→function StatBox({
+   632→  label,
+   633→  value,
+   634→  icon,
+   635→  tint,
+   636→}: {
+   637→  label: string;
+   638→  value: number;
+   639→  icon: React.ReactNode;
+   640→  tint: "cyan" | "amber" | "rose";
+   641→}) {
+   642→  const tintMap = {
+   643→    cyan: { border: "border-cyan-400/40", bg: "bg-cyan-400/10", text: "text-cyan-200", glow: "text-cyan-300" },
+   644→    amber: { border: "border-amber-400/40", bg: "bg-amber-400/10", text: "text-amber-200", glow: "text-amber-300" },
+   645→    rose: { border: "border-rose-400/40", bg: "bg-rose-400/10", text: "text-rose-200", glow: "text-rose-300" },
+   646→  }[tint];
+   647→
+   648→  return (
+   649→    <div className={`glass-soft rounded-2xl border ${tintMap.border} ${tintMap.bg} px-3 py-2.5`}>
+   650→      <div className="flex items-center gap-1.5">
+   651→        <span className={tintMap.glow}>{icon}</span>
+   652→        <p className="text-[10px] font-bold uppercase tracking-wide text-white/60">{label}</p>
+   653→      </div>
+   654→      <p className={`mt-0.5 font-display text-xl font-bold ${tintMap.text}`}>{value}</p>
+   655→    </div>
+   656→  );
+   657→}
+   658→

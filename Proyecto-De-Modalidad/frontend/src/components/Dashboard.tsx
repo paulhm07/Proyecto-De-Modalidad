@@ -537,13 +537,21 @@ function StudentDashboard() {
           >
             <div className="relative z-10 flex h-full flex-col">
               <div
-                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-300 via-amber-400 to-rose-500 text-2xl shadow-lg shadow-orange-500/40"
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-300 via-amber-400 to-rose-500 p-[3px] shadow-lg shadow-orange-500/40"
                 style={{
                   boxShadow:
                     "0 8px 20px -6px rgba(251,146,60,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
                 }}
               >
-                🦷
+                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[13px] bg-white">
+                  <img
+                    src="/game-assets/monstruo_hambriento.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full scale-[1.4] object-contain"
+                    draggable={false}
+                  />
+                </div>
               </div>
 
               <h3 className="font-display text-base font-bold text-white">
