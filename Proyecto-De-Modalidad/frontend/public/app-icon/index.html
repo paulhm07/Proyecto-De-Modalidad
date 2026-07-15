@@ -70,6 +70,9 @@
     .preview.solid-dark { background: linear-gradient(135deg, #1f2937, #111827); }
     .preview.solid-light { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
     .preview img { max-width: 100%; max-height: 220px; object-fit: contain; filter: drop-shadow(0 12px 18px rgba(0,0,0,.18)); }
+    .card.wide { grid-column: 1 / -1; }
+    .card.wide .preview { min-height: 200px; }
+    .card.wide .preview img { max-height: 180px; }
     .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
     .num { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #3b82f6; }
     .title { font-size: 17px; font-weight: 800; }
@@ -106,21 +109,21 @@
   </p>
   <div class="chips">
     <span class="chip">Estilo: Claymorphism / 2.5D</span>
-    <span class="chip">Resolución: 1024 × 1024 px</span>
+    <span class="chip">3 variantes disponibles</span>
     <span class="chip">Colores: Azul neón · Naranja · Verde manzana</span>
-    <span class="chip">Uso: App Icon / Logo</span>
+    <span class="chip">Usos: App Icon · Logo horizontal · Fondo oscuro</span>
   </div>
 
   <div class="grid">
-    <!-- Variación 1: sobre fondo a cuadros (muestra el recorte) -->
+    <!-- Variación 1: App Icon original (color, fondo sólido azul) -->
     <article class="card">
       <div class="preview tiled">
-        <img src="./educaplay-app-icon.png" alt="Logo EducaPlay sobre fondo a cuadros" />
+        <img src="./educaplay-app-icon.png" alt="Logo EducaPlay app icon color" />
       </div>
       <div class="body">
-        <span class="num">Variación 01</span>
-        <h2 class="title">Logo completo (con fondo)</h2>
-        <p class="desc">Versión original con fondo sólido azul. Ideal como App Icon para tiendas de aplicaciones.</p>
+        <span class="num">Variación 01 · App Icon</span>
+        <h2 class="title">Logo a color (1024×1024)</h2>
+        <p class="desc">Versión original con fondo sólido azul. Ideal como App Icon para Google Play y App Store.</p>
         <div class="actions">
           <a class="btn btn-primary" href="./educaplay-app-icon.png" download>⬇ Descargar PNG</a>
           <a class="btn btn-ghost" href="./educaplay-app-icon.png" target="_blank" rel="noopener">👁 Ver</a>
@@ -128,50 +131,50 @@
       </div>
     </article>
 
-    <!-- Variación 2: sobre azul oscuro -->
-    <article class="card">
-      <div class="preview solid-blue">
-        <img src="./educaplay-app-icon.png" alt="Logo EducaPlay sobre azul" />
-      </div>
-      <div class="body">
-        <span class="num">Variación 02</span>
-        <h2 class="title">Sobre fondo azul</h2>
-        <p class="desc">Vista previa del icono sobre un fondo azul degradado, simulando una pantalla de app.</p>
-        <div class="actions">
-          <a class="btn btn-primary" href="./educaplay-app-icon.png" download>⬇ Descargar PNG</a>
-          <a class="btn btn-ghost" href="./educaplay-app-icon.png" target="_blank" rel="noopener">👁 Ver</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- Variación 3: sobre fondo claro -->
-    <article class="card">
+    <!-- Variación 2: Logo horizontal con texto -->
+    <article class="card wide">
       <div class="preview solid-light">
-        <img src="./educaplay-app-icon.png" alt="Logo EducaPlay sobre fondo claro" />
+        <img src="./educaplay-logo-horizontal.png" alt="Logo horizontal EducaPlay con texto" />
       </div>
       <div class="body">
-        <span class="num">Variación 03</span>
-        <h2 class="title">Sobre fondo claro</h2>
-        <p class="desc">El icono sobre un fondo celeste claro, ideal para encabezados web o materiales impresos.</p>
+        <span class="num">Variación 02 · Horizontal Lockup</span>
+        <h2 class="title">Logo horizontal con texto (1344×768)</h2>
+        <p class="desc">Isotipo a la izquierda + wordmark «EducaPlay» a la derecha (Educa en azul, Play en naranja). Ideal para encabezados web, materiales impresos y firmas de correo.</p>
         <div class="actions">
-          <a class="btn btn-primary" href="./educaplay-app-icon.png" download>⬇ Descargar PNG</a>
-          <a class="btn btn-ghost" href="./educaplay-app-icon.png" target="_blank" rel="noopener">👁 Ver</a>
+          <a class="btn btn-primary" href="./educaplay-logo-horizontal.png" download>⬇ Descargar PNG</a>
+          <a class="btn btn-ghost" href="./educaplay-logo-horizontal.png" target="_blank" rel="noopener">👁 Ver</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- Variación 3: App Icon monocromático blanco para fondos oscuros -->
+    <article class="card">
+      <div class="preview solid-dark">
+        <img src="./educaplay-icon-white.png" alt="Logo EducaPlay monocromático blanco" />
+      </div>
+      <div class="body">
+        <span class="num">Variación 03 · Mono Blanco</span>
+        <h2 class="title">Monocromático blanco (1024×1024)</h2>
+        <p class="desc">Mismo isotipo en blanco glossy puro sobre fondo oscuro. Perfecto para barras de navegación oscuras, splash screens y modo oscuro.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="./educaplay-icon-white.png" download>⬇ Descargar PNG</a>
+          <a class="btn btn-ghost" href="./educaplay-icon-white.png" target="_blank" rel="noopener">👁 Ver</a>
         </div>
       </div>
     </article>
   </div>
 
   <div class="note">
-    <strong>💡 Sobre este logo:</strong><br/>
-    • <strong>Estilo:</strong> Claymorphism / Plastilina 2.5D con bordes suaves y redondeados.<br/>
-    • <strong>Concepto:</strong> consola de videojuegos portátil + rayo de energía amigable (aprender + diversión).<br/>
-    • <strong>Colores:</strong> azul neón (fondo/consola), naranja brillante (botones/capa exterior), verde manzana (capa inferior).<br/>
-    • <strong>Fondo sólido:</strong> facilita el recorte posterior con cualquier editor (Photoshop, GIMP, remove.bg).<br/>
-    • <strong>Resolución:</strong> 1024 × 1024 px — apta para App Store y Google Play (que piden 512 × 512 mínimo).
+    <strong>💡 Kit de identidad visual EducaPlay — 3 variantes:</strong><br/>
+    • <strong>Variación 01 · App Icon a color</strong> (1024×1024): la versión principal para tiendas de apps. Estilo Claymorphism 2.5D con azul neón, naranja y verde manzana.<br/>
+    • <strong>Variación 02 · Logo horizontal con texto</strong> (1344×768): isotipo + wordmark «EducaPlay» (Educa azul / Play naranja). Para encabezados web, cabeceras de documentos y firmas de correo.<br/>
+    • <strong>Variación 03 · Monocromático blanco</strong> (1024×1024): mismo isotipo en blanco glossy puro sobre fondo oscuro. Para barras de navegación oscuras, splash screens y modo oscuro.<br/><br/>
+    <strong>Concepto:</strong> consola de videojuegos portátil + rayo de energía amigable = «aprender jugando con energía».<br/>
+    <strong>Fondo sólido en todas:</strong> facilita el recorte posterior con Photoshop, GIMP o remove.bg si necesitas transparencia.
   </div>
 
   <footer>
-    Diseñado para <b>EducaPlay</b> · App Icon 2.5D Claymorphism · 1024 × 1024 px · Listo para recorte
+    Diseñado para <b>EducaPlay</b> · Kit de identidad visual · 3 variantes (color · horizontal · mono blanco)
   </footer>
 </body>
 </html>
