@@ -590,13 +590,21 @@ function StudentDashboard() {
           >
             <div className="relative z-10 flex h-full flex-col">
               <div
-                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-300 via-cyan-400 to-teal-400 text-2xl shadow-lg shadow-blue-500/40"
+                className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-300 via-cyan-400 to-teal-400 p-[3px] shadow-lg shadow-blue-500/40"
                 style={{
                   boxShadow:
                     "0 8px 20px -6px rgba(59,130,246,0.6), inset 0 2px 4px rgba(255,255,255,0.5)",
                 }}
               >
-                🎈
+                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[13px] bg-white">
+                  <img
+                    src="/syllable-game/balloon_red.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full scale-[1.35] object-contain"
+                    draggable={false}
+                  />
+                </div>
               </div>
 
               <h3 className="font-display text-base font-bold text-white">

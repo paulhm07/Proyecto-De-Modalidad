@@ -56,30 +56,13 @@ interface Globo {
   popping?: boolean;
 }
 
-const MAPA_COLORES: Record<
-  ColorGlobo,
-  { grad: string; sombra: string }
-> = {
-  red: {
-    grad: "radial-gradient(circle at 35% 30%, #fca5a5, #ef4444 60%, #b91c1c)",
-    sombra: "#991b1b",
-  },
-  blue: {
-    grad: "radial-gradient(circle at 35% 30%, #93c5fd, #3b82f6 60%, #1d4ed8)",
-    sombra: "#1e40af",
-  },
-  green: {
-    grad: "radial-gradient(circle at 35% 30%, #86efac, #22c55e 60%, #15803d)",
-    sombra: "#166534",
-  },
-  yellow: {
-    grad: "radial-gradient(circle at 35% 30%, #fde68a, #f59e0b 60%, #b45309)",
-    sombra: "#92400e",
-  },
-  purple: {
-    grad: "radial-gradient(circle at 35% 30%, #d8b4fe, #a855f7 60%, #7e22ce)",
-    sombra: "#6b21a8",
-  },
+// Recursos gráficos de globos (claymorphic, fondo blanco → mix-blend-multiply)
+const MAPA_IMAGENES: Record<ColorGlobo, string> = {
+  red: "/syllable-game/balloon_red.png",
+  blue: "/syllable-game/balloon_blue.png",
+  green: "/syllable-game/balloon_green.png",
+  yellow: "/syllable-game/balloon_yellow.png",
+  purple: "/syllable-game/balloon_purple.png",
 };
 
 let globoIdCounter = 0;
@@ -437,7 +420,7 @@ export function CazadorSilabas() {
             key={globo.id}
             onClick={() => reventarGlobo(globo)}
             className={`absolute cursor-pointer select-none transition-none ${
-              globo.popping ? "animate-[pop_0.3s_ease_forwards]" : ""
+              globo.popping ? "animate-[globo-pop_0.3s_ease_forwards]" : ""
             }`}
             style={{
               left: `${globo.x}px`,
@@ -447,17 +430,24 @@ export function CazadorSilabas() {
             }}
             aria-label={`Globo con sílaba ${globo.silaba}`}
           >
-            {/* Cuerpo del globo */}
-            <div
-              className="flex h-[100px] w-[90px] items-center justify-center rounded-[50%_50%_45%_45%] text-xl font-bold text-white"
-              style={{
-                background: MAPA_COLORES[globo.color].grad,
-                boxShadow:
-                  "inset -10px -15px 20px rgba(0,0,0,0.2), inset 8px 8px 15px rgba(255,255,255,0.4)",
-                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
-              }}
-            >
-              {globo.silaba}
+            {/* Globo (imagen claymorphic) con sílaba sobrepuesta */}
+            <div className="relative h-[100px] w-[90px]">
+              <img
+                src={MAPA_IMAGENES[globo.color]}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 h-full w-full object-contain mix-blend-multiply"
+                draggable={false}
+              />
+              <span
+                className="absolute inset-0 flex items-center justify-center pb-2 text-xl font-black text-white"
+                style={{
+                  textShadow:
+                    "2px 2px 4px rgba(0,0,0,0.65), 0 0 3px rgba(0,0,0,0.5)",
+                }}
+              >
+                {globo.silaba}
+              </span>
             </div>
             {/* Cordel */}
             <div
@@ -481,7 +471,7 @@ export function CazadorSilabas() {
       )}
 
       <style jsx>{`
-        @keyframes pop {
+        @keyframes globo-pop {
           0% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.6); opacity: 0.8; }
           100% { transform: scale(0.3); opacity: 0; }
