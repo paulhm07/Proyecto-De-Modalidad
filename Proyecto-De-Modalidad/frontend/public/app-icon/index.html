@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EducaPlay · Logo / App Icon</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #c7f9cc 0%, transparent 60%),
+        radial-gradient(1000px 500px at 110% 10%, #a0e7e5 0%, transparent 55%),
+        #f6f7fb;
+      color: #1f2937;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px 48px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #ede9fe; color: #7c3aed;
+      font-weight: 800; font-size: 12px; letter-spacing: .1em;
+      text-transform: uppercase; padding: 8px 14px; border-radius: 999px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #7c3aed; }
+    h1 {
+      margin-top: 14px; font-size: clamp(24px, 4vw, 36px); font-weight: 900;
+      letter-spacing: -.02em; text-align: center;
+    }
+    .grad {
+      background: linear-gradient(90deg, #3b82f6, #f97316, #22c55e);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .sub {
+      margin-top: 8px; color: #6b7280; font-size: 15px; max-width: 620px;
+      text-align: center; line-height: 1.5;
+    }
+    .chips { margin: 18px 0 4px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .chip {
+      font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px;
+      background: #fff; border: 1px solid #e5e7eb; color: #6b7280;
+    }
+    .grid {
+      margin-top: 32px; width: 100%; max-width: 980px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px;
+    }
+    .card {
+      background: #fff; border-radius: 24px; border: 1px solid #e5e7eb;
+      box-shadow: 0 10px 30px -8px rgba(59,130,246,.18);
+      overflow: hidden; display: flex; flex-direction: column;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -10px rgba(59,130,246,.28); }
+    .preview {
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px; min-height: 240px;
+    }
+    .preview.tiled {
+      background:
+        linear-gradient(45deg, #f3f4f6 25%, transparent 25%) 0 0/24px 24px,
+        linear-gradient(-45deg, #f3f4f6 25%, transparent 25%) 0 12px/24px 24px,
+        linear-gradient(45deg, transparent 75%, #f3f4f6 75%) 12px -12px/24px 24px,
+        linear-gradient(-45deg, transparent 75%, #f3f4f6 75%) -12px 0/24px 24px,
+        #fff;
+    }
+    .preview.solid-blue { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+    .preview.solid-dark { background: linear-gradient(135deg, #1f2937, #111827); }
+    .preview.solid-light { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); }
+    .preview img { max-width: 100%; max-height: 220px; object-fit: contain; filter: drop-shadow(0 12px 18px rgba(0,0,0,.18)); }
+    .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .num { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #3b82f6; }
+    .title { font-size: 17px; font-weight: 800; }
+    .desc { font-size: 13px; color: #6b7280; line-height: 1.5; flex: 1; }
+    .actions { display: flex; gap: 10px; margin-top: 6px; }
+    .btn {
+      flex: 1; text-align: center; text-decoration: none; font-weight: 800; font-size: 14px;
+      padding: 11px 14px; border-radius: 14px; transition: transform .15s ease, filter .15s ease;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: linear-gradient(90deg, #3b82f6, #f97316); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.07); }
+    .btn-ghost { background: #f3f4f6; color: #1f2937; border: 1px solid #e5e7eb; }
+    .btn-ghost:hover { background: #eff6ff; }
+    .note {
+      margin-top: 28px; background: #fff; border: 1px dashed #e5e7eb; border-radius: 18px;
+      padding: 18px 20px; color: #6b7280; font-size: 14px; line-height: 1.6; max-width: 980px; width: 100%;
+    }
+    .note strong { color: #1f2937; }
+    footer {
+      margin-top: 24px; text-align: center; padding: 18px; color: #6b7280; font-size: 13px;
+      border-top: 1px solid #e5e7eb; width: 100%; max-width: 980px;
+    }
+    footer b { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <span class="badge"><span class="dot"></span> EducaPlay · Identidad Visual</span>
+  <h1>Logo / <span class="grad">App Icon</span> de EducaPlay</h1>
+  <p class="sub">
+    Isotipo central en 2.5D estilo Claymorphism que combina una consola de videojuegos
+    portátil con un rayo de energía amigable. Colores vibrantes: azul neón, naranja brillante
+    y verde manzana. Fondo sólido para fácil recorte.
+  </p>
+  <div class="chips">
+    <span class="chip">Estilo: Claymorphism / 2.5D</span>
+    <span class="chip">Resolución: 1024 × 1024 px</span>
+    <span class="chip">Colores: Azul neón · Naranja · Verde manzana</span>
+    <span class="chip">Uso: App Icon / Logo</span>
+  </div>
+
+  <div class="grid">
+    <!-- Variación 1: sobre fondo a cuadros (muestra el recorte) -->
+    <article class="card">
+      <div class="preview tiled">
+        <img src="./educaplay-app-icon.png" alt="Logo EducaPlay sobre fondo a cuadros" />
+      </div>
+      <div class="body">
+        <span class="num">Variación 01</span>
+        <h2 class="title">Logo completo (con fondo)</h2>
+        <p class="desc">Versión original con fondo sólido azul. Ideal como App Icon para tiendas de aplicaciones.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="./educaplay-app-icon.png" download>⬇ Descargar PNG</a>
+          <a class="btn btn-ghost" href="./educaplay-app-icon.png" target="_blank" rel="noopener">👁 Ver</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- Variación 2: sobre azul oscuro -->
+    <article class="card">
+      <div class="preview solid-blue">
+        <img src="./educaplay-app-icon.png" alt="Logo EducaPlay sobre azul" />
+      </div>
+      <div class="body">
+        <span class="num">Variación 02</span>
+        <h2 class="title">Sobre fondo azul</h2>
+        <p class="desc">Vista previa del icono sobre un fondo azul degradado, simulando una pantalla de app.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="./educaplay-app-icon.png" download>⬇ Descargar PNG</a>
+          <a class="btn btn-ghost" href="./educaplay-app-icon.png" target="_blank" rel="noopener">👁 Ver</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- Variación 3: sobre fondo claro -->
+    <article class="card">
+      <div class="preview solid-light">
+        <img src="./educaplay-app-icon.png" alt="Logo EducaPlay sobre fondo claro" />
+      </div>
+      <div class="body">
+        <span class="num">Variación 03</span>
+        <h2 class="title">Sobre fondo claro</h2>
+        <p class="desc">El icono sobre un fondo celeste claro, ideal para encabezados web o materiales impresos.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="./educaplay-app-icon.png" download>⬇ Descargar PNG</a>
+          <a class="btn btn-ghost" href="./educaplay-app-icon.png" target="_blank" rel="noopener">👁 Ver</a>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <div class="note">
+    <strong>💡 Sobre este logo:</strong><br/>
+    • <strong>Estilo:</strong> Claymorphism / Plastilina 2.5D con bordes suaves y redondeados.<br/>
+    • <strong>Concepto:</strong> consola de videojuegos portátil + rayo de energía amigable (aprender + diversión).<br/>
+    • <strong>Colores:</strong> azul neón (fondo/consola), naranja brillante (botones/capa exterior), verde manzana (capa inferior).<br/>
+    • <strong>Fondo sólido:</strong> facilita el recorte posterior con cualquier editor (Photoshop, GIMP, remove.bg).<br/>
+    • <strong>Resolución:</strong> 1024 × 1024 px — apta para App Store y Google Play (que piden 512 × 512 mínimo).
+  </div>
+
+  <footer>
+    Diseñado para <b>EducaPlay</b> · App Icon 2.5D Claymorphism · 1024 × 1024 px · Listo para recorte
+  </footer>
+</body>
+</html>
