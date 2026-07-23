@@ -1,0 +1,267 @@
+{
+  "modulo": 1,
+  "titulo": "Multiplicación y División Vertical",
+  "asignatura": "Matemática",
+  "grado": "3er Grado de Primaria",
+  "semestre": "Segundo Semestre",
+  "curriculum": "MINED - Nicaragua",
+  "descripcion": "Banco de 15 problemas matemáticos contextualizados en la cultura nicaragüense. Incluye multiplicaciones verticales (DU×U y CDU×U) con y sin acarreo, y divisiones verticales (DU÷U) exactas y con residuo.",
+  "total_problemas": 15,
+  "problemas": [
+    {
+      "id": "M1-P01",
+      "tipo_operacion": "multiplicacion",
+      "subtipo": "DU×U con acarreo",
+      "enunciado": "Jerson recogió 45 nancites en cada canasta. Si tiene 3 canastas, ¿cuántos nancites recogió en total?",
+      "operacion_vertical_esperada": "45×3",
+      "respuesta_correcta": 135,
+      "residuo": 0,
+      "distractores": [125, 145, 105],
+      "explicacion_distractores": {
+        "125": "Olvidó sumar el acarreo: 3×5=15 (lleva 1), 3×4=12, no sumó el 1 → 125",
+        "145": "Sumó el acarreo dos veces: 3×5=15 (lleva 1), 3×4=12+1+1=14 → 145",
+        "105": "Error de tabla: 3×5=15→5, 3×4=10 (en lugar de 12) → 105"
+      },
+      "contexto_cultural": "Nancites - fruta tropical común en Nicaragua",
+      "dificultad": "media"
+    },
+    {
+      "id": "M1-P02",
+      "tipo_operacion": "multiplicacion",
+      "subtipo": "DU×U sin acarreo",
+      "enunciado": "Nahomi guarda 21 pitahayas en cada caja. Si tiene 3 cajas, ¿cuántas pitahayas tiene en total?",
+      "operacion_vertical_esperada": "21×3",
+      "respuesta_correcta": 63,
+      "residuo": 0,
+      "distractores": [62, 64, 24],
+      "explicacion_distractores": {
+        "62": "Error de tabla: 3×1=2 (en lugar de 3)",
+        "64": "Error de tabla: 3×1=4 (en lugar de 3)",
+        "24": "Sumó en lugar de multiplicar: 21+3=24"
+      },
+      "contexto_cultural": "Pitahayas - fruta cactácea cultivada en Nicaragua",
+      "dificultad": "baja"
+    },
+    {
+      "id": "M1-P03",
+      "tipo_operacion": "multiplicacion",
+      "subtipo": "CDU×U con acarreo",
+      "enunciado": "Don Carlos cosecha 124 libras de café cada semana. En 3 semanas, ¿cuántas libras de café cosecha en total?",
+      "operacion_vertical_esperada": "124×3",
+      "respuesta_correcta": 372,
+      "residuo": 0,
+      "distractores": [362, 472, 374],
+      "explicacion_distractores": {
+        "362": "Olvidó sumar acarreo: 3×4=12 (lleva 1), 3×2=6 (no sumó el 1), 3×1=3 → 362",
+        "472": "Sumó acarreo en lugar equivocado: 3×1=3+1=4 → 472",
+        "374": "Error de tabla: 3×4=14 (en lugar de 12)"
+      },
+      "contexto_cultural": "Café - principal producto agrícola de Nicaragua, medido en libras y quintales",
+      "dificultad": "alta"
+    },
+    {
+      "id": "M1-P04",
+      "tipo_operacion": "multiplicacion",
+      "subtipo": "CDU×U sin acarreo",
+      "enunciado": "María prepara 213 tortillas cada día en su comedor de Masaya. En 2 días, ¿cuántas tortillas prepara?",
+      "operacion_vertical_esperada": "213×2",
+      "respuesta_correcta": 426,
+      "residuo": 0,
+      "distractores": [425, 428, 416],
+      "explicacion_distractores": {
+        "425": "Error de tabla: 2×3=5 (en lugar de 6)",
+        "428": "Error de tabla: 2×3=8 (en lugar de 6)",
+        "416": "Error de escritura: 2×3=6, 2×1=2 pero escribió 1, 2×2=4 → 416"
+      },
+      "contexto_cultural": "Tortillas - alimento básico nicaragüense; Masaya - ciudad conocida por su cultura",
+      "dificultad": "media"
+    },
+    {
+      "id": "M1-P05",
+      "tipo_operacion": "multiplicacion",
+      "subtipo": "CDU×U con acarreo",
+      "enunciado": "El bus de Managua lleva 215 pasajeros por viaje. Si hace 4 viajes al día, ¿cuántos pasajeros transporta en total?",
+      "operacion_vertical_esperada": "215×4",
+      "respuesta_correcta": 860,
+      "residuo": 0,
+      "distractores": [840, 880, 865],
+      "explicacion_distractores": {
+        "840": "Olvidó sumar acarreo: 4×5=20 (lleva 2), 4×1=4 (no sumó el 2), 4×2=8 → 840",
+        "880": "Sumó acarreo dos veces: 4×1=4+2+2=8 → 880",
+        "865": "Error de tabla: 4×5=15 (en lugar de 20)"
+      },
+      "contexto_cultural": "Buses de Managua - transporte público urbano característico",
+      "dificultad": "alta"
+    },
+    {
+      "id": "M1-P06",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U exacta",
+      "enunciado": "Doña Rosa reparte 48 córdobas entre 6 niños por igual. ¿Cuántos córdobas recibe cada niño?",
+      "operacion_vertical_esperada": "48/6",
+      "respuesta_correcta": 8,
+      "residuo": 0,
+      "distractores": [7, 9, 6],
+      "explicacion_distractores": {
+        "7": "Confundió tabla: 6×7=42 (cercano pero menor)",
+        "9": "Se pasó: 6×9=54 (mayor que 48)",
+        "6": "Invertió la operación: 6×6=36"
+      },
+      "contexto_cultural": "Córdobas (C$) - moneda de Nicaragua",
+      "dificultad": "baja"
+    },
+    {
+      "id": "M1-P07",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U exacta",
+      "enunciado": "Jerson tiene 72 nancites y los guarda en bolsas de 9. ¿Cuántas bolsas necesita?",
+      "operacion_vertical_esperada": "72/9",
+      "respuesta_correcta": 8,
+      "residuo": 0,
+      "distractores": [7, 9, 6],
+      "explicacion_distractores": {
+        "7": "Se quedó corto: 9×7=63",
+        "9": "Se pasó: 9×9=81",
+        "6": "Error de tabla: 9×6=54"
+      },
+      "contexto_cultural": "Nancites - fruta tropical que se vende en bolsas en los mercados",
+      "dificultad": "baja"
+    },
+    {
+      "id": "M1-P08",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U exacta",
+      "enunciado": "Nahomi tiene 36 pitahayas y las coloca en cajas de 4. ¿Cuántas cajas usa?",
+      "operacion_vertical_esperada": "36/4",
+      "respuesta_correcta": 9,
+      "residuo": 0,
+      "distractores": [8, 7, 12],
+      "explicacion_distractores": {
+        "8": "Se quedó corto: 4×8=32",
+        "7": "Se quedó corto: 4×7=28",
+        "12": "Confundió el divisor: 3×12=36 (usó 3 en lugar de 4)"
+      },
+      "contexto_cultural": "Pitahayas - fruta que se empaca en cajas para venta",
+      "dificultad": "baja"
+    },
+    {
+      "id": "M1-P09",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U exacta",
+      "enunciado": "Don Carlos empaca 56 libras de café en sacos de 8 libras. ¿Cuántos sacos llena?",
+      "operacion_vertical_esperada": "56/8",
+      "respuesta_correcta": 7,
+      "residuo": 0,
+      "distractores": [8, 6, 9],
+      "explicacion_distractores": {
+        "8": "Se pasó: 8×8=64",
+        "6": "Se quedó corto: 8×6=48",
+        "9": "Error de tabla: 8×9=72"
+      },
+      "contexto_cultural": "Café empacado en sacos - práctica común en fincas nicaragüenses",
+      "dificultad": "media"
+    },
+    {
+      "id": "M1-P10",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U exacta",
+      "enunciado": "En la escuela de Granada, 45 estudiantes forman equipos de 5. ¿Cuántos equipos se forman?",
+      "operacion_vertical_esperada": "45/5",
+      "respuesta_correcta": 9,
+      "residuo": 0,
+      "distractores": [8, 10, 7],
+      "explicacion_distractores": {
+        "8": "Se quedó corto: 5×8=40",
+        "10": "Se pasó: 5×10=50",
+        "7": "Se quedó corto: 5×7=35"
+      },
+      "contexto_cultural": "Granada - ciudad colonial nicaragüense",
+      "dificultad": "baja"
+    },
+    {
+      "id": "M1-P11",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U con residuo",
+      "enunciado": "María tiene 35 córdobas y los reparte entre 4 amigos. ¿Cuántos córdobas recibe cada amigo y cuánto sobra?",
+      "operacion_vertical_esperada": "35/4",
+      "respuesta_correcta": 8,
+      "residuo": 3,
+      "distractores": [9, 7, 6],
+      "explicacion_distractores": {
+        "9": "Se pasó: 4×9=36 (mayor que 35)",
+        "7": "Se quedó corto: 4×7=28 (sobraría 7, que es mayor que el divisor 4)",
+        "6": "Muy corto: 4×6=24 (sobraría 11)"
+      },
+      "contexto_cultural": "Córdobas (C$) - moneda de Nicaragua",
+      "dificultad": "media"
+    },
+    {
+      "id": "M1-P12",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U con residuo",
+      "enunciado": "Jerson tiene 47 nancites y los guarda en bolsas de 6. ¿Cuántas bolsas llena completamente?",
+      "operacion_vertical_esperada": "47/6",
+      "respuesta_correcta": 7,
+      "residuo": 5,
+      "distractores": [8, 6, 5],
+      "explicacion_distractores": {
+        "8": "Se pasó: 6×8=48 (mayor que 47)",
+        "6": "Se quedó corto: 6×6=36 (sobraría 11)",
+        "5": "Muy corto: 6×5=30 (sobraría 17)"
+      },
+      "contexto_cultural": "Nancites vendidos en bolsas en mercados nicaragüenses",
+      "dificultad": "media"
+    },
+    {
+      "id": "M1-P13",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U con residuo",
+      "enunciado": "Nahomi tiene 53 pitahayas y las coloca en cajas de 8. ¿Cuántas cajas completa?",
+      "operacion_vertical_esperada": "53/8",
+      "respuesta_correcta": 6,
+      "residuo": 5,
+      "distractores": [7, 5, 4],
+      "explicacion_distractores": {
+        "7": "Se pasó: 8×7=56 (mayor que 53)",
+        "5": "Se quedó corto: 8×5=40 (sobraría 13)",
+        "4": "Muy corto: 8×4=32 (sobraría 21)"
+      },
+      "contexto_cultural": "Pitahayas empacadas en cajas para exportación",
+      "dificultad": "media"
+    },
+    {
+      "id": "M1-P14",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U con residuo",
+      "enunciado": "Don Carlos tiene 61 libras de café y las reparte en sacos de 7 libras. ¿Cuántos sacos completa?",
+      "operacion_vertical_esperada": "61/7",
+      "respuesta_correcta": 8,
+      "residuo": 5,
+      "distractores": [9, 7, 6],
+      "explicacion_distractores": {
+        "9": "Se pasó: 7×9=63 (mayor que 61)",
+        "7": "Se quedó corto: 7×7=49 (sobraría 12)",
+        "6": "Muy corto: 7×6=42 (sobraría 19)"
+      },
+      "contexto_cultural": "Café en sacos - medida tradicional en fincas nicaragüenses",
+      "dificultad": "media"
+    },
+    {
+      "id": "M1-P15",
+      "tipo_operacion": "division",
+      "subtipo": "DU÷U con residuo",
+      "enunciado": "En el bus de Managua van 29 estudiantes y los acomodan en asientos de 3. ¿Cuántos asientos se llenan?",
+      "operacion_vertical_esperada": "29/3",
+      "respuesta_correcta": 9,
+      "residuo": 2,
+      "distractores": [10, 8, 7],
+      "explicacion_distractores": {
+        "10": "Se pasó: 3×10=30 (mayor que 29)",
+        "8": "Se quedó corto: 3×8=24 (sobraría 5)",
+        "7": "Muy corto: 3×7=21 (sobraría 8)"
+      },
+      "contexto_cultural": "Buses de Managua - transporte urbano con asientos compartidos",
+      "dificultad": "media"
+    }
+  ]
+}

@@ -11,7 +11,8 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const port = process.env.PORT ?? 3001;
-  await app.listen(port);
-  console.log(`Servidor NestJS corriendo en: http://localhost:${port}/api`);
+  // Escuchar en 0.0.0.0 para ser accesible desde el gateway Caddy
+  await app.listen(port, '0.0.0.0');
+  console.log(`Servidor NestJS corriendo en: http://0.0.0.0:${port}/api`);
 }
 bootstrap();

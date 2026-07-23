@@ -431,3 +431,37 @@ Stage Summary:
 - ✅ Servicios persistentes: frontend (3000, PID 1517), backend (3001, PID 1441), gateway (81).
 - ✅ App EducaPlay visible en el Preview Panel; login demo + dashboard + Atrapa el Acento (5º minijuego) verificados end-to-end.
 - ✅ Nota para futuros resets: tras un reset del entorno hay que reinstalar node_modules (wiped), regenerar prisma client y borrar frontend/.next si Turbopack paniquea.
+
+---
+Task ID: RUN-1
+Agent: main (Code orchestrator)
+Task: Correr la aplicación EducaPlay (frontend + backend) e integrar el logo horizontal en el Header.
+
+Work Log:
+- Verificado estado del proyecto: la app EducaPlay real estaba en subfolder `Proyecto-De-Modalidad/frontend/` mientras que el proyecto principal solo tenía el placeholder Z.ai.
+- Migrados 37 componentes EducaPlay, context/, data/, lib/api.ts, lib/types.ts desde el subfolder al proyecto principal `src/`.
+- Copiados assets de public/ (app-icon, game-assets, contenido-mined, etc.) al proyecto principal.
+- Sobrescritos app/page.tsx, app/layout.tsx, app/globals.css con los de EducaPlay.
+- Modificado `Logo.tsx` para añadir variante `variant="horizontal"` que usa `educaplay-logo-horizontal.png` con mix-blend-lighten para fondos oscuros.
+- Modificado `Header.tsx` para usar `<Logo size={40} variant="horizontal" />` en lugar del isotipo + wordmark de texto.
+- Instaladas dependencias del backend NestJS (476 packages en 4.86s tras limpiar node_modules bloqueado).
+- Modificado `backend/src/main.ts` para escuchar en `0.0.0.0:3001` (era localhost) — necesario para que el gateway Caddy pueda enrutar tráfico vía XTransformPort=3001.
+- Generado Prisma Client con `bunx prisma generate`.
+- Iniciados ambos servicios con `setsid nohup` para persistencia:
+  - Frontend: `bun node_modules/.bin/next dev -p 3000` (PID 4508)
+  - Backend: `bun node_modules/.bin/nest start` (PID 4507)
+- Verificado con Agent Browser (vía gateway http://127.0.0.1:81/):
+  - Login screen se renderiza con logo, selección de rol (Estudiante/Papá/Maestro), formulario Nombre+PIN, y botones de modo demo.
+  - Click en "Estudiante DemoKid" → login exitoso vía `api.loginDemo("ESTUDIANTE")` → POST /api/usuarios/demo?XTransformPort=3001 → HTTP 200 con usuario DemoKid completo.
+  - Dashboard del estudiante se renderiza: header con navegación (Inicio/Avatar/Ranking/Perfil/Salir), saludo "¡Hola, DemoKid!", progreso (Nivel 1, 0/100 XP), mini-juegos (Pulpería de Fracciones, Camión de Multiplicaciones, Bus de Letras, etc.).
+  - Logo horizontal confirmado en el header: `educaplay-logo-horizontal.png` renderizado a 70x40px.
+- Confirmado por VLM que la screenshot del dashboard muestra correctamente el header con el logo horizontal, navegación, y contenido del dashboard.
+
+Stage Summary:
+- Aplicación EducaPlay corriendo end-to-end en el proyecto principal:
+  - Frontend: http://127.0.0.1:3000 (visible vía gateway http://127.0.0.1:81/)
+  - Backend: http://127.0.0.1:3001/api (accesible vía XTransformPort=3001)
+- Logo horizontal (`educaplay-logo-horizontal.png`) integrado en el Header, reemplazando al isotipo + wordmark de texto anterior.
+- Login demo funcional para los 3 roles (Estudiante DemoKid, Padre PadreDemo, Maestro MaestroDemo).
+- Dashboard del estudiante muestra progreso, medallas, mini-juegos y navegación completa.
+- Nota: los procesos next dev / nest start se caen entre comandos bash del sandbox; deben reiniciarse juntos cuando se requiera verificar de nuevo.

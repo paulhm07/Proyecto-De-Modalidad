@@ -1,0 +1,53 @@
+{
+  "titulo": "Banco de Contenido Educativo MINED - Nicaragua",
+  "descripcion": "Banco de contenido curricular alineado al programa de estudio del MINED para 3er grado de primaria, segundo semestre. Diseñado para la aplicación educativa EducaPlay.",
+  "grado": "3er Grado de Primaria",
+  "semestre": "Segundo Semestre",
+  "curriculum": "MINED - República de Nicaragua",
+  "total_modulos": 4,
+  "modulos": [
+    {
+      "id": "modulo1",
+      "archivo": "modulo1-multiplicacion-division.json",
+      "titulo": "Multiplicación y División Vertical",
+      "asignatura": "Matemática",
+      "total_items": 15,
+      "descripcion": "5 problemas de multiplicación vertical (DU×U y CDU×U) con y sin llevar; 10 problemas de división vertical (DU÷U) - 5 exactas y 5 con residuo. Contextualizado con nancites, pitahayas, café, córdobas y buses de Managua."
+    },
+    {
+      "id": "modulo2",
+      "archivo": "modulo2-fracciones-geometria.json",
+      "titulo": "Fracciones y Geometría",
+      "asignatura": "Matemática",
+      "total_items": 10,
+      "descripcion": "5 ejercicios de fracciones propias (medios, tercios, cuartos, quintos) con descripción visual para UI; 5 ejercicios de geometría (centro, radio, diámetro del círculo; triángulos equilátero y escaleno)."
+    },
+    {
+      "id": "modulo3",
+      "archivo": "modulo3-comprension-sintaxis.json",
+      "titulo": "Comprensión Lectora y Sintaxis",
+      "asignatura": "Lengua y Literatura",
+      "total_items": 3,
+      "total_preguntas": 9,
+      "descripcion": "3 lecturas infantiles cortas (máximo 80 palabras) estilo cuento nicaragüense. Cada lectura con 3 preguntas: estructura del texto, gramática (sujeto/predicado) y pronombres (él/ella/ellos)."
+    },
+    {
+      "id": "modulo4",
+      "archivo": "modulo4-ortografia-signos.json",
+      "titulo": "Ortografía y Signos de Puntuación",
+      "asignatura": "Lengua y Literatura",
+      "total_palabras": 20,
+      "total_oraciones": 10,
+      "descripcion": "10 palabras de uso de B/V (inicios bu-, bur-, bus-, -aba, va-, ve-, vi-, ven-, via-); 10 palabras de acentuación (Agudas, Graves, Esdrújulas); 10 oraciones exclamativas e interrogativas con falta del signo de apertura (¡/¿)."
+    }
+  ],
+  "elementos_culturales_nicaraguenses": [
+    "Nombres propios: Jerson, Nahomi, María, Carlos, Rosa",
+    "Frutas: nancites, pitahayas",
+    "Productos: café (libras, quintales), cacao, cajeta de leche",
+    "Moneda: córdobas (C$)",
+    "Lugares: Managua, Masaya, Granada",
+    "Transporte: buses de Managua",
+    "Comidas: tortillas, rosquillas"
+  ]
+}
