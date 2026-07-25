@@ -537,3 +537,44 @@ Stage Summary:
 - ✅ Dependencia de PNG eliminada; el logo ahora es vectorial y nítido a cualquier tamaño.
 - ✅ Login demo + dashboard verificados end-to-end con Agent Browser; sin errores de consola ni de runtime.
 - ✅ Sesiones existentes migradas automáticamente (legacy key educaplay_usuario → mundilex_usuario).
+
+---
+Task ID: AVATAR-3D-PERSONAJES-1
+Agent: main (orchestrator)
+Task: Arreglar pestañas de avatar vacías + rediseñar avatares en 3D + agregar personajes llamativos.
+
+Work Log:
+- Diagnóstico raíz: las pestañas (Ojos, Pelo, Accesorios, etc.) no mostraban nada porque la tabla ItemTienda del backend estaba vacía (GET /api/avatars/tienda → []). El endpoint POST /api/avatars/seed nunca se había llamado.
+- Ejecutado seed del catálogo: POST /api/avatars/seed → 201, "total": 31. Verificado: 6 categorías con items (CUERPO:4, OJOS:6, BOCA:4, CABELLO:6, ROPA:5, ACCESORIO:6).
+- Rediseñado /home/z/my-project/src/components/AvatarSVG.tsx con aspecto 3D claymorphism:
+  • viewBox ampliado 200×220 para incluir cuello + hombros/torso (antes era solo una cabeza flotante con ropa).
+  • Gradiente radial de piel 3 paradas (light/mid/dark) con foco de luz arriba-izquierda.
+  • Highlight especular (radialGradient gloss) en la cabeza para look clay glossy.
+  • Rim light (radialGradient rim) en el borde derecho para backlight.
+  • Cuello con sombra proyectada desde la cabeza (linearGradient neckShadow).
+  • Silueta de hombros/torso debajo de la ropa (da cuerpo 3D, la ropa ya no flota).
+  • Sombras en mejillas (blush) con gloss adicional.
+  • Sombra de suelo suave (shadowGrad) más profunda.
+  • Outline sutil claymorphism final.
+  • Todos los gradientes calculados con ID único por cuerpoKey para no colisionar entre previews.
+- Agregada sección "Personajes rápidos" al AvatarCustomizer (8 presets llamativos):
+  • Novato 🌱 (gratis), Soñador 😴, Robot Alien 🤖, Artista 🎨, Cadete 🚀, Estrella Pop 🌟, Genio 🧠, Héroe 🦸.
+  • Cada preset define las 6 categorías (CUERPO/OJOS/BOCA/CABELLO/ROPA/ACCESORIO).
+  • Diseñados con items mayormente gratis/baratos (monedas, nivel 1) para que un estudiante nuevo pueda aplicarlos.
+  • Función aplicarPersonaje(): preview optimista inmediato + loop secuencial comprar(si hace falta y se puede)+equipar por cada categoría. Si un item no se puede comprar (monedas/nivel), se salta y continúa. Toast final: "¡Personaje aplicado!" / "parcial" / "error".
+  • UI: fila horizontal scrollable de cards 28×4 con preview AvatarSVG 84px + nombre + descripción.
+- Verificación Agent Browser (vía gateway http://127.0.0.1:81/):
+  • Login DemoKid → Dashboard → click "Avatar" → Cámara de Personalización carga.
+  • Sección "Personajes rápidos" visible con 8 botones de personajes (Novato, Soñador, Robot Alien, Artista, Cadete, Estrella Pop, Genio, Héroe).
+  • Pestañas de categorías muestran items: OJOS → 6 option cards visibles con precios.
+  • Click "Robot Alien" → avatar config actualizado: cuerpo-verde + ojos-grandes + cabello-nada + ropa-basica + accesorio-nada (5/6 aplicados; boca-serio omitido por monedas insuficientes — comportamiento parcial diseñado).
+  • Elementos 3D verificados vía DOM: 13 gloss highlights, 13 rim lights, 13 body shadows, 13 ground shadows presentes en los 13 avatares de la página.
+  • Sin errores de consola.
+- Verificación VLM (glm-5v-turbo) sobre screenshot avatar-3d-final.png: confirma avatar con aspecto 3D (sombras, iluminación, profundidad en cápsula), sección "Personajes rápidos" con varios personajes, pestañas de categorías funcionales.
+
+Stage Summary:
+- ✅ Bug raíz corregido: la tienda de avatares ahora tiene 31 items (seed ejecutado). Las pestañas muestran opciones.
+- ✅ Avatares rediseñados con look 3D claymorphism: cuello, hombros/torso, gradientes radiales, highlight especular, rim light, sombras profundas.
+- ✅ 8 personajes llamativos agregados como presets de un solo toque (Novato, Soñador, Robot Alien, Artista, Cadete, Estrella Pop, Genio, Héroe).
+- ✅ aplicarPersonaje() con preview optimista + comprar+equipar secuencial + manejo graceful de fondos insuficientes.
+- ✅ Verificado end-to-end con Agent Browser + VLM. Sin errores de consola.

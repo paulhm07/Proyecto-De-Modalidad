@@ -16,6 +16,82 @@ const RAREZA_RING: Record<string, string> = {
   LEGENDARIA: "ring-2 ring-amber-400/70",
 };
 
+interface PersonajePreset {
+  id: string;
+  nombre: string;
+  emoji: string;
+  desc: string;
+  config: {
+    CUERPO: string;
+    OJOS: string;
+    BOCA: string;
+    CABELLO: string;
+    ROPA: string;
+    ACCESORIO: string;
+  };
+}
+
+// Personajes llamativos: combinaciones de las 6 categorías.
+// Diseñados con items mayormente gratis / baratos (monedas, nivel 1) para que un estudiante nuevo pueda aplicarlos.
+const PERSONAJES: PersonajePreset[] = [
+  {
+    id: "novato",
+    nombre: "Novato",
+    emoji: "🌱",
+    desc: "El look inicial, gratis",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-normales", BOCA: "boca-sonrisa", CABELLO: "cabello-nada", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "sonador",
+    nombre: "Soñador",
+    emoji: "😴",
+    desc: "Relajado con capucha",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-cerrados", BOCA: "boca-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-capucha", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "robot",
+    nombre: "Robot Alien",
+    emoji: "🤖",
+    desc: "¡Verde del espacio!",
+    config: { CUERPO: "cuerpo-verde", OJOS: "ojos-grandes", BOCA: "boca-serio", CABELLO: "cabello-nada", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "artista",
+    nombre: "Artista",
+    emoji: "🎨",
+    desc: "Creativo y feliz",
+    config: { CUERPO: "cuerpo-medio", OJOS: "ojos-felices", BOCA: "boca-gran-sonrisa", CABELLO: "cabello-largo", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "cadete",
+    nombre: "Cadete",
+    emoji: "🚀",
+    desc: "Uniforme espacial",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-serio", CABELLO: "cabello-corto", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "pop",
+    nombre: "Estrella Pop",
+    emoji: "🌟",
+    desc: "Travieso con estrella",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-felices", BOCA: "boca-lengua", CABELLO: "cabello-corto", ROPA: "ropa-basica", ACCESORIO: "accesorio-estrella" },
+  },
+  {
+    id: "intellect",
+    nombre: "Genio",
+    emoji: "🧠",
+    desc: "Con gafas intelectuales",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-gafas" },
+  },
+  {
+    id: "heroe",
+    nombre: "Héroe",
+    emoji: "🦸",
+    desc: "Capucha misteriosa",
+    config: { CUERPO: "cuerpo-oscuro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-nada", ROPA: "ropa-capucha", ACCESORIO: "accesorio-nada" },
+  },
+];
+
 export function AvatarCustomizer() {
   const { usuario, setVista, mostrarToast, setUsuario } = useApp();
   const [data, setData] = useState<MiAvatarResponse | null>(null);
@@ -23,6 +99,69 @@ export function AvatarCustomizer() {
   const [cargando, setCargando] = useState(true);
   const [catActiva, setCatActiva] = useState<CategoriaAvatar>("CUERPO");
   const [accionando, setAccionando] = useState<string | null>(null);
+  const [aplicandoPersonaje, setAplicandoPersonaje] = useState(false);
+
+  // Aplica un personaje completo: compra (si hace falta y se puede) y equipa las 6 categorías en secuencia.
+  const aplicarPersonaje = async (p: PersonajePreset) => {
+    if (!usuario || !data) return;
+    setAplicandoPersonaje(true);
+    // Preview optimista: muestra el look completo al instante
+    const configOptimista = { ...data.config, ...p.config };
+    setData((prev) => (prev ? { ...prev, config: configOptimista } : prev));
+    try {
+      let configActual = configOptimista;
+      let monedasActual = data.monedas;
+      let gemasActual = data.gemas;
+      let ownedActual = [...data.itemsOwned];
+      let faltaron = 0;
+      let equipados = 0;
+      // Procesar las 6 categorías en secuencia
+      for (const [cat, clave] of Object.entries(p.config)) {
+        const item = tienda.find((it) => it.categoria === cat && it.clave === clave);
+        if (!item) { faltaron++; continue; }
+        const esGratis = item.precioMonedas === 0 && item.precioGemas === 0;
+        const yaPosee = ownedActual.includes(item.id);
+        // Si no es gratis y no lo posee, intentar comprar
+        if (!esGratis && !yaPosee) {
+          const nivelOk = (data.nivel) >= item.nivelRequerido;
+          const fondosOk = item.precioGemas > 0 ? gemasActual >= item.precioGemas : monedasActual >= item.precioMonedas;
+          if (!nivelOk || !fondosOk) { faltaron++; continue; }
+          try {
+            const res = await api.comprar(usuario.id, item.id);
+            monedasActual = res.monedas;
+            gemasActual = res.gemas;
+            ownedActual = [...ownedActual, item.id];
+          } catch {
+            faltaron++; continue;
+          }
+        }
+        // Equipar
+        try {
+          const res = await api.equipar(usuario.id, item.id);
+          configActual = res.config;
+          equipados++;
+        } catch {
+          faltaron++;
+        }
+      }
+      // Actualizar estado local con el resultado real del backend
+      setData((prev) => (prev ? { ...prev, config: configActual, monedas: monedasActual, gemas: gemasActual, itemsOwned: ownedActual } : prev));
+      setUsuario({ ...usuario, monedas: monedasActual, gemas: gemasActual });
+      if (faltaron === 0) {
+        mostrarToast(`¡${p.nombre} aplicado! (${equipados} piezas)`, "exito");
+      } else if (equipados > 0) {
+        mostrarToast(`¡${p.nombre} parcial! ${equipados} piezas aplicadas, ${faltaron} bloqueadas (monedas/nivel)`, "info");
+      } else {
+        mostrarToast(`No pudiste aplicar ${p.nombre}. Necesitas más monedas o nivel`, "error");
+      }
+    } catch (err) {
+      mostrarToast(err instanceof Error ? err.message : "Error al aplicar el personaje", "error");
+      // Recargar para sincronizar con el backend real
+      await cargar();
+    } finally {
+      setAplicandoPersonaje(false);
+    }
+  };
 
   const cargar = async () => {
     if (!usuario) return;
@@ -198,6 +337,37 @@ export function AvatarCustomizer() {
 
           {/* ===== RIGHT: Building-block option cards ===== */}
           <div>
+            {/* ===== Character presets (llamativo quick-select) ===== */}
+            <div className="neu-inset-sm mb-5 rounded-2xl p-4">
+              <div className="mb-3 flex items-center gap-2">
+                <Sparkles size={18} strokeWidth={2.5} className="text-orange-500" />
+                <h2 className="font-display text-base font-bold text-stone-700">Personajes rápidos</h2>
+                <span className="ml-auto rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-700">
+                  {PERSONAJES.length} personajes
+                </span>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "thin" }}>
+                {PERSONAJES.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => aplicarPersonaje(p)}
+                    disabled={aplicandoPersonaje}
+                    className="group flex w-28 shrink-0 flex-col items-center gap-1.5 rounded-2xl p-2.5 transition-all hover:scale-105 disabled:opacity-50 neu-raised-sm"
+                    aria-label={`Aplicar personaje ${p.nombre}`}
+                  >
+                    <div className="neu-inset-sm flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl">
+                      <AvatarSVG config={p.config} size={84} className="transition-transform group-hover:scale-110" />
+                    </div>
+                    <span className="text-center text-[11px] font-bold leading-tight text-stone-700">{p.emoji} {p.nombre}</span>
+                    <span className="text-center text-[9px] font-medium leading-tight text-stone-500">{p.desc}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-center text-[10px] font-medium text-stone-400">
+                Toca un personaje para aplicar su look completo (compra y equipa automáticamente)
+              </p>
+            </div>
+
             {/* Category tabs — BIG icons with small text below */}
             <div className="mb-5 grid grid-cols-3 gap-2.5 sm:grid-cols-6">
               {CATEGORIAS_ORDER.map((catId) => {

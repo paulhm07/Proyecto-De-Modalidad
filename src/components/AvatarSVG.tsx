@@ -7,11 +7,11 @@ interface AvatarSVGProps {
   className?: string;
 }
 
-const CUERPO_GRADIENTS: Record<string, { light: string; dark: string; cheek: string }> = {
-  "cuerpo-claro": { light: "#ffe5c9", dark: "#f7c9a0", cheek: "#ff8fa3" },
-  "cuerpo-medio": { light: "#f0c089", dark: "#d99a5e", cheek: "#c64a5e" },
-  "cuerpo-oscuro": { light: "#b5763f", dark: "#8a5226", cheek: "#5e2a35" },
-  "cuerpo-verde": { light: "#b7e892", dark: "#7fc85a", cheek: "#3a8a4a" },
+const CUERPO_GRADIENTS: Record<string, { light: string; mid: string; dark: string; cheek: string; shadow: string }> = {
+  "cuerpo-claro": { light: "#fff0dc", mid: "#ffd9a8", dark: "#e0a878", cheek: "#ff8fa3", shadow: "#b87b4e" },
+  "cuerpo-medio": { light: "#f4cb95", mid: "#d99a5e", dark: "#b5763f", cheek: "#c64a5e", shadow: "#8a5226" },
+  "cuerpo-oscuro": { light: "#c9854f", mid: "#a35e30", dark: "#7a4422", cheek: "#5e2a35", shadow: "#4a2a16" },
+  "cuerpo-verde": { light: "#d4f9b0", mid: "#9ee070", dark: "#6bb842", cheek: "#3a8a4a", shadow: "#3a7a2a" },
 };
 const ROPA_COLORS: Record<string, { light: string; dark: string }> = {
   "ropa-basica": { light: "#2dd4bf", dark: "#0d9488" },
@@ -29,9 +29,27 @@ export function AvatarSVG({ config, size = 200, className = "" }: AvatarSVGProps
   const ropaKey = c.ropa ?? "ropa-basica";
 
   return (
-    <svg width={size} height={size} viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Avatar del estudiante">
+    <svg width={size} height={size} viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Avatar del estudiante">
       <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={grad.light} /><stop offset="100%" stopColor={grad.dark} /></linearGradient>
+        {/* 3D skin gradient: bright top-left → mid → dark bottom-right */}
+        <radialGradient id={gradId} cx="35%" cy="28%" r="80%">
+          <stop offset="0%" stopColor={grad.light} />
+          <stop offset="45%" stopColor={grad.mid} />
+          <stop offset="100%" stopColor={grad.dark} />
+        </radialGradient>
+        {/* Specular highlight for the head (glossy clay look) */}
+        <radialGradient id={`gloss-${cuerpoKey}`} cx="30%" cy="20%" r="35%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.75)" />
+          <stop offset="60%" stopColor="rgba(255,255,255,0.15)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+        {/* Rim light (right edge backlight) */}
+        <radialGradient id={`rim-${cuerpoKey}`} cx="78%" cy="55%" r="45%">
+          <stop offset="0%" stopColor="rgba(255,235,200,0)" />
+          <stop offset="75%" stopColor="rgba(255,235,200,0)" />
+          <stop offset="92%" stopColor="rgba(255,225,180,0.45)" />
+          <stop offset="100%" stopColor="rgba(255,225,180,0)" />
+        </radialGradient>
         <linearGradient id="grad-ropa-basica" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={ROPA_COLORS["ropa-basica"].light} /><stop offset="100%" stopColor={ROPA_COLORS["ropa-basica"].dark} /></linearGradient>
         <linearGradient id="grad-ropa-uniforme" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={ROPA_COLORS["ropa-uniforme"].light} /><stop offset="100%" stopColor={ROPA_COLORS["ropa-uniforme"].dark} /></linearGradient>
         <linearGradient id="grad-ropa-capucha" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor={ROPA_COLORS["ropa-capucha"].light} /><stop offset="100%" stopColor={ROPA_COLORS["ropa-capucha"].dark} /></linearGradient>
@@ -40,39 +58,79 @@ export function AvatarSVG({ config, size = 200, className = "" }: AvatarSVGProps
           <stop offset="0%" stopColor="#ef4444" /><stop offset="20%" stopColor="#f97316" /><stop offset="40%" stopColor="#facc15" />
           <stop offset="60%" stopColor="#22c55e" /><stop offset="80%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#a855f7" />
         </linearGradient>
-        <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(45,20,55,0.18)" /><stop offset="100%" stopColor="rgba(45,20,55,0)" /></radialGradient>
-        <radialGradient id="headHighlight" cx="30%" cy="25%" r="40%"><stop offset="0%" stopColor="rgba(255,255,255,0.55)" /><stop offset="100%" stopColor="rgba(255,255,255,0)" /></radialGradient>
-        <radialGradient id="irisGrad" cx="50%" cy="40%" r="60%"><stop offset="0%" stopColor="#5a2d6e" /><stop offset="100%" stopColor="#2d1437" /></radialGradient>
+        {/* Soft ground shadow */}
+        <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(30,15,40,0.32)" /><stop offset="70%" stopColor="rgba(30,15,40,0.12)" /><stop offset="100%" stopColor="rgba(30,15,40,0)" /></radialGradient>
+        {/* Neck shadow (casts from head onto neck) */}
+        <linearGradient id="neckShadow" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="rgba(0,0,0,0.35)" /><stop offset="100%" stopColor="rgba(0,0,0,0)" /></linearGradient>
+        <radialGradient id="irisGrad" cx="50%" cy="38%" r="62%"><stop offset="0%" stopColor="#7a3a8e" /><stop offset="70%" stopColor="#3d1a4a" /><stop offset="100%" stopColor="#1a0a22" /></radialGradient>
+        <radialGradient id="bodyShadow" cx="50%" cy="0%" r="70%"><stop offset="0%" stopColor="rgba(0,0,0,0.22)" /><stop offset="100%" stopColor="rgba(0,0,0,0)" /></radialGradient>
       </defs>
-      <ellipse cx="100" cy="190" rx="55" ry="8" fill="url(#shadowGrad)" />
+
+      {/* ===== Ground shadow ===== */}
+      <ellipse cx="100" cy="210" rx="58" ry="9" fill="url(#shadowGrad)" />
+
+      {/* ===== Back hair (behind body) ===== */}
+      <CabelloBackLayer clave={c.cabello ?? "cabello-nada"} grad={grad} />
+
+      {/* ===== Neck ===== */}
+      <path d="M84 128 L84 156 Q84 164 92 166 L108 166 Q116 164 116 156 L116 128 Z" fill={`url(#${gradId})`} />
+      {/* Neck shadow from head */}
+      <path d="M84 128 L84 142 Q100 152 116 142 L116 128 Z" fill="url(#neckShadow)" />
+      {/* Neck highlight */}
+      <path d="M88 130 L88 150" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" />
+
+      {/* ===== Shoulders / torso silhouette (gives 3D body under clothes) ===== */}
+      <path d="M44 220 Q44 178 72 164 L128 164 Q156 178 156 220 Z" fill={`url(#${gradId})`} stroke={grad.shadow} strokeWidth="1.5" />
+      {/* Torso shadow (depth under chin) */}
+      <path d="M44 220 Q44 178 72 164 L128 164 Q156 178 156 220 Z" fill="url(#bodyShadow)" />
+
+      {/* ===== Clothing (on top of torso) ===== */}
       <RopaLayer clave={ropaKey} />
-      <circle cx="100" cy="88" r="58" fill={`url(#${gradId})`} stroke="#2d1437" strokeWidth="2.5" />
-      <circle cx="100" cy="88" r="58" fill="url(#headHighlight)" />
-      <ellipse cx="64" cy="100" rx="9" ry="6" fill={grad.cheek} opacity="0.55" />
-      <ellipse cx="136" cy="100" rx="9" ry="6" fill={grad.cheek} opacity="0.55" />
+
+      {/* ===== Head (3D sphere) ===== */}
+      <circle cx="100" cy="86" r="58" fill={`url(#${gradId})`} stroke={grad.shadow} strokeWidth="2" />
+      {/* Rim light on right edge */}
+      <circle cx="100" cy="86" r="58" fill={`url(#rim-${cuerpoKey})`} />
+      {/* Specular gloss on top-left */}
+      <circle cx="100" cy="86" r="58" fill={`url(#gloss-${cuerpoKey})`} />
+
+      {/* Cheeks (soft blush, 3D placement) */}
+      <ellipse cx="64" cy="100" rx="10" ry="6.5" fill={grad.cheek} opacity="0.5" />
+      <ellipse cx="136" cy="100" rx="10" ry="6.5" fill={grad.cheek} opacity="0.5" />
+      {/* Cheek gloss */}
+      <ellipse cx="62" cy="97" rx="4" ry="2" fill="rgba(255,255,255,0.4)" />
+      <ellipse cx="134" cy="97" rx="4" ry="2" fill="rgba(255,255,255,0.4)" />
+
+      {/* ===== Front hair ===== */}
       <CabelloFrontLayer clave={c.cabello ?? "cabello-nada"} />
+
+      {/* ===== Face features ===== */}
       <OjosLayer clave={c.ojos ?? "ojos-normales"} />
       <BocaLayer clave={c.boca ?? "boca-sonrisa"} />
+
+      {/* ===== Accessories (front-most) ===== */}
       <AccesorioLayer clave={c.accesorio ?? "accesorio-nada"} />
-      <CabelloBackLayer clave={c.cabello ?? "cabello-nada"} />
+
+      {/* ===== Subtle outline for claymorphism pop ===== */}
+      <circle cx="100" cy="86" r="58" fill="none" stroke="rgba(45,20,55,0.18)" strokeWidth="1" />
     </svg>
   );
 }
 
-function CabelloBackLayer({ clave }: { clave: string }) {
+function CabelloBackLayer({ clave, grad }: { clave: string; grad: typeof CUERPO_GRADIENTS[string] }) {
   switch (clave) {
-    case "cabello-largo": return (<g><path d="M44 95 Q42 140 50 165 L62 165 Q56 140 58 100 Z" fill="#3a2515" stroke="#2d1437" strokeWidth="1.5" /><path d="M156 95 Q158 140 150 165 L138 165 Q144 140 142 100 Z" fill="#3a2515" stroke="#2d1437" strokeWidth="1.5" /></g>);
+    case "cabello-largo": return (<g><path d="M44 95 Q42 140 50 165 L62 165 Q56 140 58 100 Z" fill="#3a2515" stroke="#2d1437" strokeWidth="1.5" /><path d="M156 95 Q158 140 150 165 L138 165 Q144 140 142 100 Z" fill="#3a2515" stroke="#2d1437" strokeWidth="1.5" /><path d="M46 100 Q44 130 50 150" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2" strokeLinecap="round" /><path d="M154 100 Q156 130 150 150" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2" strokeLinecap="round" /></g>);
     default: return null;
   }
 }
 
 function CabelloFrontLayer({ clave }: { clave: string }) {
   switch (clave) {
-    case "cabello-corto": return (<g><path d="M44 88 Q44 42 100 38 Q156 42 156 88 Q152 70 138 64 Q130 78 110 76 Q100 80 90 76 Q70 78 62 64 Q48 70 44 88 Z" fill="#5a3a25" stroke="#2d1437" strokeWidth="2" /><path d="M70 52 Q90 44 110 50" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="3" strokeLinecap="round" /></g>);
-    case "cabello-largo": return (<g><path d="M42 92 Q42 38 100 34 Q158 38 158 92 Q154 66 138 58 Q128 74 110 72 Q100 76 90 72 Q72 74 62 58 Q46 66 42 92 Z" fill="#4a2c1a" stroke="#2d1437" strokeWidth="2" /><path d="M68 50 Q90 42 112 48" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="3" strokeLinecap="round" /></g>);
-    case "cabello-mohawk": return (<g><defs><linearGradient id="mohawkGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#fbbf24" /><stop offset="50%" stopColor="#f97316" /><stop offset="100%" stopColor="#dc2626" /></linearGradient></defs><path d="M88 60 Q90 22 100 14 Q110 22 112 60 L108 62 L104 58 L100 62 L96 58 L92 62 Z" fill="url(#mohawkGrad)" stroke="#2d1437" strokeWidth="2" /><path d="M52 86 Q50 70 58 64 L62 80 Z" fill="#3a2515" stroke="#2d1437" strokeWidth="1.5" /><path d="M148 86 Q150 70 142 64 L138 80 Z" fill="#3a2515" stroke="#2d1437" strokeWidth="1.5" /></g>);
-    case "cabello-corona": return (<g><defs><linearGradient id="crownGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#fde047" /><stop offset="100%" stopColor="#ca8a04" /></linearGradient></defs><path d="M58 54 L72 24 L88 46 L100 18 L112 46 L128 24 L142 54 Q120 60 100 60 Q80 60 58 54 Z" fill="url(#crownGrad)" stroke="#854d0e" strokeWidth="2" strokeLinejoin="round" /><rect x="58" y="50" width="84" height="8" rx="2" fill="#eab308" stroke="#854d0e" strokeWidth="1.5" /><circle cx="100" cy="34" r="4.5" fill="#dc2626" stroke="#7f1d1d" strokeWidth="1" /><circle cx="78" cy="40" r="3.5" fill="#3b82f6" stroke="#1e3a8a" strokeWidth="1" /><circle cx="122" cy="40" r="3.5" fill="#22c55e" stroke="#14532d" strokeWidth="1" /><circle cx="100" cy="33" r="1.4" fill="white" opacity="0.9" /><circle cx="78" cy="39" r="1.1" fill="white" opacity="0.9" /><circle cx="122" cy="39" r="1.1" fill="white" opacity="0.9" /></g>);
-    case "cabello-gorro-graduacion": return (<g><rect x="56" y="46" width="88" height="16" rx="3" fill="#1f1147" stroke="#0d0826" strokeWidth="1.5" /><polygon points="100,18 158,46 100,74 42,46" fill="#1f1147" stroke="#0d0826" strokeWidth="1.5" strokeLinejoin="round" /><circle cx="100" cy="46" r="3" fill="#fbbf24" stroke="#854d0e" strokeWidth="1" /><path d="M156 46 Q168 50 170 60 Q172 64 168 66" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" /><circle cx="170" cy="64" r="5" fill="#fbbf24" stroke="#854d0e" strokeWidth="1.5" /><line x1="167" y1="66" x2="165" y2="72" stroke="#ca8a04" strokeWidth="1" /><line x1="170" y1="67" x2="170" y2="74" stroke="#ca8a04" strokeWidth="1" /><line x1="173" y1="66" x2="175" y2="72" stroke="#ca8a04" strokeWidth="1" /></g>);
+    case "cabello-corto": return (<g><path d="M44 88 Q44 42 100 38 Q156 42 156 88 Q152 70 138 64 Q130 78 110 76 Q100 80 90 76 Q70 78 62 64 Q48 70 44 88 Z" fill="#5a3a25" stroke="#2d1437" strokeWidth="2" /><path d="M70 52 Q90 44 110 50" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round" /><path d="M48 84 Q46 60 60 50" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" /></g>);
+    case "cabello-largo": return (<g><path d="M42 92 Q42 38 100 34 Q158 38 158 92 Q154 66 138 58 Q128 74 110 72 Q100 76 90 72 Q72 74 62 58 Q46 66 42 92 Z" fill="#4a2c1a" stroke="#2d1437" strokeWidth="2" /><path d="M68 50 Q90 42 112 48" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="3" strokeLinecap="round" /><path d="M46 86 Q44 58 62 46" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" /></g>);
+    case "cabello-mohawk": return (<g><defs><linearGradient id="mohawkGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#fbbf24" /><stop offset="50%" stopColor="#f97316" /><stop offset="100%" stopColor="#dc2626" /></linearGradient></defs><path d="M88 60 Q90 22 100 14 Q110 22 112 60 L108 62 L104 58 L100 62 L96 58 L92 62 Z" fill="url(#mohawkGrad)" stroke="#2d1437" strokeWidth="2" /><path d="M52 86 Q50 70 58 64 L62 80 Z" fill="#3a2515" stroke="#2d1437" strokeWidth="1.5" /><path d="M148 86 Q150 70 142 64 L138 80 Z" fill="#3a2515" stroke="#2d1437" strokeWidth="1.5" /><path d="M96 20 Q98 30 100 18" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" /></g>);
+    case "cabello-corona": return (<g><defs><linearGradient id="crownGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#fde047" /><stop offset="100%" stopColor="#ca8a04" /></linearGradient><linearGradient id="crownShine" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="rgba(255,255,255,0)" /><stop offset="50%" stopColor="rgba(255,255,255,0.6)" /><stop offset="100%" stopColor="rgba(255,255,255,0)" /></linearGradient></defs><path d="M58 54 L72 24 L88 46 L100 18 L112 46 L128 24 L142 54 Q120 60 100 60 Q80 60 58 54 Z" fill="url(#crownGrad)" stroke="#854d0e" strokeWidth="2" strokeLinejoin="round" /><rect x="58" y="50" width="84" height="8" rx="2" fill="#eab308" stroke="#854d0e" strokeWidth="1.5" /><rect x="58" y="50" width="84" height="4" rx="2" fill="url(#crownShine)" /><circle cx="100" cy="34" r="4.5" fill="#dc2626" stroke="#7f1d1d" strokeWidth="1" /><circle cx="78" cy="40" r="3.5" fill="#3b82f6" stroke="#1e3a8a" strokeWidth="1" /><circle cx="122" cy="40" r="3.5" fill="#22c55e" stroke="#14532d" strokeWidth="1" /><circle cx="100" cy="33" r="1.4" fill="white" opacity="0.9" /><circle cx="78" cy="39" r="1.1" fill="white" opacity="0.9" /><circle cx="122" cy="39" r="1.1" fill="white" opacity="0.9" /></g>);
+    case "cabello-gorro-graduacion": return (<g><rect x="56" y="46" width="88" height="16" rx="3" fill="#1f1147" stroke="#0d0826" strokeWidth="1.5" /><polygon points="100,18 158,46 100,74 42,46" fill="#1f1147" stroke="#0d0826" strokeWidth="1.5" strokeLinejoin="round" /><polygon points="100,18 158,46 100,46 42,46" fill="rgba(255,255,255,0.08)" /><circle cx="100" cy="46" r="3" fill="#fbbf24" stroke="#854d0e" strokeWidth="1" /><path d="M156 46 Q168 50 170 60 Q172 64 168 66" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" /><circle cx="170" cy="64" r="5" fill="#fbbf24" stroke="#854d0e" strokeWidth="1.5" /><circle cx="168" cy="62" r="1.5" fill="rgba(255,255,255,0.6)" /><line x1="167" y1="66" x2="165" y2="72" stroke="#ca8a04" strokeWidth="1" /><line x1="170" y1="67" x2="170" y2="74" stroke="#ca8a04" strokeWidth="1" /><line x1="173" y1="66" x2="175" y2="72" stroke="#ca8a04" strokeWidth="1" /></g>);
     default: return null;
   }
 }
