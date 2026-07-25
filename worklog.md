@@ -642,3 +642,31 @@ Stage Summary:
 - ✅ Cápsula 60% más grande (h-96 vs h-60) con podio iluminado 3D cian debajo del avatar.
 - ✅ Banner "Modo Demo activo" ámbar; items muestran "Equipar" sin precios en demo.
 - ✅ Verificado end-to-end con Agent Browser + VLM (glm-5v-turbo). Sin errores.
+
+---
+Task ID: AVATAR-ARROWS
+Agent: main (Frontend Developer)
+Task: Agregar flechas de navegación izquierda/derecha en la pantalla del avatar para que se puedan ver todas las opciones de personajes rápidos (carrusel horizontal con scroll).
+
+Work Log:
+- Leído AvatarCustomizer.tsx para entender la estructura actual de la fila de "Personajes rápidos" (scroll horizontal sin indicadores visibles).
+- Agregados imports: useRef, useCallback de React; ChevronLeft, ChevronRight de lucide-react.
+- Implementado estado de scroll: personajesScrollRef (ref), puedeIzq/puedeDer (state), verificarScrollPersonajes (callback), desplazarPersonajes (función que usa scrollBy con behavior smooth).
+- Agregadas flechas circulares blancas con ring cyan, posicionadas absolutamente a izquierda/derecha del carrusel, con transiciones hover:scale-110 y active:scale-95.
+- Agregados degradados de borde (stone-200/90) que aparecen/desaparecen según haya contenido para scroll, como indicador visual adicional.
+- Agregado texto helper "Desliza para ver los 8 personajes" con chevrones pequeños.
+- Ocultada la scrollbar nativa con [scrollbar-width:none] y [&::-webkit-scrollbar]:hidden para un look más limpio.
+- Fix crítico 1: Agregado min-w-0 a la columna derecha del grid y al contenedor de scroll — sin esto, el contenedor crecía con el contenido (scrollWidth==clientWidth) y nunca había overflow.
+- Fix crítico 2: Agregado cargando a las dependencias del useEffect — sin esto, el efecto se ejecutaba durante el estado de carga cuando el contenedor no existía en el DOM.
+- Fix crítico 3: Agregado ResizeObserver + setTimeout de 400ms como backup — detecta cuando el layout termina de restringir el ancho del contenedor (de 988px sin restricción a ~326px en móvil).
+- Verificado con Agent Browser en móvil (390x844): flecha derecha habilitada al inicio, flecha izquierda deshabilitada; al hacer clic en flecha derecha, scroll se desplaza 260px y ambas flechas se habilitan.
+- Verificado en desktop (1280x800): flecha derecha habilitada (overflow 988>684), comportamiento correcto.
+- Verificado a través del gateway de Caddy (puerto 81): items de la tienda cargan correctamente, botones "Equipar" visibles.
+- VLM confirmó: flechas visibles, tarjetas de personajes completas, texto helper presente, diseño limpio sin superposiciones.
+
+Stage Summary:
+- Las flechas de navegación izquierda/derecha funcionan correctamente en la fila de "Personajes rápidos".
+- Se ocultan automáticamente cuando no hay overflow (ej: pantallas muy anchas) y se muestran cuando hay contenido adicional.
+- El scroll es suave (behavior: smooth) y desplaza 260px por clic (~2 tarjetas).
+- Los tres fixes técnicos (min-w-0, dependencia cargando, ResizeObserver) fueron necesarios para que la detección de overflow funcione可靠mente.
+- Archivo modificado: /home/z/my-project/src/components/AvatarCustomizer.tsx

@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
-import { ArrowLeft, Coins, Gem, Lock, Check, Sparkles, Loader2, Wrench } from "lucide-react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { ArrowLeft, Coins, Gem, Lock, Check, Sparkles, Loader2, Wrench, ChevronLeft, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
 import type { CategoriaAvatar, ItemTienda, MiAvatarResponse } from "@/lib/types";
@@ -100,6 +100,52 @@ export function AvatarCustomizer() {
   const [catActiva, setCatActiva] = useState<CategoriaAvatar>("CUERPO");
   const [accionando, setAccionando] = useState<string | null>(null);
   const [aplicandoPersonaje, setAplicandoPersonaje] = useState(false);
+
+  // ===== Scroll horizontal con flechas para Personajes rápidos =====
+  const personajesScrollRef = useRef<HTMLDivElement>(null);
+  const [puedeIzq, setPuedeIzq] = useState(false);
+  const [puedeDer, setPuedeDer] = useState(false);
+
+  const verificarScrollPersonajes = useCallback(() => {
+    const el = personajesScrollRef.current;
+    if (!el) return;
+    setPuedeIzq(el.scrollLeft > 4);
+    setPuedeDer(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  const desplazarPersonajes = (dir: 1 | -1) => {
+    const el = personajesScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * 260, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (cargando) return; // esperar a que el contenido esté en el DOM
+    const el = personajesScrollRef.current;
+    if (!el) return;
+
+    verificarScrollPersonajes();
+    const rafId = requestAnimationFrame(verificarScrollPersonajes);
+
+    // Listener de scroll manual
+    el.addEventListener("scroll", verificarScrollPersonajes, { passive: true });
+    window.addEventListener("resize", verificarScrollPersonajes);
+
+    // ResizeObserver: detecta cuando el layout termina de restringir el ancho del contenedor
+    const resizeObserver = new ResizeObserver(() => verificarScrollPersonajes());
+    resizeObserver.observe(el);
+
+    // Backup: re-verificar tras un breve retardo por si el layout tarda en estabilizarse
+    const timeoutId = setTimeout(verificarScrollPersonajes, 400);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timeoutId);
+      el.removeEventListener("scroll", verificarScrollPersonajes);
+      window.removeEventListener("resize", verificarScrollPersonajes);
+      resizeObserver.disconnect();
+    };
+  }, [verificarScrollPersonajes, cargando]);
 
   // ===== MODO DEMO: DemoKid / PadreDemo / MaestroDemo tienen TODO el catálogo desbloqueado =====
   const esModoDemo = usuario?.nombre === "DemoKid" || usuario?.nombre === "PadreDemo" || usuario?.nombre === "MaestroDemo";
@@ -341,7 +387,7 @@ export function AvatarCustomizer() {
           </div>
 
           {/* ===== RIGHT: Building-block option cards ===== */}
-          <div>
+          <div className="min-w-0">
             {/* ===== Character presets (llamativo quick-select) ===== */}
             <div className="neu-inset-sm mb-5 rounded-2xl p-4">
               <div className="mb-3 flex items-center gap-2">
@@ -351,22 +397,65 @@ export function AvatarCustomizer() {
                   {PERSONAJES.length} personajes
                 </span>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "thin" }}>
-                {PERSONAJES.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => aplicarPersonaje(p)}
-                    disabled={aplicandoPersonaje}
-                    className="group flex w-28 shrink-0 flex-col items-center gap-1.5 rounded-2xl p-2.5 transition-all hover:scale-105 disabled:opacity-50 neu-raised-sm"
-                    aria-label={`Aplicar personaje ${p.nombre}`}
-                  >
-                    <div className="neu-inset-sm flex h-28 w-24 items-center justify-center overflow-hidden rounded-2xl">
-                      <AvatarSVG config={p.config} size={72} className="transition-transform group-hover:scale-110" />
-                    </div>
-                    <span className="text-center text-[11px] font-bold leading-tight text-stone-700">{p.emoji} {p.nombre}</span>
-                    <span className="text-center text-[9px] font-medium leading-tight text-stone-500">{p.desc}</span>
-                  </button>
-                ))}
+              <div className="relative">
+                {/* Degradados de borde para indicar más contenido */}
+                <div
+                  aria-hidden
+                  className={`pointer-events-none absolute left-0 top-0 bottom-2 z-10 w-10 rounded-l-2xl bg-gradient-to-r from-stone-200/90 to-transparent transition-opacity duration-200 ${puedeIzq ? "opacity-100" : "opacity-0"}`}
+                />
+                <div
+                  aria-hidden
+                  className={`pointer-events-none absolute right-0 top-0 bottom-2 z-10 w-10 rounded-r-2xl bg-gradient-to-l from-stone-200/90 to-transparent transition-opacity duration-200 ${puedeDer ? "opacity-100" : "opacity-0"}`}
+                />
+
+                {/* Flecha izquierda */}
+                <button
+                  onClick={() => desplazarPersonajes(-1)}
+                  disabled={!puedeIzq}
+                  className={`absolute left-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-cyan-600 shadow-lg ring-2 ring-cyan-200 transition-all hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${puedeIzq ? "opacity-100" : "opacity-0"}`}
+                  aria-label="Ver personajes anteriores"
+                >
+                  <ChevronLeft size={22} strokeWidth={2.5} />
+                </button>
+
+                {/* Contenedor con scroll oculto */}
+                <div
+                  ref={personajesScrollRef}
+                  className="flex min-w-0 gap-3 overflow-x-auto px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {PERSONAJES.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => aplicarPersonaje(p)}
+                      disabled={aplicandoPersonaje}
+                      className="group flex w-28 shrink-0 flex-col items-center gap-1.5 rounded-2xl p-2.5 transition-all hover:scale-105 disabled:opacity-50 neu-raised-sm"
+                      aria-label={`Aplicar personaje ${p.nombre}`}
+                    >
+                      <div className="neu-inset-sm flex h-28 w-24 items-center justify-center overflow-hidden rounded-2xl">
+                        <AvatarSVG config={p.config} size={72} className="transition-transform group-hover:scale-110" />
+                      </div>
+                      <span className="text-center text-[11px] font-bold leading-tight text-stone-700">{p.emoji} {p.nombre}</span>
+                      <span className="text-center text-[9px] font-medium leading-tight text-stone-500">{p.desc}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Flecha derecha */}
+                <button
+                  onClick={() => desplazarPersonajes(1)}
+                  disabled={!puedeDer}
+                  className={`absolute right-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-cyan-600 shadow-lg ring-2 ring-cyan-200 transition-all hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${puedeDer ? "opacity-100" : "opacity-0"}`}
+                  aria-label="Ver personajes siguientes"
+                >
+                  <ChevronRight size={22} strokeWidth={2.5} />
+                </button>
+
+                {/* Contador de posición / hint */}
+                <p className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-medium text-stone-400">
+                  <ChevronLeft size={11} strokeWidth={2.5} />
+                  Desliza para ver los {PERSONAJES.length} personajes
+                  <ChevronRight size={11} strokeWidth={2.5} />
+                </p>
               </div>
               <p className="mt-1.5 text-center text-[10px] font-medium text-stone-400">
                 {esModoDemo
