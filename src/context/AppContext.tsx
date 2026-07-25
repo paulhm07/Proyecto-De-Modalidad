@@ -57,7 +57,8 @@ interface AppContextValue {
   cerrarSesion: () => void;
 }
 
-const STORAGE_KEY = "educaplay_usuario";
+const STORAGE_KEY = "mundilex_usuario";
+const LEGACY_STORAGE_KEY = "educaplay_usuario";
 
 const AppContext = createContext<AppContextValue | null>(null);
 
@@ -71,10 +72,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [hidratado, setHidratado] = useState(false);
 
-  // Cargar usuario desde localStorage al montar
+  // Cargar usuario desde localStorage al montar (con migración de clave legacy)
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        // Migración: si existe la clave antigua de EducaPlay, reutilizarla
+        raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (raw) {
+          localStorage.setItem(STORAGE_KEY, raw);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        }
+      }
       if (raw) {
         const u = JSON.parse(raw) as Usuario;
         setUsuarioState(u);

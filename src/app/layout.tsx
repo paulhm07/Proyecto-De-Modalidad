@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EducaPlay — Aprende jugando",
+  title: "Mundilex — Aprende jugando",
   description:
-    "EducaPlay: plataforma educativa gamificada para estudiantes de 3er grado. Aprende jugando con desafíos, medallas y avatares.",
+    "Mundilex: plataforma educativa gamificada para estudiantes de 3er grado. Aprende jugando con desafíos, medallas y avatares.",
 };
 
 export const viewport: Viewport = {
@@ -153,7 +153,7 @@ export default function RootLayout({
 
         <footer className="mt-auto border-t border-cyan-400/25 bg-violet-950/40 py-4 backdrop-blur-md">
           <div className="mx-auto max-w-6xl px-4 text-center text-xs font-semibold text-cyan-200/80">
-            EducaPlay · Cristal del Saber · Hecho con cariño para estudiantes de 3er grado ·
+            Mundilex · Cristal del Saber · Hecho con cariño para estudiantes de 3er grado ·
             <span className="ml-1 text-amber-300/90">Aprende jugando</span>
           </div>
         </footer>

@@ -1,5 +1,5 @@
 // =============================================================================
-// 📚 BANCO DE DESAFÍOS — EducaPlay
+// 📚 BANCO DE DESAFÍOS — Mundilex
 // -----------------------------------------------------------------------------
 // 30 desafíos curriculares para 3.er grado de primaria (8-9 años)
 //   • 15 de Matemáticas (5 Fácil · 5 Medio · 5 Difícil)

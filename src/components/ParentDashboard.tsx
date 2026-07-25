@@ -130,7 +130,7 @@ export function ParentDashboard() {
           </button>
         </div>
         <p className="mt-2 text-xs font-medium text-stone-500">
-          Escribe el nombre y PIN exactos que usa tu hijo/a en EducaPlay.
+          Escribe el nombre y PIN exactos que usa tu hijo/a en Mundilex.
         </p>
       </form>
 

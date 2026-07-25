@@ -505,3 +505,35 @@ Stage Summary:
 - ✅ Responsive móvil + footer sticky verificados.
 - ✅ Sin errores de runtime ni de consola.
 - App lista para presentación en monografía.
+
+---
+Task ID: REBRAND-MUNDILEX-1
+Agent: main (orchestrator)
+Task: Cambiar el logo y toda la marca de "EducaPlay" a "Mundilex" en la app.
+
+Work Log:
+- Buscadas todas las apariciones de "EducaPlay"/"educaplay" en /home/z/my-project/src: Logo.tsx, LoginScreen.tsx, layout.tsx, ParentDashboard.tsx, bancoDesafios.ts, AppContext.tsx (storage key).
+- Reescrito /home/z/my-project/src/components/Logo.tsx: eliminada la dependencia de PNG (educaplay-logo-horizontal.png / educaplay-icon-white.png) y reemplazada por un isotipo SVG inline vectorial: globo (Mundi = mundo del saber) con meridianos/paralelos, degradado cyan→violet; anillo orbital amber→rose inclinado -22°; chispa dorada 4 puntas. Wordmark "Mundi" (cyan) + "lex" (amber). Se mantiene la API (size, withText, variant) usada por Header y LoginScreen.
+- Actualizado LoginScreen.tsx: heading h1 "Educa"/"Play" → "Mundi"/"lex".
+- Actualizado layout.tsx: title "Mundilex — Aprende jugando", description con Mundilex, footer "Mundilex · Cristal del Saber · ...".
+- Actualizado ParentDashboard.tsx: texto de ayuda "en EducaPlay" → "en Mundilex".
+- Actualizado bancoDesafios.ts: comentario de cabecera "BANCO DE DESAFÍOS — Mundilex".
+- Actualizado AppContext.tsx: STORAGE_KEY "educaplay_usuario" → "mundilex_usuario" con migración backward-compatible (LEGACY_STORAGE_KEY): al cargar, si no existe la clave nueva pero sí la antigua, se migra y se elimina la vieja. Así no se pierden sesiones existentes.
+- Verificado que NO quedan referencias visibles a "EducaPlay" en src (las únicas restantes son la constante LEGACY_STORAGE_KEY y su comentario, intencionales).
+- Backend NestJS (puerto 3001) verificado sano: GET /api/desafios/asignaturas → 200; POST /api/usuarios/demo con body {rol:ESTUDIANTE} vía gateway → 200 con usuario DemoKid. Los 404 en dev.log son artefactos de Next.js logueando peticiones que se enrutan al backend vía gateway (XTransformPort), no fallos reales.
+- Lint: 63 problemas preexistentes (react-hooks/set-state-in-effect en CartaOrtografia/ContentManager, unused eslint-disable). Ninguno introducido por este cambio; los archivos editados compilan limpios.
+- Verificación Agent Browser (vía gateway http://127.0.0.1:81/):
+  • Título pestaña: "Mundilex — Aprende jugando" ✓
+  • Login: heading h1 "Mundilex", isotipo SVG renderizado (0 PNGs educaplay cargados, 1 SVG aria-label="Mundilex") ✓
+  • Click "Estudiante DemoKid" → dashboard "¡Hola, DemoKid! 👋" ✓
+  • Header: botón logo con texto "Mundilex" + 7 SVGs (logo + iconos nav) ✓
+  • Footer: "Mundilex · Cristal del Saber · Hecho con cariño para estudiantes de 3er grado · Aprende jugando" ✓
+  • document.body.innerText NO contiene "EducaPlay" ✓
+  • Sin errores de consola ✓
+- Capturas: mundilex-login.png, mundilex-dashboard.png, mundilex-final.png
+
+Stage Summary:
+- ✅ Rebrand completo EducaPlay → Mundilex: logo SVG inline (globo + anillo orbital + chispa), wordmark, título, descripción, footer, textos de UI y storage key con migración.
+- ✅ Dependencia de PNG eliminada; el logo ahora es vectorial y nítido a cualquier tamaño.
+- ✅ Login demo + dashboard verificados end-to-end con Agent Browser; sin errores de consola ni de runtime.
+- ✅ Sesiones existentes migradas automáticamente (legacy key educaplay_usuario → mundilex_usuario).

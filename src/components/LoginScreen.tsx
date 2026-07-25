@@ -128,10 +128,10 @@ export function LoginScreen() {
         </div>
         <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
           <span className="bg-gradient-to-r from-cyan-300 via-cyan-200 to-violet-300 bg-clip-text text-transparent text-glow-cyan">
-            Educa
+            Mundi
           </span>
           <span className="bg-gradient-to-r from-amber-300 via-rose-300 to-fuchsia-300 bg-clip-text text-transparent text-glow-coral">
-            Play
+            lex
           </span>
         </h1>
         <p className="mt-2 text-sm font-bold text-cyan-100/70">
