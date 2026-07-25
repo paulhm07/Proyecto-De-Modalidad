@@ -1,5 +1,5 @@
 "use client";
-import { Eye, Shirt, Glasses, User, Scissors } from "lucide-react";
+import { Eye, Shirt, Glasses, User, Scissors, Boxes } from "lucide-react";
 import type { CategoriaAvatar } from "@/lib/types";
 
 interface CategoryIconProps {
@@ -52,6 +52,11 @@ export function CategoryIcon({ categoria, size = 28, className = "", strokeWidth
     default:
       return <User size={size} strokeWidth={strokeWidth} className={className} />;
   }
+}
+
+/** Icono para "Kits de Personajes" (skins completos) */
+export function KitsIcon({ size = 28, strokeWidth = 2.5, className = "" }: { size?: number; strokeWidth?: number; className?: string }) {
+  return <Boxes size={size} strokeWidth={strokeWidth} className={className} />;
 }
 
 export const CATEGORIAS_ORDER: CategoriaAvatar[] = [

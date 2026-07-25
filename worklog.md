@@ -670,3 +670,66 @@ Stage Summary:
 - El scroll es suave (behavior: smooth) y desplaza 260px por clic (~2 tarjetas).
 - Los tres fixes técnicos (min-w-0, dependencia cargando, ResizeObserver) fueron necesarios para que la detección de overflow funcione可靠mente.
 - Archivo modificado: /home/z/my-project/src/components/AvatarCustomizer.tsx
+
+---
+Task ID: AVATAR-3D-REDESIGN
+Agent: main (Frontend Developer + UI/UX Game Designer)
+Task: Reestructurar completamente la vista de personalización de Avatar (Mundilex) con estilo 3D blocky Roblox/Minecraft, eliminando el diseño anterior. Sin emojis, iconos vectoriales SVG. Personaje Protagonista bloque 3D. Kits de personajes completos. Pestañas de rareza con bordes neón. Modo Demo con acceso total.
+
+Work Log:
+- Leídos AvatarSVG.tsx, AvatarCustomizer.tsx, CategoryIcon.tsx y AppContext.tsx para entender el estado actual.
+- Reescrito AvatarSVG.tsx completamente:
+  * Personaje humanoide bloque 3D estilo Roblox: cabeza cúbica con degradados de volumen, torso rectangular, brazos y piernas articulados (bloques), zapatos, orejas.
+  * Sombra proyectada en el piso (elipse radial).
+  * Gradientes 3D para piel (top/face/side/bottom), ropa (front/side/dark/accent), cabello (top/side/dark).
+  * Capa RopaLayer con detalles: uniforme escolar (corbata+botones), capa de héroe (emblema con letra M), capucha (bolsillo+cordones), arcoíris (6 franjas), básica (franja+cuello).
+  * Capa OjosLayer: normales, cerrados, felices, grandes (anime), estrella, corazón.
+  * Capa BocaLayer: sonrisa, serio, gran sonrisa (con dientes), lengua traviesa.
+  * Capa CabelloLayer: corto, largo, mohawk, corona (con joyas), gorro de graduación (con borla).
+  * Capa AccesorioLayer: gafas, gafas de sol, máscara de héroe, varita mágica, estrella compañera.
+  * viewBox ampliado a "0 0 200 240" para incluir cuerpo completo.
+- Actualizado CategoryIcon.tsx: agregado KitsIcon (Boxes de lucide) para la nueva categoría "Kits de Personajes".
+- Reescrito AvatarCustomizer.tsx completamente:
+  * Título cambiado a "Estudio Avatar 3D".
+  * Sistema RAREZA_CONFIG con 4 rarezas (COMUN/RARA/EPICA/LEGENDARIA), cada una con ring, border, glow neón, badge e icono (Check/Zap/Star/Crown).
+  * RAREZAS_ORDER y RAREZA_LABEL para las pestañas de filtro de rareza.
+  * PERSONAJES renombrado conceptualmente a "Kits de Personajes" (skins completos): Novato, Soñador, Alien Bloque, Artista, Cadete Espacial, Estrella Pop, Genio, Superhéroe. Cada uno con icono vectorial (Boxes/Sparkles/Shield/Star).
+  * Banderas isDemo derivadas del nombre de usuario (DemoKid/PadreDemo/MaestroDemo).
+  * Nueva categoría "KITS" agregada a las pestañas con icono Boxes naranja.
+  * Pestañas de rareza con bordes neón (Todas/Comun/Raro/Epico/Legendario) que filtran el catálogo.
+  * Sección KITS muestra grid de tarjetas grandes con skins completos y botón "Aplicar Skin".
+  * handleEquiparDemo: equipa items directamente en modo demo sin verificar fondos/nivel, con preview optimista.
+  * Cápsula central cilíndrica de cristal con bordes cyan, brillos especulares, podio iluminado 3D (plataforma elíptica + trapecio + base), haz de luz ascendente, animación float.
+  * Etiquetas "DEMO" verdes en esquina superior izquierda de cada tarjeta de item/skin cuando isDemo=true.
+  * Banner "DEMO ACTIVO" verde esmeralda en la parte superior cuando isDemo.
+  * Eliminados TODOS los emojis (verificado con grep de rangos Unicode).
+  * Flechas de navegación izquierda/derecha preservadas para la fila de kits.
+  * Grid de items con grid-cols-2 sm:grid-cols-3 lg:grid-cols-4.
+  * Estado vacío cuando no hay items de la rareza seleccionada.
+- Verificación con Agent Browser (gateway puerto 81):
+  * Navegación como DemoKid al avatar funciona.
+  * Título "Estudio Avatar 3D" visible.
+  * Personaje bloque 3D visible en cápsula de cristal.
+  * 8 kits de personajes con etiquetas DEMO verdes.
+  * Pestañas de categorías (Kits, Cuerpo, Ojos, Boca, Pelo, Ropa, Accesorios) funcionales.
+  * Pestañas de rareza (Todas, Comun, Raro, Epico, Legendario) con bordes neón.
+  * Función Equipar aplica items al Protagonista en tiempo real (verificado: capa roja de héroe se aplicó).
+  * Función Aplicar Skin aplica kits completos al Protagonista (verificado: Superhéroe con capa roja + máscara verde + piel oscura).
+  * Responsive en móvil (390px) y desktop (1280px).
+- Verificación con VLM (glm-5v-turbo):
+  * Confirmado personaje bloque 3D estilo Roblox en cápsula.
+  * Confirmado pestañas de rareza con colores neón (cyan/fucsia/ámbar).
+  * Confirmado etiquetas DEMO verdes en tarjetas.
+  * Confirmado sin emojis, solo iconos vectoriales.
+  * Confirmado diseño limpio y profesional.
+
+Stage Summary:
+- 3 archivos reescritos: AvatarSVG.tsx (personaje bloque 3D), AvatarCustomizer.tsx (layout completo), CategoryIcon.tsx (icono Kits).
+- Estilo gráfico Roblox/Minecraft implementado: cabeza cúbica, torso, extremidades articuladas, sombras 3D, zapatos.
+- 8 kits de personajes (skins completos) con nombres sin emojis.
+- 6 categorías + KITS con iconos SVG profesionales (Boxes, User, Eye, Mouth, Scissors, Shirt, Glasses).
+- 4 rarezas con bordes neón: Comun (gris), Raro (cyan), Epico (fucsia), Legendario (ámbar) + iconos (Check, Zap, Star, Crown).
+- Modo Demo totalmente funcional: isDemo=true, etiqueta verde "DEMO" en cada tarjeta, equipado instantáneo sin costo.
+- Cápsula central con cristal cyan, podio iluminado 3D, animación float del Protagonista.
+- Sin emojis en absoluto (verificado con grep Unicode).
+- Responsive móvil + desktop verificado con Agent Browser y VLM.
