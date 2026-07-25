@@ -578,3 +578,67 @@ Stage Summary:
 - ✅ 8 personajes llamativos agregados como presets de un solo toque (Novato, Soñador, Robot Alien, Artista, Cadete, Estrella Pop, Genio, Héroe).
 - ✅ aplicarPersonaje() con preview optimista + comprar+equipar secuencial + manejo graceful de fondos insuficientes.
 - ✅ Verificado end-to-end con Agent Browser + VLM. Sin errores de consola.
+
+---
+Task ID: AVATAR-3D-REDESIGN-1
+Agent: main (orchestrator + illustrator)
+Task: Rediseño completo estético y funcional de la pantalla de customización de avatar: ilustración vectorial 3D estilo Duolingo/Toca Boca, corrección de layout (laterales cortados), y modo demo con todo desbloqueado.
+
+Work Log:
+- [Backend] Modificado /home/z/my-project/Proyecto-De-Modalidad/backend/src/avatars/avatars.service.ts:
+  • Agregada constante NOMBRES_DEMO = ['DemoKid','PadreDemo','MaestroDemo'] y helper esUsuarioDemo().
+  • comprar(): si esUsuarioDemo, registra propiedad sin cobrar monedas/gemas y sin verificar nivel. Retorna "¡{item} desbloqueado! (Modo Demo)".
+  • equipar(): si esUsuarioDemo, skip del check de posesión. Puede equipar cualquier item legendario/épico sin comprarlo.
+  • Recompilado con `bunx nest build` y reiniciado backend (PID nuevo, puerto 3001).
+  • Verificado: DemoKid (nivel 1, 0 monedas, 0 gemas) puede equipar Corona LEGENDARIA (gema 3, nivel 4) vía POST /api/avatars/equipar → HTTP 200.
+- [AvatarSVG] Reescrito /home/z/my-project/src/components/AvatarSVG.tsx con estilo Duolingo/Toca Boca:
+  • viewBox 240×280 (más alto que ancho) para incluir cuerpo completo. Height proporcional calculado como size×(280/240) para que se vea el cuerpo sin clipping.
+  • Cuerpo: torso (trapecio redondeado) + 2 brazos (elipses) detrás del torso, con sombras y highlights.
+  • Cuello con sombra proyectada de la cabeza + highlight vertical.
+  • Cabeza ovalada (ellipse rx=66 ry=72) con gradiente radial 3-paradas (hi/mid/lo) para volumen 3D.
+  • Specular gloss (radialGradient) en la esquina superior-izquierda de la cabeza (clay shine).
+  • Rim light (radialGradient) en el borde derecho (backlight).
+  • Orejas a los lados con sombra interior.
+  • Mejillas con blush + gloss.
+  • Cejas (ojos-normales), nariz pequeña, pestañas (ojos-grandes).
+  • Ojos más grandes y expresivos (15×18 en grandes, con iris+pupila+2 highlights+pestañas).
+  • Ropa detallada:
+    - ropa-basica: camiseta turquesa con cuello V, franjas, estrella dorada pequeña, highlight de hombro.
+    - ropa-uniforme: uniforme azul marino con cuello blanco, corbata roja con nudito, 2 botones dorados, highlight.
+    - ropa-capucha: sudadera gris con capucha, cordones con pompones, bolsillo, collar oscuro.
+    - ropa-capas: traje de superhéroe con capa roja, emblema estrella dorada, cinturón con hebilla roja.
+    - ropa-arcoiris: camiseta degradado arcoíris con cuello V y emblema corazón blanco + sparkles.
+  • Cabello con más volumen, strands y highlights (corto, largo, mohawk con fuego, corona con joyas y brillo, gorro de graduación con borla).
+  • Bug corregido: gradientes de ropa definidos como `cloth-ropa-*` (IDs que RopaLayer referencia) en lugar de `grad-ropa-*` que no coincidían. Esto hacía que la ropa fuera invisible.
+- [AvatarCustomizer] Reescrito layout en /home/z/my-project/src/components/AvatarCustomizer.tsx:
+  • ELIMINADAS las estanterías laterales (left-0/right-0 w-28) que se cortaban en los bordes. Reemplazadas por 3 glows centrados (cyan, coral, violeta) + iconos flotantes centrados al 8-10% de los bordes (no tocan los márgenes).
+  • Cápsula más grande: h-96 w-72 (384×288px) en lugar de h-60 w-56. Cúpula rounded-t-[10rem]. Avatar a size=215 (→215×251px) con el cuerpo completo visible.
+  • Podio iluminado 3D debajo del avatar: anillo de luz cian pulsante + plataforma elíptica cian con degradado + cuerpo trapecio (clip-path) + base + brillo especular blanco.
+  • Banner "¡Modo Demo activo! Todo el catálogo está desbloqueado" (ámbar/orange gradient con borde, icono Sparkles, etiqueta "DEMO").
+  • Modo demo detectado por nombre de usuario (DemoKid/PadreDemo/MaestroDemo). En modo demo:
+    - Wallet (monedas/gemas) y placa de nivel OCULTOS (evitan confusión).
+    - Placa muestra "Acceso total · Sin restricciones".
+    - Todos los items muestran botón "Equipar" (badge "DEMO" en lugar de raridad, sin precios ni candados).
+    - disponibleDirecto = esModoDemo || propio || gratis → handleEquipar directo.
+    - aplicarPersonaje() bypass de verificación de fondos/nivel para demo.
+  • Preview de items más alto: h-32 (128px) con size=78.
+  • Preview de personajes: h-28 con size=72.
+- [Verificación] Agent Browser + VLM end-to-end:
+  • Login DemoKid → Dashboard → click "Avatar" → Cámara de Personalización carga.
+  • Banner "Modo Demo activo" visible (confirmado por VLM).
+  • Cápsula 320px de alto, avatar 215×251px con cuerpo completo (torso + brazos) renderizado.
+  • Podio cian iluminado debajo del avatar (confirmado por VLM).
+  • Items de Pelo (incluida Corona LEGENDARIA nivel 4) muestran "Equipar" sin precio.
+  • Equipado Genio preset (cuerpo-claro + ojos-grandes + boca-sonrisa + cabello-corto + ropa-uniforme + accesorio-gafas) vía API → avatar muestra uniforme azul + corbata roja + gafas.
+  • VLM confirma: "camisa/uniforme azul oscuro en el torso", "corbata roja sobre la camisa", "gafas redondas", "hombros y brazos visibles", "podio circular cian/turquesa brillante iluminado".
+  • Laterales limpios sin elementos cortados (confirmado por VLM).
+  • Sin errores de consola ni de runtime.
+
+Stage Summary:
+- ✅ Backend modo demo: DemoKid/PadreDemo/MaestroDemo pueden equipar TODO el catálogo (común/épica/legendaria) sin costo ni restricción de nivel.
+- ✅ Avatares rediseñados estilo Duolingo/Toca Boca: cabeza ovalada, cuerpo con brazos, ropa detallada (uniforme con corbata, capucha con cordones, capa de héroe con emblema, arcoíris con corazón), gradientes 3D, gloss especular, rim light, orejas, mejillas, cejas, nariz.
+- ✅ Bug crítico corregido: IDs de gradientes de ropa (cloth-ropa-*) ahora coinciden entre defs y RopaLayer.
+- ✅ Layout corregido: eliminadas estanterías laterales que se cortaban; laterales ahora limpios.
+- ✅ Cápsula 60% más grande (h-96 vs h-60) con podio iluminado 3D cian debajo del avatar.
+- ✅ Banner "Modo Demo activo" ámbar; items muestran "Equipar" sin precios en demo.
+- ✅ Verificado end-to-end con Agent Browser + VLM (glm-5v-turbo). Sin errores.

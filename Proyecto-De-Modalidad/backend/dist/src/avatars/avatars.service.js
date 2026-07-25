@@ -53,6 +53,10 @@ const CATEGORIA_A_CAMPO = {
     ROPA: 'ropa',
     ACCESORIO: 'accesorio',
 };
+const NOMBRES_DEMO = ['DemoKid', 'PadreDemo', 'MaestroDemo'];
+function esUsuarioDemo(nombre) {
+    return !!nombre && NOMBRES_DEMO.includes(nombre);
+}
 let AvatarsService = class AvatarsService {
     prisma;
     constructor(prisma) {
@@ -123,6 +127,16 @@ let AvatarsService = class AvatarsService {
         if (yaPosee) {
             throw new common_1.BadRequestException('Ya posees este artículo');
         }
+        if (esUsuarioDemo(usuario.nombre)) {
+            await this.prisma.usuarioItem.create({
+                data: { usuarioId, itemId },
+            });
+            return {
+                mensaje: `¡${item.nombre} desbloqueado! (Modo Demo)`,
+                monedas: usuario.monedas,
+                gemas: usuario.gemas,
+            };
+        }
         const nivelUsuario = Math.floor(usuario.experiencia / 100) + 1;
         if (nivelUsuario < item.nivelRequerido) {
             throw new common_1.BadRequestException(`Necesitas nivel ${item.nivelRequerido} para comprar este artículo`);
@@ -163,7 +177,15 @@ let AvatarsService = class AvatarsService {
         if (!item)
             throw new common_1.NotFoundException('Artículo no encontrado');
         const esGratis = item.precioMonedas === 0 && item.precioGemas === 0;
+        let esDemo = false;
         if (!esGratis) {
+            const usuario = await this.prisma.usuario.findUnique({
+                where: { id: usuarioId },
+                select: { nombre: true },
+            });
+            esDemo = esUsuarioDemo(usuario?.nombre);
+        }
+        if (!esGratis && !esDemo) {
             const posee = await this.prisma.usuarioItem.findUnique({
                 where: { usuarioId_itemId: { usuarioId, itemId } },
             });

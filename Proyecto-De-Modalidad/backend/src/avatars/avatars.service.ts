@@ -70,6 +70,14 @@ const CATEGORIA_A_CAMPO: Record<string, string> = {
   ACCESORIO: 'accesorio',
 };
 
+// Nombres de usuarios demo: en modo demo TODO el catálogo está desbloqueado
+// y se puede equipar sin costo ni restricción de nivel.
+const NOMBRES_DEMO = ['DemoKid', 'PadreDemo', 'MaestroDemo'];
+
+function esUsuarioDemo(nombre: string | null | undefined): boolean {
+  return !!nombre && NOMBRES_DEMO.includes(nombre);
+}
+
 @Injectable()
 export class AvatarsService {
   constructor(private prisma: PrismaService) {}
@@ -152,6 +160,19 @@ export class AvatarsService {
       throw new BadRequestException('Ya posees este artículo');
     }
 
+    // ===== MODO DEMO: todo desbloqueado, sin costo ni nivel =====
+    if (esUsuarioDemo(usuario.nombre)) {
+      // Registrar la "propiedad" sin cobrar para que equipar() también lo permita
+      await this.prisma.usuarioItem.create({
+        data: { usuarioId, itemId },
+      });
+      return {
+        mensaje: `¡${item.nombre} desbloqueado! (Modo Demo)`,
+        monedas: usuario.monedas,
+        gemas: usuario.gemas,
+      };
+    }
+
     // Nivel requerido
     const nivelUsuario = Math.floor(usuario.experiencia / 100) + 1;
     if (nivelUsuario < item.nivelRequerido) {
@@ -202,7 +223,17 @@ export class AvatarsService {
 
     const esGratis = item.precioMonedas === 0 && item.precioGemas === 0;
 
+    // ===== MODO DEMO: puede equipar cualquier item sin poseerlo =====
+    let esDemo = false;
     if (!esGratis) {
+      const usuario = await this.prisma.usuario.findUnique({
+        where: { id: usuarioId },
+        select: { nombre: true },
+      });
+      esDemo = esUsuarioDemo(usuario?.nombre);
+    }
+
+    if (!esGratis && !esDemo) {
       const posee = await this.prisma.usuarioItem.findUnique({
         where: { usuarioId_itemId: { usuarioId, itemId } },
       });

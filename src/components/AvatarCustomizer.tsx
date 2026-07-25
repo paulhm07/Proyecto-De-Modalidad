@@ -101,6 +101,9 @@ export function AvatarCustomizer() {
   const [accionando, setAccionando] = useState<string | null>(null);
   const [aplicandoPersonaje, setAplicandoPersonaje] = useState(false);
 
+  // ===== MODO DEMO: DemoKid / PadreDemo / MaestroDemo tienen TODO el catálogo desbloqueado =====
+  const esModoDemo = usuario?.nombre === "DemoKid" || usuario?.nombre === "PadreDemo" || usuario?.nombre === "MaestroDemo";
+
   // Aplica un personaje completo: compra (si hace falta y se puede) y equipa las 6 categorías en secuencia.
   const aplicarPersonaje = async (p: PersonajePreset) => {
     if (!usuario || !data) return;
@@ -121,11 +124,14 @@ export function AvatarCustomizer() {
         if (!item) { faltaron++; continue; }
         const esGratis = item.precioMonedas === 0 && item.precioGemas === 0;
         const yaPosee = ownedActual.includes(item.id);
-        // Si no es gratis y no lo posee, intentar comprar
+        // Si no es gratis y no lo posee, intentar comprar (en modo demo el backend no cobra)
         if (!esGratis && !yaPosee) {
-          const nivelOk = (data.nivel) >= item.nivelRequerido;
-          const fondosOk = item.precioGemas > 0 ? gemasActual >= item.precioGemas : monedasActual >= item.precioMonedas;
-          if (!nivelOk || !fondosOk) { faltaron++; continue; }
+          // En modo demo NO verificamos fondos ni nivel (backend lo permite)
+          if (!esModoDemo) {
+            const nivelOk = (data.nivel) >= item.nivelRequerido;
+            const fondosOk = item.precioGemas > 0 ? gemasActual >= item.precioGemas : monedasActual >= item.precioMonedas;
+            if (!nivelOk || !fondosOk) { faltaron++; continue; }
+          }
           try {
             const res = await api.comprar(usuario.id, item.id);
             monedasActual = res.monedas;
@@ -150,13 +156,12 @@ export function AvatarCustomizer() {
       if (faltaron === 0) {
         mostrarToast(`¡${p.nombre} aplicado! (${equipados} piezas)`, "exito");
       } else if (equipados > 0) {
-        mostrarToast(`¡${p.nombre} parcial! ${equipados} piezas aplicadas, ${faltaron} bloqueadas (monedas/nivel)`, "info");
+        mostrarToast(`¡${p.nombre} parcial! ${equipados} piezas aplicadas, ${faltaron} bloqueadas`, "info");
       } else {
-        mostrarToast(`No pudiste aplicar ${p.nombre}. Necesitas más monedas o nivel`, "error");
+        mostrarToast(`No se pudo aplicar ${p.nombre}`, "error");
       }
     } catch (err) {
       mostrarToast(err instanceof Error ? err.message : "Error al aplicar el personaje", "error");
-      // Recargar para sincronizar con el backend real
       await cargar();
     } finally {
       setAplicandoPersonaje(false);
@@ -212,56 +217,18 @@ export function AvatarCustomizer() {
 
   return (
     <div className="neu-room relative min-h-screen overflow-hidden text-stone-700">
-      {/* ===== Decorative robot-workshop backdrop (sits ABOVE the gray bg, BELOW content) ===== */}
+      {/* ===== Decorative backdrop (sin estanterías laterales — ya no se cortan los laterales) ===== */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         {/* Work lights (cyan + coral) — prominent glows */}
-        <div className="absolute -top-10 left-[20%] h-72 w-72 rounded-full bg-cyan-400/45 blur-[70px]" />
-        <div className="absolute bottom-0 right-[18%] h-72 w-72 rounded-full bg-orange-400/40 blur-[70px]" />
+        <div className="absolute -top-10 left-[15%] h-72 w-72 rounded-full bg-cyan-400/40 blur-[80px]" />
+        <div className="absolute bottom-0 right-[15%] h-72 w-72 rounded-full bg-orange-400/35 blur-[80px]" />
+        <div className="absolute top-1/3 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-violet-400/25 blur-[90px]" />
 
-        {/* Left shelving unit with avatar parts (clearly visible) */}
-        <div className="absolute left-0 top-[14%] hidden h-[30rem] w-28 flex-col rounded-r-2xl border-2 border-stone-600/50 bg-stone-500/30 shadow-2xl backdrop-blur-[1px] sm:flex">
-          {[0, 1, 2, 3].map((shelf) => (
-            <div key={shelf} className="relative flex flex-1 items-center justify-around border-b-2 border-stone-600/45 px-1.5">
-              {/* shelf board bottom edge */}
-              <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-b from-stone-600/40 to-stone-700/50" />
-              {/* parts on the shelf */}
-              {Array.from({ length: 3 }).map((_, i) => {
-                const kind = (shelf + i) % 3;
-                return kind === 0 ? (
-                  <div key={i} className="h-7 w-7 rounded-full bg-gradient-to-br from-stone-600/75 to-stone-800/65 shadow-inner ring-1 ring-white/25" />
-                ) : kind === 1 ? (
-                  <div key={i} className="h-7 w-7 rounded-md bg-gradient-to-br from-cyan-500/70 to-cyan-700/60 shadow-inner ring-1 ring-white/25" />
-                ) : (
-                  <div key={i} className="h-6 w-6 rotate-45 bg-gradient-to-br from-orange-500/70 to-rose-600/60 shadow-inner ring-1 ring-white/25" />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-        {/* Right shelving unit with parts (clearly visible) */}
-        <div className="absolute right-0 top-[18%] hidden h-[30rem] w-28 flex-col rounded-l-2xl border-2 border-stone-600/50 bg-stone-500/30 shadow-2xl backdrop-blur-[1px] sm:flex">
-          {[0, 1, 2, 3].map((shelf) => (
-            <div key={shelf} className="relative flex flex-1 items-center justify-around border-b-2 border-stone-600/45 px-1.5">
-              <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-b from-stone-600/40 to-stone-700/50" />
-              {Array.from({ length: 3 }).map((_, i) => {
-                const kind = (shelf + i + 1) % 3;
-                return kind === 0 ? (
-                  <div key={i} className="h-7 w-7 rounded-full bg-gradient-to-br from-orange-500/70 to-rose-600/60 shadow-inner ring-1 ring-white/25" />
-                ) : kind === 1 ? (
-                  <div key={i} className="h-7 w-7 rounded-md bg-gradient-to-br from-amber-400/75 to-orange-600/60 shadow-inner ring-1 ring-white/25" />
-                ) : (
-                  <div key={i} className="h-7 w-7 rounded-full bg-gradient-to-br from-stone-600/75 to-stone-800/65 shadow-inner ring-1 ring-white/25" />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        {/* Floating tool icons (wrench, sparkles) — prominent */}
-        <div className="absolute left-[20%] top-[12%] text-cyan-600/70 animate-float"><Wrench size={30} strokeWidth={2.5} /></div>
-        <div className="absolute right-[21%] top-[14%] text-orange-600/70 animate-float" style={{ animationDelay: "1.2s" }}><Sparkles size={28} /></div>
-        <div className="absolute left-[15%] bottom-[14%] text-cyan-600/55 animate-float" style={{ animationDelay: "0.6s" }}><Sparkles size={26} /></div>
-        <div className="absolute right-[16%] bottom-[12%] text-orange-600/55 animate-float" style={{ animationDelay: "1.8s" }}><Wrench size={26} strokeWidth={2.5} /></div>
+        {/* Floating tool icons — centrados, no tocan los bordes */}
+        <div className="absolute left-[8%] top-[12%] text-cyan-600/60 animate-float"><Wrench size={28} strokeWidth={2.5} /></div>
+        <div className="absolute right-[8%] top-[14%] text-orange-600/60 animate-float" style={{ animationDelay: "1.2s" }}><Sparkles size={26} /></div>
+        <div className="absolute left-[10%] bottom-[14%] text-cyan-600/45 animate-float" style={{ animationDelay: "0.6s" }}><Sparkles size={24} /></div>
+        <div className="absolute right-[10%] bottom-[12%] text-orange-600/45 animate-float" style={{ animationDelay: "1.8s" }}><Wrench size={24} strokeWidth={2.5} /></div>
 
         {/* Tech grid floor */}
         <div className="absolute inset-x-0 bottom-0 h-44 opacity-[0.10]" style={{
@@ -287,8 +254,22 @@ export function AvatarCustomizer() {
           </h1>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
-          {/* ===== LEFT: Avatar crystal capsule ===== */}
+        {/* ===== Banner Modo Demo (todo desbloqueado) ===== */}
+        {esModoDemo && (
+          <div className="mb-5 flex items-center gap-3 rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 px-4 py-3 shadow-md">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md">
+              <Sparkles size={20} strokeWidth={2.5} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm font-bold text-amber-800">¡Modo Demo activo! Todo el catálogo está desbloqueado</p>
+              <p className="text-xs font-medium text-amber-700">Equipa cualquier prenda, accesorio o personaje legendario al instante, sin costo ni nivel</p>
+            </div>
+            <span className="hidden rounded-full bg-amber-200/70 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-800 sm:inline">DEMO</span>
+          </div>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+          {/* ===== LEFT: Avatar preview con cápsula grande + podio iluminado ===== */}
           <div className="lg:sticky lg:top-20 lg:self-start">
             <div className="neu-raised rounded-[2rem] p-6 text-center">
               <div className="neu-inset-sm mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1">
@@ -298,40 +279,64 @@ export function AvatarCustomizer() {
               <p className="mb-1 font-display text-2xl font-bold text-stone-800">{usuario?.nombre}</p>
               <p className="mb-4 text-xs font-semibold text-stone-500">Unidad avatar en ensamble</p>
 
-              {/* Crystal capsule with cyan under-light */}
-              <div className="relative mx-auto mb-4 flex h-60 w-56 items-end justify-center">
-                {/* Under-light base plate */}
-                <div className="absolute bottom-2 h-8 w-44 rounded-full cyan-base-plate animate-cyan-pulse" />
-                {/* Capsule dome */}
-                <div className="crystal-capsule absolute inset-x-0 bottom-6 top-0 rounded-t-[8rem] rounded-b-3xl">
-                  <div className="flex h-full items-center justify-center">
-                    <AvatarSVG config={data?.config} size={170} className="animate-capsule-float" />
+              {/* ===== Cápsula grande con podio iluminado ===== */}
+              <div className="relative mx-auto mb-4 flex h-96 w-72 items-end justify-center">
+                {/* Glow de fondo del podio (haz de luz ascendente) */}
+                <div className="absolute bottom-0 left-1/2 h-80 w-56 -translate-x-1/2 rounded-full bg-cyan-300/40 blur-[50px] animate-cyan-pulse" />
+                {/* Cúpula de cristal (más alta) */}
+                <div className="crystal-capsule absolute inset-x-0 bottom-16 top-0 rounded-t-[10rem] rounded-b-[2.5rem]">
+                  <div className="flex h-full items-end justify-center pb-4">
+                    <AvatarSVG config={data?.config} size={215} className="animate-capsule-float" />
                   </div>
                 </div>
-                {/* Base ring */}
-                <div className="neu-raised-sm absolute bottom-0 h-5 w-48 rounded-full" />
+                {/* Podio iluminado (plataforma 3D con degradado) */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
+                  {/* Anillo de luz del podio */}
+                  <div className="absolute -top-1 left-1/2 h-6 w-56 -translate-x-1/2 rounded-full bg-cyan-400/60 blur-md animate-cyan-pulse" />
+                  {/* Plataforma elíptica superior */}
+                  <div className="relative h-6 w-60 rounded-[50%] bg-gradient-to-b from-cyan-200 via-cyan-300 to-cyan-500 shadow-[0_8px_24px_rgba(34,211,238,0.45)]" />
+                  {/* Cuerpo del podio (trapecio) */}
+                  <div className="mx-auto h-6 w-52 -mt-1 bg-gradient-to-b from-cyan-500 to-cyan-700" style={{ clipPath: "polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)" }} />
+                  {/* Base del podio */}
+                  <div className="mx-auto h-2 w-56 -mt-1 rounded-b-xl bg-gradient-to-b from-cyan-700 to-cyan-900" />
+                  {/* Brillo especular en la plataforma */}
+                  <div className="absolute top-0 left-1/2 h-2 w-40 -translate-x-1/2 rounded-full bg-white/60 blur-[1px]" />
+                </div>
               </div>
 
-              {/* Wallet: neumorphic oval pills */}
-              <div className="mb-3 grid grid-cols-2 gap-2.5">
-                <div className="neu-inset-sm flex items-center justify-center gap-2 rounded-full px-3 py-2.5">
-                  <RunicCoin size={22} />
-                  <span className="font-display text-lg font-bold text-amber-700">{data?.monedas ?? 0}</span>
+              {/* Wallet: neumorphic oval pills (oculto en modo demo para evitar confusión) */}
+              {!esModoDemo && (
+                <div className="mb-3 grid grid-cols-2 gap-2.5">
+                  <div className="neu-inset-sm flex items-center justify-center gap-2 rounded-full px-3 py-2.5">
+                    <RunicCoin size={22} />
+                    <span className="font-display text-lg font-bold text-amber-700">{data?.monedas ?? 0}</span>
+                  </div>
+                  <div className="neu-inset-sm flex items-center justify-center gap-2 rounded-full px-3 py-2.5">
+                    <EssenceCrystal size={20} tint="cyan" />
+                    <span className="font-display text-lg font-bold text-cyan-700">{data?.gemas ?? 0}</span>
+                  </div>
                 </div>
-                <div className="neu-inset-sm flex items-center justify-center gap-2 rounded-full px-3 py-2.5">
-                  <EssenceCrystal size={20} tint="cyan" />
-                  <span className="font-display text-lg font-bold text-cyan-700">{data?.gemas ?? 0}</span>
-                </div>
-              </div>
+              )}
 
-              {/* Level plate */}
-              <div className="neu-inset-sm rounded-2xl px-4 py-2.5">
-                <p className="text-xs font-bold uppercase tracking-wide text-cyan-600">Nivel {data?.nivel ?? 1}</p>
-                <p className="text-sm font-bold text-stone-700">{data?.experiencia ?? 0} XP</p>
-              </div>
-              <p className="mt-3 flex items-center justify-center gap-1 text-xs font-medium text-stone-500">
-                <Sparkles size={12} className="text-orange-500" /> Responde desafíos para ganar monedas y gemas
-              </p>
+              {/* Level plate (oculto en modo demo) */}
+              {!esModoDemo && (
+                <div className="neu-inset-sm rounded-2xl px-4 py-2.5">
+                  <p className="text-xs font-bold uppercase tracking-wide text-cyan-600">Nivel {data?.nivel ?? 1}</p>
+                  <p className="text-sm font-bold text-stone-700">{data?.experiencia ?? 0} XP</p>
+                </div>
+              )}
+              {esModoDemo && (
+                <div className="neu-inset-sm rounded-2xl px-4 py-2.5">
+                  <p className="flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-600">
+                    <Sparkles size={12} /> Acceso total · Sin restricciones
+                  </p>
+                </div>
+              )}
+              {!esModoDemo && (
+                <p className="mt-3 flex items-center justify-center gap-1 text-xs font-medium text-stone-500">
+                  <Sparkles size={12} className="text-orange-500" /> Responde desafíos para ganar monedas y gemas
+                </p>
+              )}
             </div>
           </div>
 
@@ -355,8 +360,8 @@ export function AvatarCustomizer() {
                     className="group flex w-28 shrink-0 flex-col items-center gap-1.5 rounded-2xl p-2.5 transition-all hover:scale-105 disabled:opacity-50 neu-raised-sm"
                     aria-label={`Aplicar personaje ${p.nombre}`}
                   >
-                    <div className="neu-inset-sm flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl">
-                      <AvatarSVG config={p.config} size={84} className="transition-transform group-hover:scale-110" />
+                    <div className="neu-inset-sm flex h-28 w-24 items-center justify-center overflow-hidden rounded-2xl">
+                      <AvatarSVG config={p.config} size={72} className="transition-transform group-hover:scale-110" />
                     </div>
                     <span className="text-center text-[11px] font-bold leading-tight text-stone-700">{p.emoji} {p.nombre}</span>
                     <span className="text-center text-[9px] font-medium leading-tight text-stone-500">{p.desc}</span>
@@ -364,7 +369,9 @@ export function AvatarCustomizer() {
                 ))}
               </div>
               <p className="mt-1.5 text-center text-[10px] font-medium text-stone-400">
-                Toca un personaje para aplicar su look completo (compra y equipa automáticamente)
+                {esModoDemo
+                  ? "Toca un personaje para aplicar su look completo al instante (modo demo)"
+                  : "Toca un personaje para aplicar su look completo (compra y equipa automáticamente)"}
               </p>
             </div>
 
@@ -408,6 +415,8 @@ export function AvatarCustomizer() {
                 const puede = puedeComprar(item);
                 const bloqueadoNivel = (data?.nivel ?? 1) < item.nivelRequerido;
                 const cargandoItem = accionando === item.id;
+                // En modo demo: todo se puede equipar directamente
+                const disponibleDirecto = esModoDemo || propio || gratis;
                 return (
                   <div
                     key={item.id}
@@ -415,12 +424,12 @@ export function AvatarCustomizer() {
                   >
                     {/* Rarity badge */}
                     <span className="absolute right-2 top-2 rounded-full bg-white/70 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-stone-500 shadow-sm">
-                      {item.raridad}
+                      {esModoDemo ? "DEMO" : item.raridad}
                     </span>
 
                     {/* Preview window — inset "screen" */}
-                    <div className="neu-inset-sm mb-2.5 flex h-24 items-center justify-center overflow-hidden rounded-2xl">
-                      <AvatarSVG config={{ ...data?.config, [item.categoria.toLowerCase()]: item.clave } as any} size={76} />
+                    <div className="neu-inset-sm mb-2.5 flex h-32 items-center justify-center overflow-hidden rounded-2xl">
+                      <AvatarSVG config={{ ...data?.config, [item.categoria.toLowerCase()]: item.clave } as any} size={78} />
                     </div>
 
                     <p className="font-display text-sm font-bold leading-tight text-stone-800">{item.nombre}</p>
@@ -434,7 +443,7 @@ export function AvatarCustomizer() {
                         <div className="neu-pill-emerald flex items-center justify-center gap-1 py-2 text-xs font-bold">
                           <Check size={13} strokeWidth={3} /> Equipado
                         </div>
-                      ) : propio || gratis ? (
+                      ) : disponibleDirecto ? (
                         <button
                           onClick={() => handleEquipar(item)}
                           disabled={cargandoItem}
