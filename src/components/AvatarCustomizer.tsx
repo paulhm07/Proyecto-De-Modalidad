@@ -3,14 +3,27 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import {
   ArrowLeft, Lock, Check, Sparkles, Loader2, Wrench,
   ChevronLeft, ChevronRight, Boxes, Crown, Star, Zap, Shield,
+  Swords, Gamepad2, Film, Wand2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
 import type { CategoriaAvatar, ItemTienda, MiAvatarResponse } from "@/lib/types";
 import { AvatarSVG } from "@/components/AvatarSVG";
+import { PersonajeIconicoSVG } from "@/components/PersonajeIconicoSVG";
+import {
+  PERSONAJES_ICONICOS, CATEGORIA_PERSONAJE_LABEL, CATEGORIA_PERSONAJE_ORDER,
+  type CategoriaPersonaje, type PersonajeIconico,
+} from "@/lib/personajesIconicos";
 import { RunicCoin } from "@/components/RunicCoin";
 import { EssenceCrystal } from "@/components/EssenceCrystal";
 import { CategoryIcon, KitsIcon, CATEGORIAS_ORDER, CATEGORIA_LABEL } from "@/components/CategoryIcon";
+
+// ===== Iconos por categoría de personaje icónico =====
+const CATEGORIA_PERSONAJE_ICON: Record<CategoriaPersonaje, typeof Swords> = {
+  ANIME: Swords,
+  GAMER: Gamepad2,
+  MOVIE: Film,
+};
 
 // ===== Sistema de rareza con bordes neón =====
 const RAREZA_CONFIG: Record<string, {
@@ -136,8 +149,10 @@ export function AvatarCustomizer() {
   const [data, setData] = useState<MiAvatarResponse | null>(null);
   const [tienda, setTienda] = useState<ItemTienda[]>([]);
   const [cargando, setCargando] = useState(true);
-  const [catActiva, setCatActiva] = useState<CategoriaAvatar | "KITS">("KITS");
+  const [catActiva, setCatActiva] = useState<CategoriaAvatar | "KITS" | "ICONICOS">("ICONICOS");
   const [rarezaFiltro, setRarezaFiltro] = useState<string>("TODAS");
+  const [filtroIconico, setFiltroIconico] = useState<CategoriaPersonaje | "TODOS">("TODOS");
+  const [personajeIconicoActivo, setPersonajeIconicoActivo] = useState<string | null>(null);
   const [accionando, setAccionando] = useState<string | null>(null);
   const [aplicandoPersonaje, setAplicandoPersonaje] = useState(false);
 
@@ -241,6 +256,57 @@ export function AvatarCustomizer() {
     }
   };
 
+  // ===== Aplicar personaje icónico al Protagonista (modo demo: instantáneo y gratis) =====
+  const aplicarPersonajeIconico = async (p: PersonajeIconico) => {
+    if (!usuario || !data) return;
+    setAplicandoPersonaje(true);
+    // Preview optimista: cambia el Protagonista al instante
+    setPersonajeIconicoActivo(p.id);
+    try {
+      // En modo demo, aplicar el config del personaje icónico al avatar (compra+equipa las partes)
+      let configActual = { ...data.config, ...p.config };
+      let monedasActual = data.monedas;
+      let gemasActual = data.gemas;
+      let ownedActual = [...data.itemsOwned];
+      for (const [cat, clave] of Object.entries(p.config)) {
+        const item = tienda.find((it) => it.categoria === cat && it.clave === clave);
+        if (!item) continue;
+        const yaPosee = ownedActual.includes(item.id);
+        const esGratis = item.precioMonedas === 0 && item.precioGemas === 0;
+        if (!esGratis && !yaPosee) {
+          if (!isDemo) {
+            const nivelOk = (data.nivel) >= item.nivelRequerido;
+            const fondosOk = item.precioGemas > 0 ? gemasActual >= item.precioGemas : monedasActual >= item.precioMonedas;
+            if (!nivelOk || !fondosOk) continue;
+          }
+          try {
+            const res = await api.comprar(usuario.id, item.id);
+            monedasActual = res.monedas;
+            gemasActual = res.gemas;
+            ownedActual = [...ownedActual, item.id];
+          } catch { continue; }
+        }
+        try {
+          const res = await api.equipar(usuario.id, item.id);
+          configActual = res.config;
+        } catch { /* ignore */ }
+      }
+      setData((prev) => (prev ? { ...prev, config: configActual, monedas: monedasActual, gemas: gemasActual, itemsOwned: ownedActual } : prev));
+      setUsuario({ ...usuario, monedas: monedasActual, gemas: gemasActual });
+      mostrarToast(`${p.nombre} equipado en el Protagonista`, "exito");
+    } catch (err) {
+      mostrarToast(err instanceof Error ? err.message : "Error al aplicar el personaje", "error");
+    } finally {
+      setAplicandoPersonaje(false);
+    }
+  };
+
+  // Reset del Protagonista al avatar normal (sin personaje icónico)
+  const quitarPersonajeIconico = () => {
+    setPersonajeIconicoActivo(null);
+    mostrarToast("Protagonista reseteado", "info");
+  };
+
   const cargar = async () => {
     if (!usuario) return;
     try {
@@ -256,6 +322,12 @@ export function AvatarCustomizer() {
     if (rarezaFiltro !== "TODAS") items = items.filter((i) => i.raridad === rarezaFiltro);
     return items;
   }, [tienda, catActiva, rarezaFiltro]);
+
+  // Personajes icónicos filtrados por categoría (Anime/Gamer/Movie)
+  const personajesIconicosFiltrados = useMemo(() => {
+    if (filtroIconico === "TODOS") return PERSONAJES_ICONICOS;
+    return PERSONAJES_ICONICOS.filter((p) => p.categoria === filtroIconico);
+  }, [filtroIconico]);
 
   const estaEquipado = (item: ItemTienda): boolean => {
     if (!data) return false;
@@ -371,7 +443,11 @@ export function AvatarCustomizer() {
                 <p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Capsula activa</p>
               </div>
               <p className="mb-1 text-2xl font-black text-stone-800">{usuario?.nombre}</p>
-              <p className="mb-4 text-xs font-semibold text-stone-500">Protagonista 3D · Bloque Humanoide</p>
+              <p className="mb-4 text-xs font-semibold text-stone-500">
+                {personajeIconicoActivo
+                  ? `Protagonista · ${PERSONAJES_ICONICOS.find((p) => p.id === personajeIconicoActivo)?.nombre ?? ""}`
+                  : "Protagonista 3D · Bloque Humanoide"}
+              </p>
 
               {/* ===== Cápsula cilíndrica de cristal con podio ===== */}
               <div className="relative mx-auto mb-4 flex h-96 w-72 items-end justify-center">
@@ -384,9 +460,13 @@ export function AvatarCustomizer() {
                   <div className="absolute left-4 top-8 h-3/4 w-6 rounded-full bg-white/40 blur-md" />
                   {/* Brillo especular derecho */}
                   <div className="absolute right-6 top-12 h-1/2 w-3 rounded-full bg-white/30 blur-sm" />
-                  {/* Protagonista bloque 3D */}
+                  {/* Protagonista: personaje icónico o avatar normal */}
                   <div className="flex h-full items-end justify-center pb-6">
-                    <AvatarSVG config={data?.config} size={200} className="drop-shadow-2xl animate-[float_3s_ease-in-out_infinite]" />
+                    {personajeIconicoActivo ? (
+                      <PersonajeIconicoSVG personajeId={personajeIconicoActivo} size={200} className="drop-shadow-2xl animate-[float_3s_ease-in-out_infinite]" />
+                    ) : (
+                      <AvatarSVG config={data?.config} size={200} className="drop-shadow-2xl animate-[float_3s_ease-in-out_infinite]" />
+                    )}
                   </div>
                 </div>
 
@@ -516,7 +596,20 @@ export function AvatarCustomizer() {
             </div>
 
             {/* ===== Pestañas de categorías con iconos SVG ===== */}
-            <div className="mb-4 grid grid-cols-4 gap-2 sm:grid-cols-7">
+            <div className="mb-4 grid grid-cols-4 gap-2 sm:grid-cols-8">
+              {/* Botón ICONICOS (galería de personajes famosos) */}
+              <button
+                onClick={() => setCatActiva("ICONICOS")}
+                aria-label="Personajes Iconicos"
+                className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 transition-all hover:scale-105 ${
+                  catActiva === "ICONICOS"
+                    ? "bg-gradient-to-br from-fuchsia-500 to-purple-600 text-white shadow-lg shadow-fuchsia-200"
+                    : "bg-white text-stone-500 ring-1 ring-stone-200 hover:text-fuchsia-500"
+                }`}
+              >
+                <Wand2 size={26} strokeWidth={2.5} className={catActiva === "ICONICOS" ? "text-white" : "text-fuchsia-500"} />
+                <span className="text-[10px] font-black leading-tight">Iconicos</span>
+              </button>
               {/* Botón KITS */}
               <button
                 onClick={() => setCatActiva("KITS")}
@@ -551,7 +644,7 @@ export function AvatarCustomizer() {
             </div>
 
             {/* ===== Pestañas de rareza (bordes neón) ===== */}
-            {catActiva !== "KITS" && (
+            {(catActiva !== "KITS" && catActiva !== "ICONICOS") && (
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setRarezaFiltro("TODAS")}
@@ -583,8 +676,137 @@ export function AvatarCustomizer() {
               </div>
             )}
 
-            {/* ===== Sección KITS (tarjetas grandes de skins) ===== */}
-            {catActiva === "KITS" ? (
+            {/* ===== Pestañas de filtro para personajes icónicos (Anime/Gamer/Movie) ===== */}
+            {catActiva === "ICONICOS" && (
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setFiltroIconico("TODOS")}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                    filtroIconico === "TODOS"
+                      ? "bg-stone-800 text-white shadow-md"
+                      : "bg-white text-stone-600 ring-1 ring-stone-200 hover:ring-stone-400"
+                  }`}
+                >
+                  Todos
+                </button>
+                {CATEGORIA_PERSONAJE_ORDER.map((cat) => {
+                  const Icon = CATEGORIA_PERSONAJE_ICON[cat];
+                  const activo = filtroIconico === cat;
+                  const colores: Record<CategoriaPersonaje, string> = {
+                    ANIME: "bg-rose-500",
+                    GAMER: "bg-violet-600",
+                    MOVIE: "bg-amber-500",
+                  };
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setFiltroIconico(cat)}
+                      className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                        activo ? `${colores[cat]} text-white shadow-md` : `bg-white text-stone-600 ring-1 ring-stone-200 hover:scale-105`
+                      }`}
+                    >
+                      <Icon size={11} strokeWidth={2.5} />
+                      {CATEGORIA_PERSONAJE_LABEL[cat]}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ===== Sección ICONICOS (galería de personajes famosos) ===== */}
+            {catActiva === "ICONICOS" ? (
+              <div>
+                {/* Encabezado de sección */}
+                <div className="mb-4 flex items-center justify-between rounded-2xl bg-white px-4 py-2.5 shadow-sm ring-1 ring-stone-200">
+                  <div className="flex items-center gap-2">
+                    <Wand2 size={18} strokeWidth={2.5} className="text-fuchsia-500" />
+                    <h2 className="text-base font-black text-stone-800">
+                      {filtroIconico === "TODOS" ? "Galería de Iconicos" : CATEGORIA_PERSONAJE_LABEL[filtroIconico]}
+                    </h2>
+                  </div>
+                  <span className="rounded-full bg-fuchsia-100 px-2.5 py-0.5 text-xs font-bold text-fuchsia-700">
+                    {personajesIconicosFiltrados.length} personajes
+                  </span>
+                </div>
+
+                {/* Grid de personajes icónicos */}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {personajesIconicosFiltrados.map((p) => {
+                    const CatIcon = CATEGORIA_PERSONAJE_ICON[p.categoria];
+                    const estaActivo = personajeIconicoActivo === p.id;
+                    const colorCat: Record<CategoriaPersonaje, string> = {
+                      ANIME: "ring-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.5)]",
+                      GAMER: "ring-violet-500 shadow-[0_0_14px_rgba(139,92,246,0.5)]",
+                      MOVIE: "ring-amber-400 shadow-[0_0_14px_rgba(251,191,36,0.5)]",
+                    };
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => aplicarPersonajeIconico(p)}
+                        disabled={aplicandoPersonaje}
+                        className={`group relative flex flex-col items-center gap-2 rounded-2xl bg-white p-3 ring-2 transition-all hover:scale-[1.03] hover:shadow-lg disabled:opacity-50 ${
+                          estaActivo ? colorCat[p.categoria] + " scale-[1.02]" : "ring-stone-200 hover:ring-fuchsia-300"
+                        }`}
+                      >
+                        {/* Etiqueta DEMO ACTIVO / GRATIS EN DEMO */}
+                        {isDemo && (
+                          <span className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
+                            <Check size={8} strokeWidth={3} /> GRATIS
+                          </span>
+                        )}
+                        {/* Badge de categoría */}
+                        <span className={`absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow ${
+                          p.categoria === "ANIME" ? "bg-rose-500" : p.categoria === "GAMER" ? "bg-violet-600" : "bg-amber-500"
+                        }`}>
+                          <CatIcon size={8} strokeWidth={2.5} />
+                          {p.categoria}
+                        </span>
+                        {/* Indicador de personaje activo */}
+                        {estaActivo && (
+                          <span className="absolute left-2 top-9 z-10 flex items-center gap-0.5 rounded-md bg-fuchsia-600 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
+                            <Check size={8} strokeWidth={3} /> ACTIVO
+                          </span>
+                        )}
+                        {/* Preview del personaje icónico */}
+                        <div className="flex h-36 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-fuchsia-50 to-white ring-1 ring-fuchsia-100">
+                          <PersonajeIconicoSVG personajeId={p.id} size={92} className="transition-transform group-hover:scale-110" />
+                        </div>
+                        <div className="flex w-full items-center justify-center gap-1 text-sm font-black text-stone-800">
+                          <CatIcon size={13} strokeWidth={2.5} className={
+                            p.categoria === "ANIME" ? "text-rose-500" : p.categoria === "GAMER" ? "text-violet-500" : "text-amber-500"
+                          } /> {p.nombre}
+                        </div>
+                        <p className="text-center text-[10px] font-medium text-stone-500">{p.desc}</p>
+                        <div className={`mt-auto w-full rounded-lg py-1.5 text-center text-xs font-black text-white shadow-sm transition-colors ${
+                          estaActivo ? "bg-fuchsia-600" : "bg-fuchsia-500 group-hover:bg-fuchsia-600"
+                        }`}>
+                          {aplicandoPersonaje ? <Loader2 size={12} className="mx-auto animate-spin" /> : estaActivo ? "Equipado" : "Aplicar"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Botón para resetear el Protagonista */}
+                {personajeIconicoActivo && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={quitarPersonajeIconico}
+                      className="flex items-center gap-1.5 rounded-full bg-stone-200 px-4 py-2 text-xs font-bold text-stone-700 ring-1 ring-stone-300 transition-all hover:bg-stone-300"
+                    >
+                      <ArrowLeft size={12} strokeWidth={2.5} /> Resetear Protagonista
+                    </button>
+                  </div>
+                )}
+
+                {/* Nota informativa */}
+                <p className="mt-3 text-center text-[10px] font-medium text-stone-400">
+                  {isDemo
+                    ? "Todos los personajes iconicos estan GRATIS en modo demo · aplicalos al instante"
+                    : "Selecciona un personaje iconico para aplicarlo al Protagonista"}
+                </p>
+              </div>
+            ) : catActiva === "KITS" ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {PERSONAJES.map((p) => {
                   const Icon = p.icon;

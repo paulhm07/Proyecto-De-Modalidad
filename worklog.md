@@ -733,3 +733,79 @@ Stage Summary:
 - Cápsula central con cristal cyan, podio iluminado 3D, animación float del Protagonista.
 - Sin emojis en absoluto (verificado con grep Unicode).
 - Responsive móvil + desktop verificado con Agent Browser y VLM.
+
+---
+Task ID: AVATAR-ICONICOS
+Agent: main (Frontend Developer + UI/UX Game Designer)
+Task: Integrar galería de personajes icónicos inspirados en anime, videojuegos y películas (Goku, Naruto, Pikachu, Eren, Mario, Master Chief, Sora, Spider-Man, Batman, Luke, Eleven, Mickey) en estilo 3D blocky Roblox/Minecraft. Filtros Anime Legends/Gamer Heroes/Movie Icons. Modo demo con etiqueta GRATIS, aplicación instantánea al Protagonista.
+
+Work Log:
+- Creado src/lib/personajesIconicos.ts con:
+  * Tipo CategoriaPersonaje (ANIME/GAMER/MOVIE) e interfaz PersonajeIconico.
+  * 12 personajes icónicos con config de 6 categorías cada uno:
+    - ANIME: goku (Guerrero Z), naruto (Ninja Rubio), pikachu (Raton Electrico), eren (Soldado Explorador)
+    - GAMER: mario (Fontanero Heroico), master-chief (Jefe Maestro), sora (Portador de Llave)
+    - MOVIE: spiderman (Trepa-muros), batman (Caballero Oscuro), luke (Caballero Jedi), eleven (Chica Psiquica), mickey (Raton Magico)
+  * Nombres adaptados (sin marcas registradas directas) pero reconocibles por colores/detalles.
+- Creado src/components/PersonajeIconicoSVG.tsx con renderizado 3D blocky de los 12 personajes:
+  * Componente CuerpoBase reutilizable (piernas, brazos, cuello) con colores parametrizables.
+  * Componente CabezaBase reutilizable (cabeza cúbica con ojos y boca inyectables).
+  * GokuSVG: gi naranja con camiseta azul, cinturón, muñequeras, pelo negro erizado con 5 picos, ojos determinados.
+  * NarutoSVG: traje naranja con bandas negras, cremallera, pelo rubio erizado, headband azul con placa metálica y símbolo espiral, marcas de zorro.
+  * PikachuSVG: cuerpo amarillo compacto, rayas marrones, cola rayo, orejas puntiagudas con puntas negras, mejillas rojas, ojos negros brillantes.
+  * ErenSVG: uniforme beige, cinturón de cuero con hebilla, capa verde del Cuerpo de Exploración con emblema (alas de la libertad), pelo castaño, ojos verdes.
+  * MarioSVG: overoles azules con tirantes y botones dorados, camisa roja, guantes blancos, gorra roja con círculo blanco y M, bigote negro, nariz grande.
+  * MasterChiefSVG: armadura verde completa (piernas, brazos, torso), rodilleras, luz del pecho amarilla, casco con visor dorado reflectante.
+  * SoraSVG: traje negro con panel rojo, coronas doradas en hombros, pelo castaño erizado, collar con corona, Llave Espada con dientes dorados.
+  * SpiderManSVG: traje rojo/azul, telaraña en torso y cara, araña negra en pecho, ojos blancos con borde negro característicos.
+  * BatmanSVG: traje gris oscuro, símbolo de murciélago negro en pecho, cinturón amarillo con bolsas, máscara negra con cuernos, capa negra larga, ojos blancos.
+  * LukeSVG: túnica blanca con líneas, cinturón marrón con hebilla, pelo rubio, sable de luz verde encendido con brillo.
+  * ElevenSVG: vestido rosa cuadriculado, pelo castaño rapado, sangre de nariz (power activado), ojos grises.
+  * MickeySVG: cuerpo negro, pantalón corto rojo con botones, zapatos amarillos grandes, guantes blancos, orejas redondas, cara clara, hocico negro, mejillas rosadas.
+- Actualizado src/components/AvatarCustomizer.tsx:
+  * Imports: Swords, Gamepad2, Film, Wand2 de lucide-react; PersonajeIconicoSVG; personajesIconicos.
+  * Mapa CATEGORIA_PERSONAJE_ICON con iconos por categoría (Swords/Gamepad2/Film).
+  * Estado: catActiva ahora incluye "ICONICOS" (default), filtroIconico (TODOS/ANIME/GAMER/MOVIE), personajeIconicoActivo (id del personaje aplicado al Protagonista).
+  * Función aplicarPersonajeIconico: aplica el config del personaje al avatar (compra+equipa partes), preview optimista instantáneo, en modo demo sin restricciones.
+  * Función quitarPersonajeIconico: resetea el Protagonista al avatar normal.
+  * useMemo personajesIconicosFiltrados por filtroIconico.
+  * Cápsula actualizada: muestra PersonajeIconicoSVG cuando personajeIconicoActivo está seteado, AvatarSVG normal en caso contrario. Subtítulo dinámico muestra el nombre del personaje activo.
+  * Nueva pestaña "Iconicos" (fucsia/púrpura, icono Wand2) como primera opción del menú de categorías.
+  * Pestañas de filtro Anime Legends/Gamer Heroes/Movie Icons (con iconos Swords/Gamepad2/Film y colores rosa/violeta/ámbar) cuando catActiva === "ICONICOS".
+  * Grid de personajes icónicos: 2/3/4 columnas responsive, cada tarjeta con:
+    - Etiqueta "GRATIS" verde (esquina superior izquierda) en modo demo
+    - Badge de categoría (ANIME rosa / GAMER violeta / MOVIE ámbar) en esquina superior derecha
+    - Indicador "ACTIVO" fucsia cuando el personaje está seleccionado
+    - Preview con PersonajeIconicoSVG
+    - Nombre con icono de categoría
+    - Descripción
+    - Botón "Aplicar" / "Equipado" (fucsia)
+  * Botón "Resetear Protagonista" cuando hay un personaje icónico activo.
+  * Nota informativa: "Todos los personajes iconicos estan GRATIS en modo demo".
+- Corregidos 2 errores de parsing: backticks extra en className de las pestañas de filtro (template literals mal cerrados).
+- Verificación con Agent Browser (gateway puerto 81, DemoKid):
+  * Navegación a avatar carga correctamente con pestaña "Iconicos" por defecto.
+  * Botón "Personajes Iconicos" visible.
+  * Pestañas de filtro Anime Legends/Gamer Heroes/Movie Icons funcionales.
+  * 12 personajes icónicos con etiquetas GRATIS y badges de categoría.
+  * Click en Pikachu → Protagonista cambia a personaje amarillo con mejillas rojas y orejas puntiagudas instantáneamente.
+  * Click en Mario → Protagonista cambia a personaje con gorra roja con M, overoles azules y bigote.
+  * Filtro "Gamer Heroes" → solo muestra Mario, Master Chief, Sora.
+  * Responsive móvil (390px): grid de 2 columnas, pestañas de filtro visibles, layout limpio.
+- Verificación con VLM (glm-5v-turbo):
+  * Confirmados personajes bloque 3D con colores distintivos (amarillo Pikachu, rojo Spider-Man/Mario, verde Master Chief, negro Batman).
+  * Confirmadas etiquetas GRATIS verdes y badges ANIME/GAMER/MOVIE.
+  * Confirmado grid de 12 personajes icónicos.
+  * Confirmados personajes reconocibles: Guerrero Z (Goku), Ninja Rubio (Naruto), Ratón Eléctrico (Pikachu), Fontanero Heroico (Mario), Jefe Maestro (Master Chief), Trepa-muros (Spider-Man), Batman, Luke Skywalker.
+  * Confirmado responsive móvil con grid de 2 columnas.
+
+Stage Summary:
+- 2 archivos creados: personajesIconicos.ts (base de datos), PersonajeIconicoSVG.tsx (renderizado 3D blocky).
+- 1 archivo actualizado: AvatarCustomizer.tsx (pestaña Iconicos, filtros, galería, aplicar al Protagonista).
+- 12 personajes icónicos renderizados en estilo Roblox/Minecraft con colores y detalles distintivos.
+- 3 filtros de categoría: Anime Legends (rosa), Gamer Heroes (violeta), Movie Icons (ámbar).
+- Modo demo: etiqueta "GRATIS" verde, aplicación instantánea al Protagonista sin costo.
+- Cápsula central muestra el personaje icónico seleccionado en tiempo real.
+- Botón "Resetear Protagonista" para volver al avatar normal.
+- Sin emojis, solo iconos vectoriales SVG (Swords, Gamepad2, Film, Wand2).
+- Responsive móvil + desktop verificado con Agent Browser y VLM.
