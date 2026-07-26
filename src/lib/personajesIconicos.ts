@@ -1,7 +1,7 @@
 // Base de datos de personajes icónicos inspirados en anime, videojuegos y películas
 // Estilo bloque 3D Roblox/Minecraft — sin emojis, solo iconos vectoriales
 
-export type CategoriaPersonaje = "ANIME" | "GAMER" | "MOVIE" | "MUGIWARA";
+export type CategoriaPersonaje = "ANIME" | "GAMER" | "MOVIE" | "MUGIWARA" | "CAZADORES";
 
 export interface PersonajeIconico {
   id: string;
@@ -24,9 +24,10 @@ export const CATEGORIA_PERSONAJE_LABEL: Record<CategoriaPersonaje, string> = {
   GAMER: "Gamer Heroes",
   MOVIE: "Movie Icons",
   MUGIWARA: "Piratas Mugiwara",
+  CAZADORES: "Cazadores de Demonios",
 };
 
-export const CATEGORIA_PERSONAJE_ORDER: CategoriaPersonaje[] = ["ANIME", "GAMER", "MOVIE", "MUGIWARA"];
+export const CATEGORIA_PERSONAJE_ORDER: CategoriaPersonaje[] = ["ANIME", "GAMER", "MOVIE", "MUGIWARA", "CAZADORES"];
 
 export const PERSONAJES_ICONICOS: PersonajeIconico[] = [
   // ===== ANIME LEGENDS =====
@@ -186,6 +187,107 @@ export const PERSONAJES_ICONICOS: PersonajeIconico[] = [
     categoria: "MUGIWARA",
     desc: "Piel azul y kimono de judo",
     config: { CUERPO: "cuerpo-oscuro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-nada", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-nada" },
+  },
+  // ===== CAZADORES DE DEMONIOS (Kimetsu no Yaiba) =====
+  // --- Protagonistas ---
+  {
+    id: "tanjiro",
+    nombre: "Cazador Protector",
+    categoria: "CAZADORES",
+    desc: "Haori cuadriculado verde y espada negra",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-capas", ACCESORIO: "accesorio-varita" },
+  },
+  {
+    id: "nezuko",
+    nombre: "Demonio Hermana",
+    categoria: "CAZADORES",
+    desc: "Kimono rosa con bozal de bambu",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-serio", CABELLO: "cabello-largo", ROPA: "ropa-basica", ACCESORIO: "accesorio-mascara" },
+  },
+  {
+    id: "zenitsu",
+    nombre: "Rayo Asustadizo",
+    categoria: "CAZADORES",
+    desc: "Pelo amarillo y haori naranja",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-capas", ACCESORIO: "accesorio-varita" },
+  },
+  {
+    id: "inosuke",
+    nombre: "Jabali Salvaje",
+    categoria: "CAZADORES",
+    desc: "Mascara de jabali y dos espadas",
+    config: { CUERPO: "cuerpo-oscuro", OJOS: "ojos-grandes", BOCA: "boca-gran-sonrisa", CABELLO: "cabello-nada", ROPA: "ropa-basica", ACCESORIO: "accesorio-mascara" },
+  },
+  {
+    id: "kanao",
+    nombre: "Mariposa Silenciosa",
+    categoria: "CAZADORES",
+    desc: "Coletas con horquilla de mariposa",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-serio", CABELLO: "cabello-largo", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-nada" },
+  },
+  // --- Pilares (Hashira) ---
+  {
+    id: "giyu",
+    nombre: "Pilar del Agua",
+    categoria: "CAZADORES",
+    desc: "Haori bicolor rojo y naranja",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-corto", ROPA: "ropa-capas", ACCESORIO: "accesorio-varita" },
+  },
+  {
+    id: "shinobu",
+    nombre: "Pilar del Insecto",
+    categoria: "CAZADORES",
+    desc: "Haori de alas de mariposa moradas",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-largo", ROPA: "ropa-capas", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "rengoku",
+    nombre: "Pilar del Fuego",
+    categoria: "CAZADORES",
+    desc: "Pelo rojo y amarillo flameante",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-gran-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-capas", ACCESORIO: "accesorio-varita" },
+  },
+  {
+    id: "tengen",
+    nombre: "Pilar del Sonido",
+    categoria: "CAZADORES",
+    desc: "Pelo blanco y diadema con joyas",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-gafas" },
+  },
+  {
+    id: "mitsuri",
+    nombre: "Pilar del Amor",
+    categoria: "CAZADORES",
+    desc: "Pelo rosa y verde con coletas",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-largo", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "muichiro",
+    nombre: "Pilar de la Niebla",
+    categoria: "CAZADORES",
+    desc: "Pelo negro largo con puntas menta",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-largo", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "gyomei",
+    nombre: "Pilar de la Roca",
+    categoria: "CAZADORES",
+    desc: "Calvo gigante con rosario y maza",
+    config: { CUERPO: "cuerpo-oscuro", OJOS: "ojos-cerrados", BOCA: "boca-serio", CABELLO: "cabello-nada", ROPA: "ropa-capas", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "obanai",
+    nombre: "Pilar de la Serpiente",
+    categoria: "CAZADORES",
+    desc: "Haori blanco y negro con serpiente",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-serio", CABELLO: "cabello-corto", ROPA: "ropa-capas", ACCESORIO: "accesorio-mascara" },
+  },
+  {
+    id: "sanemi",
+    nombre: "Pilar del Viento",
+    categoria: "CAZADORES",
+    desc: "Pelo blanco espinoso con cicatrices",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-mohawk", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-varita" },
   },
 ];
 

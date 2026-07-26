@@ -12,7 +12,10 @@ interface PersonajeIconicoSVGProps {
  * con colores y detalles distintivos.
  *
  * Personajes: Goku, Naruto, Pikachu, Eren, Mario, Master Chief, Sora,
- * Spider-Man, Batman, Luke, Eleven, Mickey.
+ * Spider-Man, Batman, Luke, Eleven, Mickey, Luffy, Zoro, Nami, Usopp,
+ * Sanji, Chopper, Robin, Franky, Brook, Jinbe, Tanjiro, Nezuko, Zenitsu,
+ * Inosuke, Kanao, Giyu, Shinobu, Rengoku, Tengen, Mitsuri, Muichiro,
+ * Gyomei, Obanai, Sanemi.
  */
 export function PersonajeIconicoSVG({ personajeId, size = 200, className = "" }: PersonajeIconicoSVGProps) {
   return (
@@ -64,6 +67,21 @@ function renderPersonaje(id: string) {
     case "franky": return <FrankySVG />;
     case "brook": return <BrookSVG />;
     case "jinbe": return <JinbeSVG />;
+    // Cazadores de Demonios (Kimetsu no Yaiba)
+    case "tanjiro": return <TanjiroSVG />;
+    case "nezuko": return <NezukoSVG />;
+    case "zenitsu": return <ZenitsuSVG />;
+    case "inosuke": return <InosukeSVG />;
+    case "kanao": return <KanaoSVG />;
+    case "giyu": return <GiyuSVG />;
+    case "shinobu": return <ShinobuSVG />;
+    case "rengoku": return <RengokuSVG />;
+    case "tengen": return <TengenSVG />;
+    case "mitsuri": return <MitsuriSVG />;
+    case "muichiro": return <MuichiroSVG />;
+    case "gyomei": return <GyomeiSVG />;
+    case "obanai": return <ObanaiSVG />;
+    case "sanemi": return <SanemiSVG />;
     default: return <GokuSVG />;
   }
 }
@@ -1293,6 +1311,860 @@ function JinbeSVG() {
       <rect x="96" y="22" width="8" height="10" fill="#0f172a" />
       {/* Cinta del moño */}
       <rect x="88" y="18" width="24" height="3" rx="1" fill="#dc2626" />
+    </g>
+  );
+}
+
+// ============================================================
+// CAZADORES DE DEMONIOS (Kimetsu no Yaiba)
+// ============================================================
+
+// TANJIRO - Haori cuadriculado verde/negro, pelo negro con puntas rojas, espada nichirin
+function TanjiroSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+      {/* Uniforme negro Demon Slayer */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
+      {/* Haori cuadriculado verde/negro (capa exterior) */}
+      <rect x="66" y="112" width="68" height="48" rx="4" fill="#15803d" stroke="#14532d" strokeWidth="1.2" opacity="0.95" />
+      {/* Patrón cuadriculado (ichimatsu) */}
+      <g fill="#0f172a">
+        <rect x="68" y="114" width="14" height="12" />
+        <rect x="96" y="114" width="14" height="12" />
+        <rect x="124" y="114" width="8" height="12" />
+        <rect x="82" y="126" width="14" height="12" />
+        <rect x="110" y="126" width="14" height="12" />
+        <rect x="68" y="138" width="14" height="12" />
+        <rect x="96" y="138" width="14" height="12" />
+        <rect x="124" y="138" width="8" height="12" />
+        <rect x="82" y="150" width="14" height="10" />
+        <rect x="110" y="150" width="14" height="10" />
+      </g>
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#0f172a" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            <ellipse cx="82" cy="76" rx="7" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="7" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="83" cy="78" r="4" fill="#dc2626" />
+            <circle cx="119" cy="78" r="4" fill="#dc2626" />
+            <circle cx="84" cy="76" r="1.4" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.4" fill="#ffffff" />
+          </>
+        }
+        boca={<path d="M 88 96 Q 100 102 112 96" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo negro erizado con puntas rojas */}
+      <g stroke="#0f172a" strokeWidth="1">
+        <path d="M 56 48 Q 58 24 100 20 Q 142 24 144 48 L 144 54 Q 100 46 56 54 Z" fill="#0f172a" />
+      </g>
+      <g fill="#dc2626" stroke="#991b1b" strokeWidth="0.8">
+        <path d="M 64 30 L 60 12 L 74 28 Z" />
+        <path d="M 82 24 L 80 6 L 92 22 Z" />
+        <path d="M 100 20 L 100 2 L 108 20 Z" />
+        <path d="M 118 24 L 120 6 L 110 22 Z" />
+        <path d="M 136 30 L 140 12 L 126 28 Z" />
+      </g>
+      {/* Pendientes hanafuda (rojo/amarillo) */}
+      <rect x="50" y="70" width="6" height="10" rx="1" fill="#facc15" stroke="#ca8a04" strokeWidth="0.6" />
+      <rect x="144" y="70" width="6" height="10" rx="1" fill="#facc15" stroke="#ca8a04" strokeWidth="0.6" />
+      <rect x="50" y="73" width="6" height="4" fill="#dc2626" />
+      <rect x="144" y="73" width="6" height="4" fill="#dc2626" />
+      {/* Espada nichirin negra (en mano derecho) */}
+      <line x1="148" y1="110" x2="178" y2="80" stroke="#0f172a" strokeWidth="4" strokeLinecap="round" />
+      <rect x="142" y="108" width="10" height="6" rx="1" fill="#78350f" />
+      <line x1="148" y1="110" x2="178" y2="80" stroke="#374151" strokeWidth="1.5" />
+    </g>
+  );
+}
+
+// NEZUKO - Pelo negro con puntas naranjas, ojos rosas, bozal de bambú, kimono rosa
+function NezukoSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#9d174d" piernaDark="#831843" brazoLado="#ec4899" />
+      {/* Kimono rosa con patrón asanoha */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f472b6" stroke="#be185d" strokeWidth="1.5" />
+      {/* Patrón de rombos (asanoha) */}
+      <g stroke="#9d174d" strokeWidth="1" fill="none" opacity="0.7">
+        <path d="M 80 130 L 90 138 L 100 130 L 110 138 L 120 130" />
+        <path d="M 80 146 L 90 154 L 100 146 L 110 154 L 120 146" />
+        <path d="M 85 134 L 85 142 M 95 134 L 95 142 M 105 134 L 105 142 M 115 134 L 115 142" />
+      </g>
+      {/* Obi (cinturón) rojo */}
+      <rect x="70" y="156" width="60" height="8" rx="2" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos de demonio rosas sin pupila */}
+            <ellipse cx="82" cy="76" rx="7" ry="9" fill="#fda4af" stroke="#be185d" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="7" ry="9" fill="#fda4af" stroke="#be185d" strokeWidth="1.5" />
+            <ellipse cx="83" cy="78" rx="3" ry="5" fill="#ec4899" />
+            <ellipse cx="119" cy="78" rx="3" ry="5" fill="#ec4899" />
+          </>
+        }
+        boca={null}
+      />
+      {/* Bozal de bambú (cubre la boca) */}
+      <rect x="88" y="90" width="24" height="16" rx="3" fill="#ca8a04" stroke="#78350f" strokeWidth="1.5" />
+      <line x1="88" y1="94" x2="112" y2="94" stroke="#78350f" strokeWidth="0.8" />
+      <line x1="88" y1="98" x2="112" y2="98" stroke="#78350f" strokeWidth="0.8" />
+      <line x1="88" y1="102" x2="112" y2="102" stroke="#78350f" strokeWidth="0.8" />
+      {/* Cuerdas del bozal */}
+      <path d="M 88 96 Q 70 92 60 100" stroke="#78350f" strokeWidth="1.5" fill="none" />
+      <path d="M 112 96 Q 130 92 140 100" stroke="#78350f" strokeWidth="1.5" fill="none" />
+      {/* Pelo negro largo con puntas naranjas */}
+      <path d="M 50 48 Q 54 22 100 18 Q 146 22 150 48 L 156 130 L 138 130 L 138 50 Q 100 44 62 50 L 62 130 L 44 130 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      {/* Mechones frontales con puntas naranjas */}
+      <g stroke="#0f172a" strokeWidth="1">
+        <path d="M 60 46 L 56 70 L 70 84 Q 78 80 76 70 Q 70 56 66 48 Z" fill="#0f172a" />
+        <path d="M 140 46 L 144 70 L 130 84 Q 122 80 124 70 Q 130 56 134 48 Z" fill="#0f172a" />
+      </g>
+      {/* Puntas naranjas del pelo */}
+      <path d="M 56 70 L 60 80 L 64 72 Z" fill="#f97316" />
+      <path d="M 144 70 L 140 80 L 136 72 Z" fill="#f97316" />
+      {/* Flequillo */}
+      <path d="M 60 46 Q 100 42 140 46 L 140 54 Q 100 48 60 54 Z" fill="#334155" />
+    </g>
+  );
+}
+
+// ZENITSU - Pelo amarillo espinoso, haori naranja con triángulos blancos
+function ZenitsuSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+      {/* Uniforme negro */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
+      {/* Haori naranja con triángulos blancos */}
+      <rect x="66" y="112" width="68" height="52" rx="4" fill="#f97316" stroke="#c2410c" strokeWidth="1.2" />
+      {/* Patrón de triángulos blancos */}
+      <g fill="#fef3c7">
+        <path d="M 72 130 L 78 122 L 84 130 Z" />
+        <path d="M 88 130 L 94 122 L 100 130 Z" />
+        <path d="M 104 130 L 110 122 L 116 130 Z" />
+        <path d="M 120 130 L 126 122 L 132 130 Z" />
+        <path d="M 72 144 L 78 136 L 84 144 Z" />
+        <path d="M 88 144 L 94 136 L 100 144 Z" />
+        <path d="M 104 144 L 110 136 L 116 144 Z" />
+        <path d="M 120 144 L 126 136 L 132 144 Z" />
+        <path d="M 72 158 L 78 150 L 84 158 Z" />
+        <path d="M 88 158 L 94 150 L 100 158 Z" />
+        <path d="M 104 158 L 110 150 L 116 158 Z" />
+        <path d="M 120 158 L 126 150 L 132 158 Z" />
+      </g>
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#0f172a" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos dorados llorosos */}
+            <ellipse cx="82" cy="76" rx="7" ry="9" fill="#fef3c7" stroke="#92400e" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="7" ry="9" fill="#fef3c7" stroke="#92400e" strokeWidth="1.5" />
+            <circle cx="83" cy="78" r="4" fill="#ca8a04" />
+            <circle cx="119" cy="78" r="4" fill="#ca8a04" />
+            <circle cx="84" cy="76" r="1.4" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.4" fill="#ffffff" />
+            {/* Cejas asustadas */}
+            <path d="M 74 64 L 90 70" stroke="#92400e" strokeWidth="2" strokeLinecap="round" />
+            <path d="M 126 64 L 110 70" stroke="#92400e" strokeWidth="2" strokeLinecap="round" />
+          </>
+        }
+        boca={<ellipse cx="100" cy="98" rx="6" ry="4" fill="#7a4422" stroke="#451a03" strokeWidth="1" />}
+      />
+      {/* Lágrima */}
+      <ellipse cx="76" cy="88" rx="2" ry="4" fill="#7dd3fc" opacity="0.8" />
+      {/* Pelo amarillo espinoso (despeinado del susto) */}
+      <g fill="#fbbf24" stroke="#d97706" strokeWidth="1">
+        <path d="M 56 48 Q 58 22 100 18 Q 142 22 144 48 L 144 54 Q 100 46 56 54 Z" />
+        <path d="M 60 30 L 50 8 L 72 26 Z" />
+        <path d="M 78 22 L 72 2 L 90 20 Z" />
+        <path d="M 100 18 L 100 -2 L 108 18 Z" />
+        <path d="M 122 22 L 128 2 L 110 20 Z" />
+        <path d="M 140 30 L 150 8 L 128 26 Z" />
+      </g>
+    </g>
+  );
+}
+
+// INOSUKE - Máscara de jabalí, pecho desnudo, dos espadas jagged
+function InosukeSVG() {
+  return (
+    <g>
+      {/* Piernas con pantalón oscuro */}
+      <rect x="78" y="168" width="20" height="48" rx="3" fill="#374151" />
+      <rect x="78" y="168" width="6" height="48" rx="2" fill="#1f2937" />
+      <rect x="102" y="168" width="20" height="48" rx="3" fill="#374151" />
+      <rect x="116" y="168" width="6" height="48" rx="2" fill="#1f2937" />
+      {/* Zapatos */}
+      <rect x="76" y="208" width="24" height="10" rx="2" fill="#1e293b" />
+      <rect x="100" y="208" width="24" height="10" rx="2" fill="#1e293b" />
+      {/* Brazos musculosos */}
+      <rect x="48" y="118" width="22" height="52" rx="4" fill="#f5c08c" stroke="#d99a5e" strokeWidth="1" />
+      <rect x="130" y="118" width="22" height="52" rx="4" fill="#f5c08c" stroke="#d99a5e" strokeWidth="1" />
+      {/* Pectoral (pecho desnudo muscular) */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f5c08c" stroke="#d99a5e" strokeWidth="1.5" />
+      {/* Músculos pectorales */}
+      <path d="M 100 120 Q 84 130 78 138 M 100 120 Q 116 130 122 138" stroke="#d99a5e" strokeWidth="1.5" fill="none" />
+      <line x1="100" y1="120" x2="100" y2="160" stroke="#d99a5e" strokeWidth="1" />
+      {/* Abdominales */}
+      <g stroke="#d99a5e" strokeWidth="1" fill="none">
+        <path d="M 86 145 L 114 145" />
+        <path d="M 88 152 L 112 152" />
+        <path d="M 90 159 L 110 159" />
+      </g>
+      {/* Cinturón del uniforme */}
+      <rect x="70" y="164" width="60" height="4" fill="#1e293b" />
+      {/* Cuello */}
+      <rect x="90" y="104" width="20" height="14" rx="2" fill="#f5c08c" />
+      {/* MÁSCARA DE JABALÍ (cabeza de jabalí gris) */}
+      <ellipse cx="100" cy="75" rx="46" ry="42" fill="#6b7280" stroke="#374151" strokeWidth="2" />
+      {/* Hocico */}
+      <ellipse cx="100" cy="96" rx="22" ry="14" fill="#4b5563" stroke="#1f2937" strokeWidth="1.5" />
+      {/* Fosas nasales */}
+      <ellipse cx="92" cy="96" rx="3" ry="4" fill="#1f2937" />
+      <ellipse cx="108" cy="96" rx="3" ry="4" fill="#1f2937" />
+      {/* Colmillos blancos */}
+      <path d="M 88 104 L 86 116 L 92 110 Z" fill="#fef3c7" stroke="#92400e" strokeWidth="1" />
+      <path d="M 112 104 L 114 116 L 108 110 Z" fill="#fef3c7" stroke="#92400e" strokeWidth="1" />
+      {/* Ojos furiosos del jabalí */}
+      <ellipse cx="80" cy="68" rx="9" ry="6" fill="#ffffff" stroke="#1f2937" strokeWidth="1.5" />
+      <ellipse cx="120" cy="68" rx="9" ry="6" fill="#ffffff" stroke="#1f2937" strokeWidth="1.5" />
+      <circle cx="82" cy="69" r="3" fill="#dc2626" />
+      <circle cx="118" cy="69" r="3" fill="#dc2626" />
+      {/* Cejas enojadas */}
+      <path d="M 70 60 L 90 64" stroke="#1f2937" strokeWidth="3" strokeLinecap="round" />
+      <path d="M 130 60 L 110 64" stroke="#1f2937" strokeWidth="3" strokeLinecap="round" />
+      {/* Cerda del jabalí (pelo en la cabeza) */}
+      <path d="M 70 38 L 66 22 L 76 36 Z" fill="#374151" />
+      <path d="M 90 32 L 88 16 L 96 30 Z" fill="#374151" />
+      <path d="M 110 32 L 112 16 L 104 30 Z" fill="#374151" />
+      <path d="M 130 38 L 134 22 L 124 36 Z" fill="#374151" />
+      {/* Orejas de jabalí */}
+      <path d="M 54 56 L 48 42 L 60 52 Z" fill="#6b7280" stroke="#374151" strokeWidth="1" />
+      <path d="M 146 56 L 152 42 L 140 52 Z" fill="#6b7280" stroke="#374151" strokeWidth="1" />
+      {/* DOS ESPADAS JAGGED (nichirin indentado) en cada mano */}
+      <g>
+        <line x1="40" y1="170" x2="20" y2="120" stroke="#9ca3af" strokeWidth="5" strokeLinecap="round" />
+        <path d="M 20 120 L 24 130 L 18 132 L 22 142 L 16 144 L 20 154 L 14 156" stroke="#6b7280" strokeWidth="2" fill="none" />
+        <rect x="36" y="166" width="10" height="6" rx="1" fill="#374151" />
+      </g>
+      <g>
+        <line x1="160" y1="170" x2="180" y2="120" stroke="#9ca3af" strokeWidth="5" strokeLinecap="round" />
+        <path d="M 180 120 L 176 130 L 182 132 L 178 142 L 184 144 L 180 154 L 186 156" stroke="#6b7280" strokeWidth="2" fill="none" />
+        <rect x="154" y="166" width="10" height="6" rx="1" fill="#374151" />
+      </g>
+    </g>
+  );
+}
+
+// KANAO - Pelo negro en coletas, horquilla de mariposa, uniforme rosa/morado
+function KanaoSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#7c3aed" />
+      {/* Uniforme con degradado rosa a púrpura */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#a855f7" stroke="#7c3aed" strokeWidth="1.5" />
+      <rect x="70" y="116" width="60" height="20" rx="5" fill="#ec4899" opacity="0.6" />
+      {/* Solapa del uniforme */}
+      <path d="M 86 116 L 100 130 L 114 116" fill="#f5c08c" />
+      {/* Botones */}
+      <circle cx="100" cy="138" r="2" fill="#fbbf24" />
+      <circle cx="100" cy="148" r="2" fill="#fbbf24" />
+      {/* Cinturón */}
+      <rect x="70" y="156" width="60" height="6" rx="2" fill="#1e293b" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos lavanda/rosados sin pupila (mirada vacía) */}
+            <ellipse cx="82" cy="76" rx="6" ry="8" fill="#fce7f3" stroke="#be185d" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="6" ry="8" fill="#fce7f3" stroke="#be185d" strokeWidth="1.5" />
+            <ellipse cx="83" cy="78" rx="3" ry="5" fill="#a855f7" />
+            <ellipse cx="119" cy="78" rx="3" ry="5" fill="#a855f7" />
+          </>
+        }
+        boca={<line x1="92" y1="98" x2="108" y2="98" stroke="#7a4422" strokeWidth="2" strokeLinecap="round" />}
+      />
+      {/* Pelo negro con coletas altas */}
+      <path d="M 56 48 Q 58 24 100 22 Q 142 24 144 48 L 144 54 Q 100 46 56 54 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      {/* Flequillo recto */}
+      <path d="M 60 46 L 140 46 L 140 56 Q 100 50 60 56 Z" fill="#1e293b" />
+      {/* Coletas (a los lados) */}
+      <path d="M 56 50 Q 40 56 36 80 Q 38 100 48 110 L 56 100 Q 50 80 56 60 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      <path d="M 144 50 Q 160 56 164 80 Q 162 100 152 110 L 144 100 Q 150 80 144 60 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      {/* Horquilla de mariposa (en el lado derecho) */}
+      <g transform="translate(132 50)">
+        <ellipse cx="0" cy="0" rx="5" ry="3" fill="#a855f7" stroke="#7c3aed" strokeWidth="0.8" />
+        <ellipse cx="0" cy="0" rx="3" ry="5" fill="#a855f7" stroke="#7c3aed" strokeWidth="0.8" opacity="0.8" />
+        <line x1="0" y1="-4" x2="0" y2="4" stroke="#1e293b" strokeWidth="1" />
+      </g>
+    </g>
+  );
+}
+
+// GIYU (Pilar del Agua) - Haori bicolor rojo geométrico / naranja cuadriculado, pelo negro
+function GiyuSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+      {/* Uniforme negro */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
+      {/* Haori mitad rojo (izquierda) y mitad naranja cuadriculado (derecha) */}
+      <rect x="66" y="112" width="34" height="52" rx="4" fill="#dc2626" stroke="#991b1b" strokeWidth="1.2" />
+      <rect x="100" y="112" width="34" height="52" rx="4" fill="#f97316" stroke="#c2410c" strokeWidth="1.2" />
+      {/* Patrón geométrico en lado rojo (líneas blancas) */}
+      <g stroke="#fef3c7" strokeWidth="1.2" fill="none" opacity="0.8">
+        <path d="M 72 120 L 96 144" />
+        <path d="M 72 132 L 96 156" />
+        <path d="M 78 120 L 78 160" />
+        <path d="M 84 120 L 84 160" />
+        <path d="M 90 120 L 90 160" />
+      </g>
+      {/* Patrón cuadriculado en lado naranja */}
+      <g fill="#92400e" opacity="0.6">
+        <rect x="104" y="118" width="10" height="10" />
+        <rect x="124" y="118" width="10" height="10" />
+        <rect x="114" y="128" width="10" height="10" />
+        <rect x="104" y="138" width="10" height="10" />
+        <rect x="124" y="138" width="10" height="10" />
+        <rect x="114" y="148" width="10" height="10" />
+      </g>
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#0f172a" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            <ellipse cx="82" cy="76" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="83" cy="78" r="3.5" fill="#1e3a8a" />
+            <circle cx="119" cy="78" r="3.5" fill="#1e3a8a" />
+            <circle cx="84" cy="76" r="1.3" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.3" fill="#ffffff" />
+            {/* Cejas serias */}
+            <path d="M 74 66 L 90 68" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
+            <path d="M 126 66 L 110 68" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
+          </>
+        }
+        boca={<line x1="90" y1="98" x2="110" y2="98" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" />}
+      />
+      {/* Pelo negro recogido en coleta baja */}
+      <path d="M 56 48 Q 58 24 100 22 Q 142 24 144 48 L 144 54 Q 100 46 56 54 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      <path d="M 60 46 L 140 46 L 140 56 Q 100 50 60 56 Z" fill="#334155" />
+      {/* Coleta baja atrás */}
+      <ellipse cx="100" cy="56" rx="8" ry="14" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      {/* Espada nichirin azul (agua) */}
+      <line x1="148" y1="110" x2="178" y2="80" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" />
+      <rect x="142" y="108" width="10" height="6" rx="1" fill="#78350f" />
+      <line x1="148" y1="110" x2="178" y2="80" stroke="#1e40af" strokeWidth="1.5" />
+    </g>
+  );
+}
+
+// SHINOBU (Pilar del Insecto) - Haori de alas de mariposa, pelo negro con puntas púrpura
+function ShinobuSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+      {/* Uniforme negro */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
+      {/* Haori blanco con patrón de alas de mariposa (gradiente púrpura) */}
+      <rect x="66" y="112" width="68" height="52" rx="4" fill="#faf5ff" stroke="#a855f7" strokeWidth="1.2" />
+      {/* Patrón de alas de mariposa */}
+      <g opacity="0.7">
+        <ellipse cx="78" cy="124" rx="10" ry="6" fill="#a855f7" />
+        <ellipse cx="122" cy="124" rx="10" ry="6" fill="#a855f7" />
+        <ellipse cx="78" cy="138" rx="8" ry="5" fill="#7c3aed" />
+        <ellipse cx="122" cy="138" rx="8" ry="5" fill="#7c3aed" />
+        <ellipse cx="78" cy="150" rx="6" ry="4" fill="#6b21a8" />
+        <ellipse cx="122" cy="150" rx="6" ry="4" fill="#6b21a8" />
+        {/* Puntos en las alas */}
+        <circle cx="78" cy="124" r="2" fill="#fef3c7" />
+        <circle cx="122" cy="124" r="2" fill="#fef3c7" />
+      </g>
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#0f172a" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos púrpura con sonrisa cerrada */}
+            <ellipse cx="82" cy="76" rx="6" ry="8" fill="#faf5ff" stroke="#7c3aed" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="6" ry="8" fill="#faf5ff" stroke="#7c3aed" strokeWidth="1.5" />
+            <ellipse cx="83" cy="78" rx="3" ry="5" fill="#7c3aed" />
+            <ellipse cx="119" cy="78" rx="3" ry="5" fill="#7c3aed" />
+            <circle cx="84" cy="76" r="1.2" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.2" fill="#ffffff" />
+          </>
+        }
+        boca={<path d="M 88 96 Q 100 102 112 96" stroke="#7a4422" strokeWidth="2" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo negro con puntas púrpura (moño mariposa) */}
+      <path d="M 50 48 Q 54 22 100 18 Q 146 22 150 48 L 152 80 L 138 80 L 138 50 Q 100 44 62 50 L 62 80 L 48 80 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      {/* Puntas púrpura del pelo */}
+      <path d="M 48 80 L 56 92 L 62 84 Z" fill="#7c3aed" />
+      <path d="M 152 80 L 144 92 L 138 84 Z" fill="#7c3aed" />
+      {/* Moño mariposa arriba */}
+      <g>
+        <ellipse cx="90" cy="26" rx="10" ry="6" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+        <ellipse cx="110" cy="26" rx="10" ry="6" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+        <ellipse cx="100" cy="26" rx="3" ry="5" fill="#1e293b" />
+      </g>
+      {/* Flequillo */}
+      <path d="M 56 46 Q 100 42 144 46 L 144 56 Q 100 50 56 56 Z" fill="#334155" />
+      {/* Horquilla de mariposa */}
+      <g transform="translate(76 44)">
+        <ellipse cx="0" cy="0" rx="4" ry="2.5" fill="#7c3aed" />
+        <ellipse cx="0" cy="0" rx="2.5" ry="4" fill="#7c3aed" opacity="0.8" />
+      </g>
+    </g>
+  );
+}
+
+// RENGOKU (Pilar del Fuego) - Pelo rojo/amarillo flameante, gran sonrisa, espada de fuego
+function RengokuSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+      {/* Uniforme negro */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
+      {/* Haori blanco con patrón de llamas en el borde */}
+      <rect x="66" y="112" width="68" height="52" rx="4" fill="#fef3c7" stroke="#f59e0b" strokeWidth="1.2" />
+      {/* Llamas rojas en el borde inferior del haori */}
+      <g fill="#dc2626" stroke="#991b1b" strokeWidth="1">
+        <path d="M 66 156 Q 72 144 78 156 Q 84 144 90 156 Q 96 144 102 156 Q 108 144 114 156 Q 120 144 126 156 Q 132 144 134 156 L 134 164 L 66 164 Z" />
+      </g>
+      {/* Llamas amarillas más pequeñas encima */}
+      <g fill="#fbbf24" opacity="0.8">
+        <path d="M 70 156 Q 74 150 78 156 Q 82 150 86 156 Q 90 150 94 156 Q 98 150 102 156 Q 106 150 110 156 Q 114 150 118 156 Q 122 150 126 156 Q 130 150 134 156" />
+      </g>
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#0f172a" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos dorados con iris rojo */}
+            <ellipse cx="82" cy="76" rx="7" ry="8" fill="#fef3c7" stroke="#92400e" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="7" ry="8" fill="#fef3c7" stroke="#92400e" strokeWidth="1.5" />
+            <circle cx="83" cy="78" r="4" fill="#dc2626" />
+            <circle cx="119" cy="78" r="4" fill="#dc2626" />
+            <circle cx="84" cy="76" r="1.4" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.4" fill="#ffffff" />
+          </>
+        }
+        boca={<path d="M 84 94 Q 100 110 116 94 Q 100 100 84 94 Z" fill="#7a4422" stroke="#451a03" strokeWidth="1" />}
+      />
+      {/* Dientes (gran sonrisa característica) */}
+      <rect x="88" y="94" width="24" height="4" fill="#ffffff" stroke="#92400e" strokeWidth="0.5" />
+      {/* Pelo rojo con puntas amarillas (estilo flama) */}
+      <g stroke="#991b1b" strokeWidth="1">
+        <path d="M 56 48 Q 58 24 100 18 Q 142 24 144 48 L 144 54 Q 100 46 56 54 Z" fill="#dc2626" />
+        <path d="M 62 28 L 56 8 L 74 24 Z" fill="#dc2626" />
+        <path d="M 80 22 L 76 2 L 92 20 Z" fill="#dc2626" />
+        <path d="M 100 18 L 100 -2 L 108 18 Z" fill="#dc2626" />
+        <path d="M 120 22 L 124 2 L 108 20 Z" fill="#dc2626" />
+        <path d="M 138 28 L 144 8 L 126 24 Z" fill="#dc2626" />
+      </g>
+      {/* Puntas amarillas (llamas en el pelo) */}
+      <g fill="#fbbf24" stroke="#d97706" strokeWidth="0.8">
+        <path d="M 62 28 L 60 14 L 70 26 Z" />
+        <path d="M 80 22 L 80 6 L 90 20 Z" />
+        <path d="M 100 18 L 100 2 L 106 18 Z" />
+        <path d="M 120 22 L 120 6 L 110 20 Z" />
+        <path d="M 138 28 L 140 14 L 130 26 Z" />
+      </g>
+      {/* Espada de fuego (nikirin naranja/rojo) */}
+      <line x1="148" y1="110" x2="178" y2="80" stroke="#f97316" strokeWidth="5" strokeLinecap="round" />
+      <line x1="148" y1="110" x2="178" y2="80" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
+      <rect x="142" y="108" width="10" height="6" rx="1" fill="#78350f" />
+      {/* Llamas alrededor de la espada */}
+      <g fill="#fbbf24" opacity="0.6">
+        <circle cx="160" cy="92" r="3" />
+        <circle cx="170" cy="88" r="2" />
+      </g>
+    </g>
+  );
+}
+
+// TENGEN (Pilar del Sonido) - Pelo blanco, diadema con joyas, brazos descubiertos
+function TengenSVG() {
+  return (
+    <g>
+      {/* Piernas con pantalón oscuro */}
+      <rect x="78" y="168" width="20" height="48" rx="3" fill="#1e293b" />
+      <rect x="78" y="168" width="6" height="48" rx="2" fill="#0f172a" />
+      <rect x="102" y="168" width="20" height="48" rx="3" fill="#1e293b" />
+      <rect x="116" y="168" width="6" height="48" rx="2" fill="#0f172a" />
+      <rect x="76" y="208" width="24" height="10" rx="2" fill="#92400e" />
+      <rect x="100" y="208" width="24" height="10" rx="2" fill="#92400e" />
+      {/* Brazos musculosos sin mangas */}
+      <rect x="48" y="118" width="22" height="52" rx="4" fill="#f5c08c" stroke="#d99a5e" strokeWidth="1" />
+      <rect x="130" y="118" width="22" height="52" rx="4" fill="#f5c08c" stroke="#d99a5e" strokeWidth="1" />
+      {/* Pulseras coloridas en muñecas */}
+      <rect x="48" y="160" width="22" height="8" rx="2" fill="#fbbf24" />
+      <rect x="130" y="160" width="22" height="8" rx="2" fill="#fbbf24" />
+      <rect x="48" y="168" width="22" height="6" rx="2" fill="#ec4899" />
+      <rect x="130" y="168" width="22" height="6" rx="2" fill="#ec4899" />
+      {/* Uniforme sin mangas (musculoso) */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+      {/* Detalles de tela en el pecho */}
+      <path d="M 78 120 L 78 168 M 86 120 L 86 168 M 94 120 L 94 168 M 102 120 L 102 168 M 110 120 L 110 168 M 118 120 L 118 168" stroke="#1e293b" strokeWidth="0.8" />
+      {/* Cinturón con joya */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#92400e" />
+      <circle cx="100" cy="161" r="3" fill="#fbbf24" stroke="#ca8a04" strokeWidth="0.6" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos coloridos (uno rosa, uno cyan) - heterocromia */}
+            <ellipse cx="82" cy="76" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="83" cy="78" r="3.5" fill="#ec4899" />
+            <circle cx="119" cy="78" r="3.5" fill="#06b6d4" />
+            <circle cx="84" cy="76" r="1.3" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.3" fill="#ffffff" />
+          </>
+        }
+        boca={<path d="M 86 96 Q 100 102 114 96" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo blanco plateado */}
+      <path d="M 56 48 Q 58 24 100 20 Q 142 24 144 48 L 144 54 Q 100 46 56 54 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.2" />
+      {/* Mechones frontales blancos */}
+      <g fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1">
+        <path d="M 64 32 L 60 14 L 74 30 Z" />
+        <path d="M 82 26 L 80 8 L 92 24 Z" />
+        <path d="M 100 22 L 100 4 L 108 22 Z" />
+        <path d="M 118 26 L 120 8 L 110 24 Z" />
+        <path d="M 136 32 L 140 14 L 126 30 Z" />
+      </g>
+      {/* Diadema con joyas colgantes (cubre la frente) */}
+      <rect x="56" y="52" width="88" height="14" rx="3" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
+      {/* Joyas colgantes de la diadema */}
+      <g>
+        <line x1="68" y1="66" x2="68" y2="78" stroke="#0f172a" strokeWidth="1" />
+        <ellipse cx="68" cy="80" rx="3" ry="4" fill="#ec4899" stroke="#be185d" strokeWidth="0.6" />
+        <line x1="84" y1="66" x2="84" y2="80" stroke="#0f172a" strokeWidth="1" />
+        <ellipse cx="84" cy="82" rx="3" ry="4" fill="#06b6d4" stroke="#0e7490" strokeWidth="0.6" />
+        <line x1="100" y1="66" x2="100" y2="82" stroke="#0f172a" strokeWidth="1" />
+        <ellipse cx="100" cy="84" rx="3" ry="4" fill="#fbbf24" stroke="#ca8a04" strokeWidth="0.6" />
+        <line x1="116" y1="66" x2="116" y2="80" stroke="#0f172a" strokeWidth="1" />
+        <ellipse cx="116" cy="82" rx="3" ry="4" fill="#10b981" stroke="#047857" strokeWidth="0.6" />
+        <line x1="132" y1="66" x2="132" y2="78" stroke="#0f172a" strokeWidth="1" />
+        <ellipse cx="132" cy="80" rx="3" ry="4" fill="#a855f7" stroke="#7c3aed" strokeWidth="0.6" />
+      </g>
+      {/* Pulseras en el cuello (estilo Uzui) */}
+      <rect x="86" y="108" width="28" height="6" rx="2" fill="#fbbf24" stroke="#ca8a04" strokeWidth="0.6" />
+    </g>
+  );
+}
+
+// MITSURI (Pilar del Amor) - Pelo rosa con puntas verdes, coletas, uniforme rosa
+function MitsuriSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#f472b6" />
+      {/* Uniforme rosa (estilo Kanroji) */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#ec4899" stroke="#be185d" strokeWidth="1.5" />
+      {/* Solapa en V con piel visible */}
+      <path d="M 86 116 L 100 132 L 114 116" fill="#f5c08c" />
+      {/* Botones dorados */}
+      <circle cx="100" cy="138" r="1.8" fill="#fbbf24" />
+      <circle cx="100" cy="148" r="1.8" fill="#fbbf24" />
+      <circle cx="100" cy="158" r="1.8" fill="#fbbf24" />
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#9d174d" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos verde-rosa (heterocromia suave) */}
+            <ellipse cx="82" cy="76" rx="7" ry="9" fill="#fef3c7" stroke="#10b981" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="7" ry="9" fill="#fef3c7" stroke="#10b981" strokeWidth="1.5" />
+            <circle cx="83" cy="78" r="4" fill="#10b981" />
+            <circle cx="119" cy="78" r="4" fill="#10b981" />
+            <circle cx="84" cy="76" r="1.4" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.4" fill="#ffffff" />
+            {/* Pestañas largas */}
+            <path d="M 75 70 L 80 68 M 125 70 L 120 68" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
+          </>
+        }
+        boca={<path d="M 90 96 Q 100 102 110 96" stroke="#7a4422" strokeWidth="2" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo rosa con tres coletas y puntas verdes */}
+      <path d="M 56 48 Q 58 24 100 20 Q 142 24 144 48 L 144 54 Q 100 46 56 54 Z" fill="#f9a8d4" stroke="#ec4899" strokeWidth="1" />
+      {/* Flequillo rosa */}
+      <path d="M 60 46 L 140 46 L 140 56 Q 100 50 60 56 Z" fill="#f9a8d4" />
+      {/* Tres coletas (dos laterales + una trasera) */}
+      <path d="M 56 50 Q 38 60 34 90 Q 36 110 46 120 L 56 110 Q 50 90 56 60 Z" fill="#f9a8d4" stroke="#ec4899" strokeWidth="1" />
+      <path d="M 144 50 Q 162 60 166 90 Q 164 110 154 120 L 144 110 Q 150 90 144 60 Z" fill="#f9a8d4" stroke="#ec4899" strokeWidth="1" />
+      <ellipse cx="100" cy="56" rx="10" ry="20" fill="#f9a8d4" stroke="#ec4899" strokeWidth="1" />
+      {/* Puntas verdes en las coletas */}
+      <path d="M 34 110 L 38 124 L 44 116 Z" fill="#10b981" />
+      <path d="M 166 110 L 162 124 L 156 116 Z" fill="#10b981" />
+      <path d="M 100 76 L 96 90 L 104 90 Z" fill="#10b981" />
+      {/* Mechones frontales con puntas verdes */}
+      <path d="M 64 46 Q 60 60 68 70 Q 74 64 70 54 Z" fill="#f9a8d4" stroke="#ec4899" strokeWidth="0.8" />
+      <path d="M 136 46 Q 140 60 132 70 Q 126 64 130 54 Z" fill="#f9a8d4" stroke="#ec4899" strokeWidth="0.8" />
+    </g>
+  );
+}
+
+// MUICHIRO (Pilar de la Niebla) - Pelo negro largo con puntas menta, mirada distante
+function MuichiroSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+      {/* Uniforme negro con holgura */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
+      {/* Holgura en el uniforme (pliegues) */}
+      <path d="M 78 120 L 78 168 M 86 120 L 86 168 M 94 120 L 94 168 M 102 120 L 102 168 M 110 120 L 110 168 M 118 120 L 118 168" stroke="#0f172a" strokeWidth="0.6" opacity="0.5" />
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#0f172a" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos menta distantes (mirada vacía) */}
+            <ellipse cx="82" cy="76" rx="7" ry="8" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="7" ry="8" fill="#ecfdf5" stroke="#10b981" strokeWidth="1.5" />
+            <circle cx="83" cy="78" r="4" fill="#10b981" />
+            <circle cx="119" cy="78" r="4" fill="#10b981" />
+            <circle cx="84" cy="76" r="1.4" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.4" fill="#ffffff" />
+          </>
+        }
+        boca={<line x1="92" y1="98" x2="108" y2="98" stroke="#7a4422" strokeWidth="2" strokeLinecap="round" />}
+      />
+      {/* Pelo negro largo con puntas menta (largo, lacio) */}
+      <path d="M 48 48 Q 52 22 100 18 Q 148 22 152 48 L 158 130 L 140 130 L 138 50 Q 100 44 62 50 L 60 130 L 42 130 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      {/* Puntas menta en el pelo largo */}
+      <path d="M 42 130 L 48 144 L 54 134 Z" fill="#6ee7b7" />
+      <path d="M 60 130 L 64 144 L 70 134 Z" fill="#6ee7b7" />
+      <path d="M 130 130 L 134 144 L 140 134 Z" fill="#6ee7b7" />
+      <path d="M 146 130 L 150 144 L 156 134 Z" fill="#6ee7b7" />
+      {/* Flequillo negro */}
+      <path d="M 56 46 Q 100 42 144 46 L 144 56 Q 100 50 56 56 Z" fill="#334155" />
+      {/* Mechones laterales del pelo */}
+      <path d="M 56 50 Q 48 70 52 96 L 62 96 Q 60 70 64 52 Z" fill="#0f172a" stroke="#000000" strokeWidth="0.8" />
+      <path d="M 144 50 Q 152 70 148 96 L 138 96 Q 140 70 136 52 Z" fill="#0f172a" stroke="#000000" strokeWidth="0.8" />
+    </g>
+  );
+}
+
+// GYOMEI (Pilar de la Roca) - Calvo, ojos cerrados llorosos, rosario, maza gigante
+function GyomeiSVG() {
+  return (
+    <g>
+      {/* Piernas corpulentas (túnica gris) */}
+      <rect x="74" y="168" width="24" height="48" rx="3" fill="#6b7280" />
+      <rect x="74" y="168" width="8" height="48" rx="2" fill="#4b5563" />
+      <rect x="102" y="168" width="24" height="48" rx="3" fill="#6b7280" />
+      <rect x="118" y="168" width="8" height="48" rx="2" fill="#4b5563" />
+      {/* Zapatos */}
+      <rect x="72" y="208" width="28" height="10" rx="2" fill="#1e293b" />
+      <rect x="100" y="208" width="28" height="10" rx="2" fill="#1e293b" />
+      {/* Brazos grandes */}
+      <rect x="44" y="116" width="26" height="56" rx="5" fill="#6b7280" stroke="#4b5563" strokeWidth="1.2" />
+      <rect x="130" y="116" width="26" height="56" rx="5" fill="#6b7280" stroke="#4b5563" strokeWidth="1.2" />
+      {/* Manos */}
+      <rect x="44" y="166" width="26" height="12" rx="3" fill="#f5c08c" />
+      <rect x="130" y="166" width="26" height="12" rx="3" fill="#f5c08c" />
+      {/* Túnica gris amplía (Himejima) */}
+      <rect x="66" y="114" width="68" height="60" rx="5" fill="#6b7280" stroke="#4b5563" strokeWidth="1.5" />
+      {/* Textura de la tela */}
+      <g stroke="#4b5563" strokeWidth="0.6" fill="none" opacity="0.6">
+        <path d="M 74 122 L 74 168 M 84 122 L 84 168 M 94 122 L 94 168 M 104 122 L 104 168 M 114 122 L 114 168 M 124 122 L 124 168" />
+      </g>
+      {/* Cinturón */}
+      <rect x="66" y="158" width="68" height="6" rx="2" fill="#374151" />
+      {/* Cuello grueso */}
+      <rect x="88" y="102" width="24" height="16" rx="2" fill="#f5c08c" />
+      {/* Rosario (mala de cuentas) alrededor del cuello */}
+      <g fill="#78350f" stroke="#451a03" strokeWidth="0.5">
+        <circle cx="86" cy="106" r="2" />
+        <circle cx="92" cy="104" r="2" />
+        <circle cx="100" cy="104" r="2" />
+        <circle cx="108" cy="104" r="2" />
+        <circle cx="114" cy="106" r="2" />
+        <circle cx="84" cy="110" r="2" />
+        <circle cx="116" cy="110" r="2" />
+      </g>
+      {/* Cruz colgante del rosario */}
+      <rect x="98" y="110" width="4" height="8" fill="#92400e" />
+      <rect x="95" y="113" width="10" height="2" fill="#92400e" />
+      {/* Cabeza (calva) */}
+      <rect x="60" y="40" width="80" height="70" rx="8" fill="#f5c08c" stroke="#d99a5e" strokeWidth="1.2" />
+      <rect x="60" y="40" width="80" height="6" rx="3" fill="#fde047" opacity="0.3" />
+      {/* Orejas */}
+      <rect x="54" y="68" width="8" height="14" rx="3" fill="#f5c08c" />
+      <rect x="138" y="68" width="8" height="14" rx="3" fill="#f5c08c" />
+      {/* Ojos cerrados (llorando - líneas hacia abajo) */}
+      <path d="M 76 76 Q 82 80 88 76" stroke="#0f172a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M 112 76 Q 118 80 124 76" stroke="#0f172a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      {/* Lágrimas cayendo (característico de Gyomei) */}
+      <ellipse cx="82" cy="88" rx="1.5" ry="5" fill="#7dd3fc" opacity="0.85" />
+      <ellipse cx="118" cy="88" rx="1.5" ry="5" fill="#7dd3fc" opacity="0.85" />
+      {/* Cejas tristes */}
+      <path d="M 74 68 Q 82 64 90 68" stroke="#0f172a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path d="M 110 68 Q 118 64 126 68" stroke="#0f172a" strokeWidth="2" fill="none" strokeLinecap="round" />
+      {/* Boca seria */}
+      <line x1="92" y1="98" x2="108" y2="98" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" />
+      {/* Maza gigante (hacha de piedra) en la espalda */}
+      <g transform="rotate(20 100 100)">
+        <line x1="100" y1="60" x2="100" y2="180" stroke="#78350f" strokeWidth="6" strokeLinecap="round" />
+        <ellipse cx="100" cy="60" rx="20" ry="14" fill="#6b7280" stroke="#374151" strokeWidth="2" />
+        <ellipse cx="100" cy="60" rx="14" ry="8" fill="#4b5563" opacity="0.6" />
+      </g>
+    </g>
+  );
+}
+
+// OBANAI (Pilar de la Serpiente) - Haori blanco y negro, boca vendada, serpiente blanca
+function ObanaiSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+      {/* Uniforme negro */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
+      {/* Haori mitad blanca (izquierda) y mitad negra (derecha) */}
+      <rect x="66" y="112" width="34" height="52" rx="4" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.2" />
+      <rect x="100" y="112" width="34" height="52" rx="4" fill="#0f172a" stroke="#000000" strokeWidth="1.2" />
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#0f172a" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Heterocromia: ojo izquierdo amarillo, ojo derecho cyan */}
+            <ellipse cx="82" cy="74" rx="6" ry="8" fill="#fef3c7" stroke="#ca8a04" strokeWidth="1.5" />
+            <ellipse cx="118" cy="74" rx="6" ry="8" fill="#ecfeff" stroke="#06b6d4" strokeWidth="1.5" />
+            <circle cx="83" cy="76" r="3.5" fill="#fbbf24" />
+            <circle cx="119" cy="76" r="3.5" fill="#06b6d4" />
+            <circle cx="84" cy="74" r="1.2" fill="#ffffff" />
+            <circle cx="120" cy="74" r="1.2" fill="#ffffff" />
+          </>
+        }
+        boca={null}
+      />
+      {/* Vendas blancas cubriendo la boca */}
+      <rect x="74" y="88" width="52" height="14" rx="2" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+      <line x1="74" y1="92" x2="126" y2="92" stroke="#cbd5e1" strokeWidth="0.6" />
+      <line x1="74" y1="96" x2="126" y2="96" stroke="#cbd5e1" strokeWidth="0.6" />
+      <line x1="74" y1="100" x2="126" y2="100" stroke="#cbd5e1" strokeWidth="0.6" />
+      {/* Pelo negro (largo, lacio) */}
+      <path d="M 50 48 Q 54 22 100 18 Q 146 22 150 48 L 156 110 L 138 110 L 138 50 Q 100 44 62 50 L 62 110 L 44 110 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      <path d="M 56 46 Q 100 42 144 46 L 144 56 Q 100 50 56 56 Z" fill="#334155" />
+      {/* SERPIENTE BLANCA alrededor del cuello/hombro */}
+      <g>
+        <path d="M 70 110 Q 84 100 100 108 Q 116 116 130 110 Q 140 104 144 112" stroke="#f8fafc" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M 70 110 Q 84 100 100 108 Q 116 116 130 110 Q 140 104 144 112" stroke="#cbd5e1" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.6" />
+        {/* Cabeza de la serpiente */}
+        <ellipse cx="146" cy="112" rx="6" ry="4" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+        {/* Ojo de la serpiente */}
+        <circle cx="148" cy="111" r="1" fill="#fbbf24" />
+        {/* Lengua bifida */}
+        <path d="M 152 112 L 156 110 M 152 112 L 156 114" stroke="#dc2626" strokeWidth="0.8" />
+        {/* Patrón de escamas */}
+        <circle cx="80" cy="106" r="1.5" fill="#cbd5e1" opacity="0.5" />
+        <circle cx="100" cy="110" r="1.5" fill="#cbd5e1" opacity="0.5" />
+        <circle cx="120" cy="112" r="1.5" fill="#cbd5e1" opacity="0.5" />
+      </g>
+    </g>
+  );
+}
+
+// SANEMI (Pilar del Viento) - Pelo blanco espinoso, cicatrices, camisa blanca abierta
+function SanemiSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#f5c08c" />
+      {/* Camisa blanca abierta del uniforme */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+      {/* Pecho descubierto (piel) */}
+      <path d="M 86 116 L 100 138 L 114 116" fill="#f5c08c" />
+      {/* Cinturón */}
+      <rect x="70" y="158" width="60" height="6" rx="2" fill="#1e293b" />
+      {/* Botones de la camisa */}
+      <circle cx="84" cy="140" r="1.5" fill="#475569" />
+      <circle cx="84" cy="150" r="1.5" fill="#475569" />
+      <circle cx="116" cy="140" r="1.5" fill="#475569" />
+      <circle cx="116" cy="150" r="1.5" fill="#475569" />
+      {/* CICATRICES en el pecho (características de Sanemi) */}
+      <g stroke="#dc2626" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.8">
+        <path d="M 90 128 L 100 134" />
+        <path d="M 104 138 L 112 144" />
+        <path d="M 88 146 L 96 150" />
+        <path d="M 108 150 L 116 154" />
+      </g>
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Ojos púrpura pálido con mirada enojada */}
+            <ellipse cx="82" cy="76" rx="6" ry="8" fill="#faf5ff" stroke="#7c3aed" strokeWidth="1.5" />
+            <ellipse cx="118" cy="76" rx="6" ry="8" fill="#faf5ff" stroke="#7c3aed" strokeWidth="1.5" />
+            <circle cx="83" cy="78" r="3.5" fill="#7c3aed" />
+            <circle cx="119" cy="78" r="3.5" fill="#7c3aed" />
+            <circle cx="84" cy="76" r="1.3" fill="#ffffff" />
+            <circle cx="120" cy="76" r="1.3" fill="#ffffff" />
+            {/* Cejas enojadas (hacia abajo) */}
+            <path d="M 72 64 L 90 70" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 128 64 L 110 70" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
+          </>
+        }
+        boca={<path d="M 88 98 Q 100 94 112 98" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+      />
+      {/* Cicatrices en la cara */}
+      <g stroke="#dc2626" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.85">
+        <path d="M 74 84 L 80 90" />
+        <path d="M 120 84 L 126 90" />
+        <path d="M 92 64 L 96 70" />
+      </g>
+      {/* Pelo blanco espinoso (salvaje) */}
+      <g fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1">
+        <path d="M 56 48 Q 58 24 100 18 Q 142 24 144 48 L 144 54 Q 100 46 56 54 Z" />
+        <path d="M 62 30 L 54 8 L 74 26 Z" />
+        <path d="M 78 22 L 74 2 L 92 20 Z" />
+        <path d="M 100 18 L 100 -2 L 108 18 Z" />
+        <path d="M 122 22 L 126 2 L 110 20 Z" />
+        <path d="M 138 30 L 146 8 L 126 26 Z" />
+        {/* Picos adicionales más pequeños */}
+        <path d="M 70 28 L 64 12 L 78 24 Z" />
+        <path d="M 88 24 L 84 6 L 96 22 Z" />
+        <path d="M 112 24 L 116 6 L 104 22 Z" />
+        <path d="M 130 28 L 136 12 L 122 24 Z" />
+      </g>
     </g>
   );
 }

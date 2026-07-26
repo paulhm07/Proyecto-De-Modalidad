@@ -1,0 +1,1299 @@
+     1→"use client";
+     2→
+     3→interface PersonajeIconicoSVGProps {
+     4→  personajeId: string;
+     5→  size?: number;
+     6→  className?: string;
+     7→}
+     8→
+     9→/**
+    10→ * Renderiza personajes icónicos en estilo bloque 3D Roblox/Minecraft.
+    11→ * Cada personaje tiene un cuerpo base humanoide (cabeza cúbica, torso, extremidades)
+    12→ * con colores y detalles distintivos.
+    13→ *
+    14→ * Personajes: Goku, Naruto, Pikachu, Eren, Mario, Master Chief, Sora,
+    15→ * Spider-Man, Batman, Luke, Eleven, Mickey.
+    16→ */
+    17→export function PersonajeIconicoSVG({ personajeId, size = 200, className = "" }: PersonajeIconicoSVGProps) {
+    18→  return (
+    19→    <svg
+    20→      width={size}
+    21→      height={size}
+    22→      viewBox="0 0 200 240"
+    23→      xmlns="http://www.w3.org/2000/svg"
+    24→      className={className}
+    25→      role="img"
+    26→      aria-label={`Personaje ${personajeId}`}
+    27→    >
+    28→      <defs>
+    29→        <radialGradient id="ps-shadow" cx="0.5" cy="0.5" r="0.5">
+    30→          <stop offset="0%" stopColor="#000000" stopOpacity="0.35" />
+    31→          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+    32→        </radialGradient>
+    33→      </defs>
+    34→      {/* Sombra del piso */}
+    35→      <ellipse cx="100" cy="228" rx="52" ry="9" fill="url(#ps-shadow)" />
+    36→      {/* Render del personaje específico */}
+    37→      {renderPersonaje(personajeId)}
+    38→    </svg>
+    39→  );
+    40→}
+    41→
+    42→function renderPersonaje(id: string) {
+    43→  switch (id) {
+    44→    case "goku": return <GokuSVG />;
+    45→    case "naruto": return <NarutoSVG />;
+    46→    case "pikachu": return <PikachuSVG />;
+    47→    case "eren": return <ErenSVG />;
+    48→    case "mario": return <MarioSVG />;
+    49→    case "master-chief": return <MasterChiefSVG />;
+    50→    case "sora": return <SoraSVG />;
+    51→    case "spiderman": return <SpiderManSVG />;
+    52→    case "batman": return <BatmanSVG />;
+    53→    case "luke": return <LukeSVG />;
+    54→    case "eleven": return <ElevenSVG />;
+    55→    case "mickey": return <MickeySVG />;
+    56→    // Piratas Mugiwara (One Piece)
+    57→    case "luffy": return <LuffySVG />;
+    58→    case "zoro": return <ZoroSVG />;
+    59→    case "nami": return <NamiSVG />;
+    60→    case "usopp": return <UsoppSVG />;
+    61→    case "sanji": return <SanjiSVG />;
+    62→    case "chopper": return <ChopperSVG />;
+    63→    case "robin": return <RobinSVG />;
+    64→    case "franky": return <FrankySVG />;
+    65→    case "brook": return <BrookSVG />;
+    66→    case "jinbe": return <JinbeSVG />;
+    67→    default: return <GokuSVG />;
+    68→  }
+    69→}
+    70→
+    71→// ===== Cuerpo base reutilizable (piernas, brazos, torso) =====
+    72→function CuerpoBase({
+    73→  pielTop = "#ffe0bd", pielSide = "#f5c08c", pielBottom = "#d99a5e",
+    74→  piernaColor = "#1e293b", piernaDark = "#0f172a",
+    75→  brazoLado = "#f5c08c",
+    76→}: {
+    77→  pielTop?: string; pielSide?: string; pielBottom?: string;
+    78→  piernaColor?: string; piernaDark?: string; brazoLado?: string;
+    79→}) {
+    80→  return (
+    81→    <g>
+    82→      {/* Piernas */}
+    83→      <rect x="78" y="168" width="20" height="48" rx="3" fill={piernaColor} />
+    84→      <rect x="78" y="168" width="6" height="48" rx="2" fill={piernaDark} opacity="0.6" />
+    85→      <rect x="102" y="168" width="20" height="48" rx="3" fill={piernaColor} />
+    86→      <rect x="116" y="168" width="6" height="48" rx="2" fill={piernaDark} opacity="0.6" />
+    87→      {/* Zapatos */}
+    88→      <rect x="76" y="208" width="24" height="10" rx="2" fill="#1e293b" />
+    89→      <rect x="100" y="208" width="24" height="10" rx="2" fill="#1e293b" />
+    90→      {/* Brazos */}
+    91→      <rect x="48" y="118" width="22" height="52" rx="4" fill={brazoLado} />
+    92→      <rect x="48" y="166" width="22" height="10" rx="3" fill={pielTop} />
+    93→      <rect x="130" y="118" width="22" height="52" rx="4" fill={brazoLado} />
+    94→      <rect x="130" y="166" width="22" height="10" rx="3" fill={pielTop} />
+    95→      {/* Cuello */}
+    96→      <rect x="90" y="104" width="20" height="14" rx="2" fill={pielSide} />
+    97→    </g>
+    98→  );
+    99→}
+   100→
+   101→// ===== Cabeza base reutilizable =====
+   102→function CabezaBase({
+   103→  pielTop = "#ffe0bd", pielSide = "#f5c08c", pielBottom = "#d99a5e",
+   104→  ojos, boca,
+   105→}: {
+   106→  pielTop?: string; pielSide?: string; pielBottom?: string;
+   107→  ojos?: React.ReactNode; boca?: React.ReactNode;
+   108→}) {
+   109→  return (
+   110→    <g>
+   111→      <rect x="60" y="40" width="80" height="70" rx="6" fill={pielSide} stroke={pielBottom} strokeWidth="1.2" />
+   112→      <rect x="60" y="40" width="80" height="6" rx="3" fill={pielTop} opacity="0.6" />
+   113→      <rect x="134" y="46" width="6" height="64" rx="2" fill={pielBottom} opacity="0.4" />
+   114→      {/* Orejas */}
+   115→      <rect x="54" y="68" width="8" height="14" rx="3" fill={pielSide} />
+   116→      <rect x="138" y="68" width="8" height="14" rx="3" fill={pielSide} />
+   117→      {ojos}
+   118→      {boca}
+   119→    </g>
+   120→  );
+   121→}
+   122→
+   123→// ============================================================
+   124→// GOKU - Dragon Ball (gi naranja, pelo negro erizado)
+   125→// ============================================================
+   126→function GokuSVG() {
+   127→  return (
+   128→    <g>
+   129→      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#3b82f6" piernaDark="#1e40af" brazoLado="#f5c08c" />
+   130→      {/* Gi naranja (torso) */}
+   131→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f97316" stroke="#c2410c" strokeWidth="1.5" />
+   132→      {/* Camiseta azul interior */}
+   133→      <path d="M 88 116 L 100 132 L 112 116 Z" fill="#1e40af" />
+   134→      {/* Cinturón azul */}
+   135→      <rect x="70" y="158" width="60" height="8" rx="2" fill="#1e40af" />
+   136→      <rect x="96" y="158" width="8" height="8" fill="#3b82f6" />
+   137→      {/* Muñequeras */}
+   138→      <rect x="48" y="160" width="22" height="6" rx="2" fill="#1e40af" />
+   139→      <rect x="130" y="160" width="22" height="6" rx="2" fill="#1e40af" />
+   140→      {/* Cabeza */}
+   141→      <CabezaBase
+   142→        pielSide="#f5c08c"
+   143→        pielBottom="#d99a5e"
+   144→        ojos={
+   145→          <>
+   146→            <ellipse cx="82" cy="78" rx="7" ry="9" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   147→            <ellipse cx="118" cy="78" rx="7" ry="9" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   148→            <circle cx="83" cy="80" r="4" fill="#1e293b" />
+   149→            <circle cx="119" cy="80" r="4" fill="#1e293b" />
+   150→            <circle cx="84" cy="77" r="1.5" fill="#ffffff" />
+   151→            <circle cx="120" cy="77" r="1.5" fill="#ffffff" />
+   152→          </>
+   153→        }
+   154→        boca={<path d="M 86 96 L 114 96" stroke="#7a4422" strokeWidth="2.8" strokeLinecap="round" fill="none" />}
+   155→      />
+   156→      {/* Pelo erizado negro (estilo Goku) */}
+   157→      <g fill="#1e293b" stroke="#0f172a" strokeWidth="1">
+   158→        <path d="M 58 46 Q 56 20 72 30 Q 70 14 84 26 Q 82 10 96 24 Q 100 8 104 24 Q 118 10 116 26 Q 130 14 128 30 Q 144 20 142 46 L 142 52 Q 100 46 58 52 Z" />
+   159→        {/* Picos adicionales */}
+   160→        <path d="M 68 30 L 64 14 L 74 26 Z" />
+   161→        <path d="M 84 26 L 82 8 L 92 22 Z" />
+   162→        <path d="M 100 24 L 100 4 L 108 22 Z" />
+   163→        <path d="M 116 26 L 118 8 L 110 22 Z" />
+   164→        <path d="M 132 30 L 136 14 L 126 26 Z" />
+   165→      </g>
+   166→    </g>
+   167→  );
+   168→}
+   169→
+   170→// ============================================================
+   171→// NARUTO - rubio erizado, traje naranja, headband
+   172→// ============================================================
+   173→function NarutoSVG() {
+   174→  return (
+   175→    <g>
+   176→      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#f97316" piernaDark="#c2410c" brazoLado="#f5c08c" />
+   177→      {/* Traje naranja con negro */}
+   178→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f97316" stroke="#c2410c" strokeWidth="1.5" />
+   179→      {/* Bandas negras en hombros */}
+   180→      <rect x="70" y="116" width="60" height="8" rx="2" fill="#1e293b" />
+   181→      {/* Cremallera central */}
+   182→      <line x1="100" y1="124" x2="100" y2="170" stroke="#1e293b" strokeWidth="2" />
+   183→      {/* Cinturón */}
+   184→      <rect x="70" y="158" width="60" height="8" rx="2" fill="#1e293b" />
+   185→      {/* Cabeza */}
+   186→      <CabezaBase
+   187→        pielSide="#f5c08c"
+   188→        pielBottom="#d99a5e"
+   189→        ojos={
+   190→          <>
+   191→            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   192→            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   193→            <circle cx="83" cy="79" r="3.5" fill="#1e40af" />
+   194→            <circle cx="119" cy="79" r="3.5" fill="#1e40af" />
+   195→            <circle cx="84" cy="77" r="1.3" fill="#ffffff" />
+   196→            <circle cx="120" cy="77" r="1.3" fill="#ffffff" />
+   197→            {/* Marca de bigote de zorro */}
+   198→            <path d="M 72 88 L 78 86 M 74 92 L 78 90" stroke="#1e293b" strokeWidth="1" />
+   199→            <path d="M 128 88 L 122 86 M 126 92 L 122 90" stroke="#1e293b" strokeWidth="1" />
+   200→          </>
+   201→        }
+   202→        boca={<path d="M 88 94 Q 100 100 112 94" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+   203→      />
+   204→      {/* Pelo rubio erizado */}
+   205→      <g fill="#fbbf24" stroke="#d97706" strokeWidth="1">
+   206→        <path d="M 58 46 Q 60 22 100 20 Q 140 22 142 46 L 142 50 Q 100 44 58 50 Z" />
+   207→        <path d="M 66 30 L 60 12 L 74 28 Z" />
+   208→        <path d="M 80 24 L 78 6 L 90 22 Z" />
+   209→        <path d="M 100 20 L 100 2 L 108 20 Z" />
+   210→        <path d="M 120 24 L 122 6 L 110 22 Z" />
+   211→        <path d="M 134 30 L 140 12 L 126 28 Z" />
+   212→      </g>
+   213→      {/* Headband (banda ninja) con placa metálica */}
+   214→      <rect x="58" y="50" width="84" height="10" rx="2" fill="#1e3a8a" stroke="#0f172a" strokeWidth="1" />
+   215→      <rect x="86" y="51" width="28" height="8" rx="1" fill="#cbd5e1" stroke="#64748b" strokeWidth="0.8" />
+   216→      {/* Símbolo espiral */}
+   217→      <path d="M 100 55 Q 96 53 96 57 Q 96 60 100 58 Q 102 57 101 55" fill="none" stroke="#1e293b" strokeWidth="1.2" />
+   218→    </g>
+   219→  );
+   220→}
+   221→
+   222→// ============================================================
+   223→// PIKACHU - amarillo, mejillas rojas, orejas puntiagudas
+   224→// ============================================================
+   225→function PikachuSVG() {
+   226→  return (
+   227→    <g>
+   228→      {/* Cuerpo amarillo (sin piernas separadas, cuerpo compacto) */}
+   229→      <rect x="78" y="168" width="20" height="48" rx="3" fill="#facc15" />
+   230→      <rect x="102" y="168" width="20" height="48" rx="3" fill="#facc15" />
+   231→      <rect x="78" y="168" width="6" height="48" rx="2" fill="#ca8a04" opacity="0.5" />
+   232→      <rect x="116" y="168" width="6" height="48" rx="2" fill="#ca8a04" opacity="0.5" />
+   233→      {/* Zapatos marrones */}
+   234→      <rect x="74" y="208" width="28" height="10" rx="3" fill="#78350f" />
+   235→      <rect x="98" y="208" width="28" height="10" rx="3" fill="#78350f" />
+   236→      {/* Brazos amarillos */}
+   237→      <rect x="48" y="118" width="22" height="52" rx="4" fill="#facc15" />
+   238→      <rect x="130" y="118" width="22" height="52" rx="4" fill="#facc15" />
+   239→      <rect x="48" y="166" width="22" height="10" rx="3" fill="#fde047" />
+   240→      <rect x="130" y="166" width="22" height="10" rx="3" fill="#fde047" />
+   241→      {/* Torso amarillo con rayas marrones */}
+   242→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#facc15" stroke="#ca8a04" strokeWidth="1.5" />
+   243→      {/* Rayas marrones en la espalda/torso */}
+   244→      <path d="M 80 130 L 86 128 M 80 138 L 86 136 M 114 128 L 120 130 M 114 136 L 120 138" stroke="#78350f" strokeWidth="3" strokeLinecap="round" />
+   245→      {/* Cola rayo (detrás) */}
+   246→      <path d="M 145 150 L 165 120 L 160 140 L 175 110 L 170 145 L 180 130" fill="#facc15" stroke="#ca8a04" strokeWidth="1.5" strokeLinejoin="round" />
+   247→      {/* Cabeza amarilla */}
+   248→      <rect x="60" y="40" width="80" height="70" rx="8" fill="#facc15" stroke="#ca8a04" strokeWidth="1.2" />
+   249→      <rect x="60" y="40" width="80" height="6" rx="3" fill="#fde047" opacity="0.7" />
+   250→      {/* Orejas puntiagudas */}
+   251→      <path d="M 56 44 L 44 14 L 62 36 Z" fill="#facc15" stroke="#ca8a04" strokeWidth="1.2" />
+   252→      <path d="M 48 24 L 44 14 L 54 26 Z" fill="#1e293b" />
+   253→      <path d="M 144 44 L 156 14 L 138 36 Z" fill="#facc15" stroke="#ca8a04" strokeWidth="1.2" />
+   254→      <path d="M 152 24 L 156 14 L 146 26 Z" fill="#1e293b" />
+   255→      {/* Mejillas rojas */}
+   256→      <circle cx="72" cy="88" r="7" fill="#ef4444" stroke="#b91c1c" strokeWidth="1" />
+   257→      <circle cx="128" cy="88" r="7" fill="#ef4444" stroke="#b91c1c" strokeWidth="1" />
+   258→      {/* Ojos negros brillantes */}
+   259→      <circle cx="84" cy="76" r="6" fill="#1e293b" />
+   260→      <circle cx="116" cy="76" r="6" fill="#1e293b" />
+   261→      <circle cx="86" cy="74" r="2" fill="#ffffff" />
+   262→      <circle cx="118" cy="74" r="2" fill="#ffffff" />
+   263→      {/* Boca */}
+   264→      <path d="M 90 92 Q 95 96 100 92 Q 105 96 110 92" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" fill="none" />
+   265→      <path d="M 94 94 Q 100 98 106 94" fill="#7a4422" stroke="#7a4422" strokeWidth="1" />
+   266→      {/* Nariz */}
+   267→      <circle cx="100" cy="84" r="1.5" fill="#1e293b" />
+   268→    </g>
+   269→  );
+   270→}
+   271→
+   272→// ============================================================
+   273→// EREN - Attack on Titan (capa verde, uniforme beige)
+   274→// ============================================================
+   275→function ErenSVG() {
+   276→  return (
+   277→    <g>
+   278→      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#a8a29e" piernaDark="#78716c" brazoLado="#e7e5e4" />
+   279→      {/* Uniforme beige */}
+   280→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#d6d3d1" stroke="#78716c" strokeWidth="1.5" />
+   281→      {/* Cinturón de cuero con hebilla */}
+   282→      <rect x="70" y="152" width="60" height="8" rx="2" fill="#451a03" />
+   283→      <rect x="94" y="151" width="12" height="10" rx="1" fill="#a8a29e" stroke="#1e293b" strokeWidth="1" />
+   284→      {/* Bolsillos */}
+   285→      <rect x="74" y="124" width="14" height="12" rx="1" fill="none" stroke="#78716c" strokeWidth="1" />
+   286→      <rect x="112" y="124" width="14" height="12" rx="1" fill="none" stroke="#78716c" strokeWidth="1" />
+   287→      {/* Cabeza */}
+   288→      <CabezaBase
+   289→        pielSide="#f5c08c"
+   290→        pielBottom="#d99a5e"
+   291→        ojos={
+   292→          <>
+   293→            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   294→            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   295→            <circle cx="83" cy="80" r="3.5" fill="#16a34a" />
+   296→            <circle cx="119" cy="80" r="3.5" fill="#16a34a" />
+   297→            <circle cx="84" cy="78" r="1.3" fill="#ffffff" />
+   298→            <circle cx="120" cy="78" r="1.3" fill="#ffffff" />
+   299→          </>
+   300→        }
+   301→        boca={<path d="M 86 96 L 114 96" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+   302→      />
+   303→      {/* Pelo castaño */}
+   304→      <path d="M 58 46 Q 60 24 100 22 Q 140 24 142 46 L 142 54 Q 100 48 58 54 Z" fill="#78350f" stroke="#451a03" strokeWidth="1" />
+   305→      <path d="M 68 44 Q 76 52 88 46 Q 100 50 112 46 Q 124 52 132 44 L 132 52 Q 100 56 68 52 Z" fill="#92400e" />
+   306→      {/* Capa verde del Cuerpo de Exploración */}
+   307→      <path d="M 50 118 Q 100 108 150 118 L 156 180 Q 130 170 100 174 Q 70 170 44 180 Z" fill="#166534" stroke="#14532d" strokeWidth="1.5" opacity="0.92" />
+   308→      {/* Emblema (alas de la libertad) */}
+   309→      <g fill="#ffffff" opacity="0.95">
+   310→        <path d="M 88 134 L 96 138 L 88 142 Z" />
+   311→        <path d="M 104 138 L 112 134 L 112 142 Z" />
+   312→        <line x1="96" y1="138" x2="104" y2="138" stroke="#ffffff" strokeWidth="2" />
+   313→      </g>
+   314→    </g>
+   315→  );
+   316→}
+   317→
+   318→// ============================================================
+   319→// MARIO - rojo y azul, gorra con M, bigote
+   320→// ============================================================
+   321→function MarioSVG() {
+   322→  return (
+   323→    <g>
+   324→      {/* Piernas azules (overoles) */}
+   325→      <rect x="78" y="168" width="20" height="48" rx="3" fill="#1e40af" />
+   326→      <rect x="102" y="168" width="20" height="48" rx="3" fill="#1e40af" />
+   327→      {/* Zapatos marrones */}
+   328→      <rect x="72" y="208" width="32" height="10" rx="3" fill="#78350f" />
+   329→      <rect x="96" y="208" width="32" height="10" rx="3" fill="#78350f" />
+   330→      {/* Brazos rojos (camisa) */}
+   331→      <rect x="48" y="118" width="22" height="52" rx="4" fill="#dc2626" />
+   332→      <rect x="130" y="118" width="22" height="52" rx="4" fill="#dc2626" />
+   333→      {/* Guantes blancos */}
+   334→      <rect x="48" y="166" width="22" height="10" rx="3" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
+   335→      <rect x="130" y="166" width="22" height="10" rx="3" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
+   336→      {/* Overoles azules */}
+   337→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+   338→      {/* Camisa roja visible arriba */}
+   339→      <rect x="70" y="116" width="60" height="12" rx="3" fill="#dc2626" />
+   340→      {/* Tirantes */}
+   341→      <rect x="80" y="116" width="8" height="50" fill="#1e40af" />
+   342→      <rect x="112" y="116" width="8" height="50" fill="#1e40af" />
+   343→      {/* Botones dorados */}
+   344→      <circle cx="84" cy="138" r="3" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
+   345→      <circle cx="116" cy="138" r="3" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
+   346→      {/* Cabeza */}
+   347→      <CabezaBase
+   348→        pielSide="#ffe0bd"
+   349→        pielBottom="#d99a5e"
+   350→        ojos={
+   351→          <>
+   352→            <circle cx="84" cy="78" r="4" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   353→            <circle cx="116" cy="78" r="4" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   354→            <circle cx="85" cy="79" r="2.5" fill="#1e40af" />
+   355→            <circle cx="117" cy="79" r="2.5" fill="#1e40af" />
+   356→          </>
+   357→        }
+   358→        boca={
+   359→          <>
+   360→            {/* Bigote grande negro */}
+   361→            <path d="M 74 96 Q 82 100 92 96 Q 100 102 108 96 Q 118 100 126 96 Q 122 104 110 100 Q 100 106 90 100 Q 78 104 74 96 Z" fill="#1e293b" />
+   362→            {/* Nariz grande */}
+   363→            <ellipse cx="100" cy="90" rx="9" ry="7" fill="#ff8c5a" stroke="#c2410c" strokeWidth="1.2" />
+   364→          </>
+   365→        }
+   366→      />
+   367→      {/* Gorra roja con M */}
+   368→      <g>
+   369→        <path d="M 58 48 Q 60 22 100 20 Q 140 22 142 48 L 142 52 Q 100 46 58 52 Z" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+   370→        {/* Visera */}
+   371→        <path d="M 58 50 Q 100 44 142 50 L 148 56 Q 100 50 52 56 Z" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+   372→        {/* Círculo blanco con M */}
+   373→        <circle cx="100" cy="36" r="10" fill="#ffffff" stroke="#991b1b" strokeWidth="1.5" />
+   374→        <text x="100" y="42" textAnchor="middle" fontSize="14" fontWeight="900" fill="#dc2626" fontFamily="Arial, sans-serif">M</text>
+   375→      </g>
+   376→    </g>
+   377→  );
+   378→}
+   379→
+   380→// ============================================================
+   381→// MASTER CHIEF - armadura verde, casco con visor dorado
+   382→// ============================================================
+   383→function MasterChiefSVG() {
+   384→  return (
+   385→    <g>
+   386→      {/* Piernas verdes blindadas */}
+   387→      <rect x="78" y="168" width="20" height="48" rx="3" fill="#15803d" />
+   388→      <rect x="78" y="168" width="6" height="48" rx="2" fill="#166534" />
+   389→      <rect x="102" y="168" width="20" height="48" rx="3" fill="#15803d" />
+   390→      <rect x="116" y="168" width="6" height="48" rx="2" fill="#166534" />
+   391→      {/* Botas */}
+   392→      <rect x="74" y="208" width="28" height="10" rx="2" fill="#14532d" />
+   393→      <rect x="98" y="208" width="28" height="10" rx="2" fill="#14532d" />
+   394→      {/* Rodilleras */}
+   395→      <rect x="78" y="190" width="20" height="8" rx="2" fill="#22c55e" />
+   396→      <rect x="102" y="190" width="20" height="8" rx="2" fill="#22c55e" />
+   397→      {/* Brazos blindados */}
+   398→      <rect x="48" y="118" width="22" height="52" rx="4" fill="#15803d" />
+   399→      <rect x="48" y="118" width="6" height="52" rx="2" fill="#166534" />
+   400→      <rect x="130" y="118" width="22" height="52" rx="4" fill="#15803d" />
+   401→      <rect x="146" y="118" width="6" height="52" rx="2" fill="#166534" />
+   402→      {/* Guantes */}
+   403→      <rect x="48" y="166" width="22" height="10" rx="3" fill="#22c55e" />
+   404→      <rect x="130" y="166" width="22" height="10" rx="3" fill="#22c55e" />
+   405→      {/* Torso blindado */}
+   406→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#15803d" stroke="#14532d" strokeWidth="1.5" />
+   407→      {/* Detalles de armadura */}
+   408→      <rect x="76" y="122" width="48" height="44" rx="3" fill="#16a34a" opacity="0.6" />
+   409→      <rect x="90" y="126" width="20" height="36" rx="2" fill="#14532d" opacity="0.4" />
+   410→      {/* Luz del pecho */}
+   411→      <circle cx="100" cy="138" r="4" fill="#fde047" stroke="#ca8a04" strokeWidth="1.5" />
+   412→      <circle cx="100" cy="138" r="2" fill="#fef9c3" />
+   413→      {/* Cuello */}
+   414→      <rect x="90" y="104" width="20" height="14" rx="2" fill="#14532d" />
+   415→      {/* Casco (cabeza blindada) */}
+   416→      <g>
+   417→        <rect x="60" y="40" width="80" height="70" rx="8" fill="#15803d" stroke="#14532d" strokeWidth="1.5" />
+   418→        <rect x="60" y="40" width="80" height="8" rx="4" fill="#22c55e" opacity="0.7" />
+   419→        <rect x="134" y="48" width="6" height="56" rx="2" fill="#14532d" opacity="0.5" />
+   420→        {/* Visor dorado */}
+   421→        <rect x="70" y="66" width="60" height="20" rx="4" fill="#fbbf24" stroke="#92400e" strokeWidth="1.5" />
+   422→        <rect x="70" y="66" width="60" height="6" rx="3" fill="#fde68a" opacity="0.8" />
+   423→        {/* Línea del visor */}
+   424→        <line x1="74" y1="76" x2="126" y2="76" stroke="#92400e" strokeWidth="0.8" opacity="0.6" />
+   425→        {/* Detalles laterales del casco */}
+   426→        <rect x="56" y="70" width="6" height="20" rx="2" fill="#14532d" />
+   427→        <rect x="138" y="70" width="6" height="20" rx="2" fill="#14532d" />
+   428→      </g>
+   429→    </g>
+   430→  );
+   431→}
+   432→
+   433→// ============================================================
+   434→// SORA - Kingdom Hearts (pelo castaño erizado, llave espada)
+   435→// ============================================================
+   436→function SoraSVG() {
+   437→  return (
+   438→    <g>
+   439→      <CuerpoBase pielSide="#ffe0bd" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#ffe0bd" />
+   440→      {/* Traje negro con rojo */}
+   441→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#0f172a" strokeWidth="1.5" />
+   442→      {/* Panel rojo central */}
+   443→      <rect x="88" y="116" width="24" height="56" fill="#dc2626" />
+   444→      {/* Cinturón */}
+   445→      <rect x="70" y="158" width="60" height="6" rx="2" fill="#7f1d1d" />
+   446→      {/* Coronas en hombros */}
+   447→      <circle cx="58" cy="120" r="5" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
+   448→      <circle cx="142" cy="120" r="5" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
+   449→      {/* Cabeza */}
+   450→      <CabezaBase
+   451→        pielSide="#ffe0bd"
+   452→        pielBottom="#d99a5e"
+   453→        ojos={
+   454→          <>
+   455→            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   456→            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   457→            <circle cx="83" cy="80" r="3.5" fill="#3b82f6" />
+   458→            <circle cx="119" cy="80" r="3.5" fill="#3b82f6" />
+   459→            <circle cx="84" cy="78" r="1.3" fill="#ffffff" />
+   460→            <circle cx="120" cy="78" r="1.3" fill="#ffffff" />
+   461→          </>
+   462→        }
+   463→        boca={<path d="M 88 94 Q 100 100 112 94" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+   464→      />
+   465→      {/* Pelo castaño erizado (estilo Sora) */}
+   466→      <g fill="#7c2d12" stroke="#451a03" strokeWidth="1">
+   467→        <path d="M 58 48 Q 60 22 100 18 Q 140 22 142 48 L 142 54 Q 100 46 58 54 Z" />
+   468→        {/* Picos característicos */}
+   469→        <path d="M 64 36 L 54 18 L 72 32 Z" />
+   470→        <path d="M 78 28 L 74 8 L 88 26 Z" />
+   471→        <path d="M 96 22 L 100 4 L 104 22 Z" />
+   472→        <path d="M 112 28 L 118 8 L 108 26 Z" />
+   473→        <path d="M 122 32 L 138 18 L 132 36 Z" />
+   474→      </g>
+   475→      {/* Collar con corona */}
+   476→      <path d="M 80 114 Q 100 120 120 114" stroke="#fbbf24" strokeWidth="2" fill="none" />
+   477→      <path d="M 96 118 L 100 124 L 104 118 L 100 112 Z" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
+   478→      {/* Llave Espada (en mano derecho) */}
+   479→      <g>
+   480→        <line x1="146" y1="160" x2="178" y2="110" stroke="#cbd5e1" strokeWidth="4" strokeLinecap="round" />
+   481→        <line x1="146" y1="160" x2="178" y2="110" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
+   482→        {/* Dientes de la llave */}
+   483→        <rect x="172" y="106" width="14" height="6" rx="1" fill="#fbbf24" stroke="#92400e" strokeWidth="1" transform="rotate(-35 179 109)" />
+   484→        <rect x="168" y="118" width="10" height="5" rx="1" fill="#fbbf24" stroke="#92400e" strokeWidth="1" transform="rotate(-35 173 120)" />
+   485→        {/* Empuñadura */}
+   486→        <circle cx="144" cy="162" r="4" fill="#fbbf24" stroke="#92400e" strokeWidth="1.5" />
+   487→      </g>
+   488→    </g>
+   489→  );
+   490→}
+   491→
+   492→// ============================================================
+   493→// SPIDER-MAN - rojo y azul con telaraña
+   494→// ============================================================
+   495→function SpiderManSVG() {
+   496→  return (
+   497→    <g>
+   498→      {/* Piernas azules */}
+   499→      <rect x="78" y="168" width="20" height="48" rx="3" fill="#1e40af" />
+   500→      <rect x="102" y="168" width="20" height="48" rx="3" fill="#1e40af" />
+   501→      {/* Botas rojas */}
+   502→      <rect x="74" y="208" width="28" height="10" rx="2" fill="#dc2626" />
+   503→      <rect x="98" y="208" width="28" height="10" rx="2" fill="#dc2626" />
+   504→      {/* Brazos rojos */}
+   505→      <rect x="48" y="118" width="22" height="52" rx="4" fill="#dc2626" />
+   506→      <rect x="130" y="118" width="22" height="52" rx="4" fill="#dc2626" />
+   507→      {/* Guantes rojos */}
+   508→      <rect x="48" y="166" width="22" height="10" rx="3" fill="#991b1b" />
+   509→      <rect x="130" y="166" width="22" height="10" rx="3" fill="#991b1b" />
+   510→      {/* Torso rojo */}
+   511→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+   512→      {/* Sección azul del torso */}
+   513→      <path d="M 70 158 Q 100 148 130 158 L 130 172 L 70 172 Z" fill="#1e40af" />
+   514→      {/* Telaraña en el torso */}
+   515→      <g stroke="#1e293b" strokeWidth="0.8" fill="none" opacity="0.8">
+   516→        <line x1="100" y1="116" x2="100" y2="158" />
+   517→        <path d="M 80 126 Q 100 124 120 126" />
+   518→        <path d="M 76 138 Q 100 136 124 138" />
+   519→        <path d="M 78 150 Q 100 148 122 150" />
+   520→      </g>
+   521→      {/* Araña en el pecho */}
+   522→      <g fill="#1e293b">
+   523→        <ellipse cx="100" cy="134" rx="4" ry="6" />
+   524→        <path d="M 96 130 L 88 124 M 96 134 L 86 132 M 96 138 L 88 140" stroke="#1e293b" strokeWidth="1.5" />
+   525→        <path d="M 104 130 L 112 124 M 104 134 L 114 132 M 104 138 L 112 140" stroke="#1e293b" strokeWidth="1.5" />
+   526→      </g>
+   527→      {/* Cuello */}
+   528→      <rect x="90" y="104" width="20" height="14" rx="2" fill="#dc2626" />
+   529→      {/* Máscara roja */}
+   530→      <g>
+   531→        <rect x="60" y="40" width="80" height="70" rx="8" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+   532→        <rect x="60" y="40" width="80" height="6" rx="3" fill="#ef4444" opacity="0.7" />
+   533→        {/* Telaraña en la cara */}
+   534→        <g stroke="#1e293b" strokeWidth="0.7" fill="none" opacity="0.7">
+   535→          <path d="M 60 70 Q 100 60 140 70" />
+   536→          <path d="M 60 84 Q 100 74 140 84" />
+   537→          <path d="M 62 98 Q 100 88 138 98" />
+   538→          <line x1="80" y1="46" x2="78" y2="104" />
+   539→          <line x1="100" y1="44" x2="100" y2="104" />
+   540→          <line x1="120" y1="46" x2="122" y2="104" />
+   541→        </g>
+   542→        {/* Ojos blancos con borde negro (característicos) */}
+   543→        <path d="M 70 72 Q 82 64 94 74 Q 92 84 80 86 Q 70 82 70 72 Z" fill="#ffffff" stroke="#1e293b" strokeWidth="2" />
+   544→        <path d="M 106 74 Q 118 64 130 72 Q 130 82 120 86 Q 108 84 106 74 Z" fill="#ffffff" stroke="#1e293b" strokeWidth="2" />
+   545→        {/* Brillo en los ojos */}
+   546→        <ellipse cx="80" cy="74" rx="3" ry="2" fill="#bfdbfe" opacity="0.7" />
+   547→        <ellipse cx="120" cy="74" rx="3" ry="2" fill="#bfdbfe" opacity="0.7" />
+   548→      </g>
+   549→    </g>
+   550→  );
+   551→}
+   552→
+   553→// ============================================================
+   554→// BATMAN - negro, capa, cornamenta
+   555→// ============================================================
+   556→function BatmanSVG() {
+   557→  return (
+   558→    <g>
+   559→      <CuerpoBase pielSide="#9ca3af" pielBottom="#4b5563" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#374151" />
+   560→      {/* Traje gris oscuro */}
+   561→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#374151" stroke="#0f172a" strokeWidth="1.5" />
+   562→      {/* Símbolo de murciélago negro en el pecho */}
+   563→      <g fill="#0f172a">
+   564→        <ellipse cx="100" cy="138" rx="5" ry="7" />
+   565→        <path d="M 95 132 L 84 124 L 88 134 L 80 130 L 86 138 L 95 140 Z" />
+   566→        <path d="M 105 132 L 116 124 L 112 134 L 120 130 L 114 138 L 105 140 Z" />
+   567→        <path d="M 95 144 L 86 152 L 92 146 Z" />
+   568→        <path d="M 105 144 L 114 152 L 108 146 Z" />
+   569→      </g>
+   570→      {/* Cinturón amarillo con bolsas */}
+   571→      <rect x="70" y="158" width="60" height="8" rx="2" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
+   572→      <rect x="80" y="158" width="6" height="8" fill="#92400e" />
+   573→      <rect x="94" y="158" width="12" height="8" fill="#fde047" stroke="#92400e" strokeWidth="0.8" />
+   574→      <rect x="114" y="158" width="6" height="8" fill="#92400e" />
+   575→      {/* Cabeza gris */}
+   576→      <rect x="60" y="40" width="80" height="70" rx="6" fill="#9ca3af" stroke="#4b5563" strokeWidth="1.2" />
+   577→      {/* Máscara negra (cubre la cabeza excepto la zona de la cara) */}
+   578→      <path d="M 60 40 L 60 110 L 140 110 L 140 40 Z M 70 60 Q 70 100 100 100 Q 130 100 130 60 Z" fill="#0f172a" fillRule="evenodd" />
+   579→      {/* Cuernos (cornamenta) */}
+   580→      <path d="M 64 40 L 58 14 L 78 40 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+   581→      <path d="M 136 40 L 142 14 L 122 40 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+   582→      {/* Ojos blancos */}
+   583→      <ellipse cx="82" cy="76" rx="7" ry="5" fill="#ffffff" />
+   584→      <ellipse cx="118" cy="76" rx="7" ry="5" fill="#ffffff" />
+   585→      {/* Boca seria */}
+   586→      <path d="M 88 94 L 112 94" stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+   587→      {/* Capa negra (detrás del cuerpo) */}
+   588→      <path d="M 44 118 Q 100 104 156 118 L 162 185 Q 130 175 100 180 Q 70 175 38 185 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" opacity="0.95" />
+   589→      {/* Interior de la capa (oscuro) */}
+   590→      <path d="M 50 120 Q 100 110 150 120 L 150 124 Q 100 114 50 124 Z" fill="#1e293b" />
+   591→    </g>
+   592→  );
+   593→}
+   594→
+   595→// ============================================================
+   596→// LUKE SKYWALKER - túnica blanca, sable de luz verde
+   597→// ============================================================
+   598→function LukeSVG() {
+   599→  return (
+   600→    <g>
+   601→      <CuerpoBase pielSide="#ffe0bd" pielBottom="#d99a5e" piernaColor="#e7e5e4" piernaDark="#a8a29e" brazoLado="#f5f5f4" />
+   602→      {/* Túnica blanca */}
+   603→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f5f5f4" stroke="#a8a29e" strokeWidth="1.5" />
+   604→      {/* Líneas de la túnica */}
+   605→      <line x1="100" y1="116" x2="100" y2="172" stroke="#a8a29e" strokeWidth="1.5" />
+   606→      <path d="M 88 116 L 100 128 L 112 116" fill="none" stroke="#a8a29e" strokeWidth="1.5" />
+   607→      {/* Cinturón marrón */}
+   608→      <rect x="70" y="156" width="60" height="8" rx="2" fill="#78350f" />
+   609→      <rect x="94" y="155" width="12" height="10" rx="1" fill="#fbbf24" stroke="#92400e" strokeWidth="1" />
+   610→      {/* Cabeza */}
+   611→      <CabezaBase
+   612→        pielSide="#ffe0bd"
+   613→        pielBottom="#d99a5e"
+   614→        ojos={
+   615→          <>
+   616→            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   617→            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   618→            <circle cx="83" cy="80" r="3.5" fill="#3b82f6" />
+   619→            <circle cx="119" cy="80" r="3.5" fill="#3b82f6" />
+   620→            <circle cx="84" cy="78" r="1.3" fill="#ffffff" />
+   621→            <circle cx="120" cy="78" r="1.3" fill="#ffffff" />
+   622→          </>
+   623→        }
+   624→        boca={<path d="M 88 94 Q 100 98 112 94" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+   625→      />
+   626→      {/* Pelo rubio */}
+   627→      <path d="M 58 46 Q 60 26 100 24 Q 140 26 142 46 L 142 54 Q 100 48 58 54 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+   628→      <path d="M 68 44 Q 80 52 92 48 Q 100 52 108 48 Q 120 52 132 44 L 132 52 Q 100 56 68 52 Z" fill="#facc15" />
+   629→      {/* Sable de luz verde (encendido) */}
+   630→      <g>
+   631→        {/* Mango */}
+   632→        <rect x="143" y="158" width="8" height="20" rx="2" fill="#94a3b8" stroke="#475569" strokeWidth="1" transform="rotate(-30 147 168)" />
+   633→        {/* Hoja de luz verde */}
+   634→        <line x1="150" y1="152" x2="190" y2="100" stroke="#86efac" strokeWidth="7" strokeLinecap="round" opacity="0.9" />
+   635→        <line x1="150" y1="152" x2="190" y2="100" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
+   636→        <line x1="150" y1="152" x2="190" y2="100" stroke="#bbf7d0" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+   637→        {/* Brillo del sable */}
+   638→        <circle cx="170" cy="126" r="14" fill="#22c55e" opacity="0.2" />
+   639→      </g>
+   640→    </g>
+   641→  );
+   642→}
+   643→
+   644→// ============================================================
+   645→// ELEVEN - Stranger Things (vestido rosa, pelo rapado)
+   646→// ============================================================
+   647→function ElevenSVG() {
+   648→  return (
+   649→    <g>
+   650→      <CuerpoBase pielSide="#ffe0bd" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#fbcfe8" />
+   651→      {/* Vestido rosa */}
+   652→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f9a8d4" stroke="#be185d" strokeWidth="1.5" />
+   653→      {/* Cuadros del vestido */}
+   654→      <g stroke="#be185d" strokeWidth="0.6" opacity="0.4">
+   655→        <line x1="82" y1="116" x2="82" y2="172" />
+   656→        <line x1="94" y1="116" x2="94" y2="172" />
+   657→        <line x1="106" y1="116" x2="106" y2="172" />
+   658→        <line x1="118" y1="116" x2="118" y2="172" />
+   659→        <line x1="70" y1="130" x2="130" y2="130" />
+   660→        <line x1="70" y1="144" x2="130" y2="144" />
+   661→        <line x1="70" y1="158" x2="130" y2="158" />
+   662→      </g>
+   663→      {/* Cuello del vestido */}
+   664→      <path d="M 86 116 L 100 126 L 114 116" fill="none" stroke="#be185d" strokeWidth="1.5" />
+   665→      {/* Cabeza */}
+   666→      <CabezaBase
+   667→        pielSide="#ffe0bd"
+   668→        pielBottom="#d99a5e"
+   669→        ojos={
+   670→          <>
+   671→            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   672→            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   673→            <circle cx="83" cy="80" r="3.5" fill="#4b5563" />
+   674→            <circle cx="119" cy="80" r="3.5" fill="#4b5563" />
+   675→            <circle cx="84" cy="78" r="1.3" fill="#ffffff" />
+   676→            <circle cx="120" cy="78" r="1.3" fill="#ffffff" />
+   677→          </>
+   678→        }
+   679→        boca={<path d="M 90 94 L 110 94" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+   680→      />
+   681→      {/* Pelo corto rapado castaño */}
+   682→      <path d="M 60 46 Q 62 30 100 28 Q 138 30 140 46 L 140 50 Q 100 44 60 50 Z" fill="#78350f" stroke="#451a03" strokeWidth="1" opacity="0.85" />
+   683→      {/* Sangre de nariz (power activado) */}
+   684→      <path d="M 100 88 L 100 100 L 103 100" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" fill="none" />
+   685→      <circle cx="101" cy="100" r="1.5" fill="#dc2626" />
+   686→    </g>
+   687→  );
+   688→}
+   689→
+   690→// ============================================================
+   691→// MICKEY MOUSE - negro, orejas redondas, pantalón corto rojo
+   692→// ============================================================
+   693→function MickeySVG() {
+   694→  return (
+   695→    <g>
+   696→      {/* Piernas negras finas */}
+   697→      <rect x="84" y="168" width="12" height="40" rx="3" fill="#0f172a" />
+   698→      <rect x="104" y="168" width="12" height="40" rx="3" fill="#0f172a" />
+   699→      {/* Zapatos amarillos grandes */}
+   700→      <ellipse cx="88" cy="214" rx="16" ry="8" fill="#facc15" stroke="#ca8a04" strokeWidth="1.5" />
+   701→      <ellipse cx="112" cy="214" rx="16" ry="8" fill="#facc15" stroke="#ca8a04" strokeWidth="1.5" />
+   702→      {/* Brazos negros finos */}
+   703→      <rect x="52" y="120" width="14" height="48" rx="4" fill="#0f172a" />
+   704→      <rect x="134" y="120" width="14" height="48" rx="4" fill="#0f172a" />
+   705→      {/* Guantes blancos */}
+   706→      <circle cx="59" cy="172" r="11" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+   707→      <circle cx="141" cy="172" r="11" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+   708→      {/* Líneas del guante */}
+   709→      <path d="M 54 168 L 64 168 M 136 168 L 146 168" stroke="#cbd5e1" strokeWidth="1" />
+   710→      {/* Torso negro */}
+   711→      <rect x="72" y="116" width="56" height="56" rx="8" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+   712→      {/* Pantalón corto rojo con botones */}
+   713→      <rect x="70" y="150" width="60" height="22" rx="4" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+   714→      <circle cx="80" cy="154" r="2" fill="#fbbf24" />
+   715→      <circle cx="120" cy="154" r="2" fill="#fbbf24" />
+   716→      {/* Cabeza negra redonda */}
+   717→      <circle cx="100" cy="75" r="38" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+   718→      {/* Cara (más clara, óvalo) */}
+   719→      <ellipse cx="100" cy="82" rx="26" ry="22" fill="#fbcfe4" stroke="#be185d" strokeWidth="0.8" opacity="0.4" />
+   720→      <ellipse cx="100" cy="82" rx="26" ry="22" fill="#fff1f2" />
+   721→      {/* Orejas redondas grandes */}
+   722→      <circle cx="62" cy="48" r="16" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+   723→      <circle cx="138" cy="48" r="16" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+   724→      {/* Ojos (óvalos blancos con pupilas) */}
+   725→      <ellipse cx="88" cy="72" rx="7" ry="10" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   726→      <ellipse cx="112" cy="72" rx="7" ry="10" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   727→      <circle cx="89" cy="74" r="4" fill="#1e293b" />
+   728→      <circle cx="113" cy="74" r="4" fill="#1e293b" />
+   729→      <circle cx="90" cy="72" r="1.5" fill="#ffffff" />
+   730→      <circle cx="114" cy="72" r="1.5" fill="#ffffff" />
+   731→      {/* Hocico (óvalo negro) */}
+   732→      <ellipse cx="100" cy="90" rx="7" ry="5" fill="#0f172a" />
+   733→      <circle cx="100" cy="88" r="2" fill="#ffffff" opacity="0.6" />
+   734→      {/* Sonrisa */}
+   735→      <path d="M 88 96 Q 100 106 112 96" stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+   736→      {/* Mejillas rosadas */}
+   737→      <circle cx="78" cy="88" r="4" fill="#f9a8d4" opacity="0.5" />
+   738→      <circle cx="122" cy="88" r="4" fill="#f9a8d4" opacity="0.5" />
+   739→    </g>
+   740→  );
+   741→}
+   742→
+   743→// ============================================================
+   744→// ===== PIRATAS MUGIWARA (One Piece) =====
+   745→// ============================================================
+   746→
+   747→// LUFFY - Sombrero de paja, chaqueta roja, pantalón azul, cicatriz bajo el ojo
+   748→function LuffySVG() {
+   749→  return (
+   750→    <g>
+   751→      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e3a8a" piernaDark="#1e293b" brazoLado="#f5c08c" />
+   752→      {/* Chaleco rojo abierto */}
+   753→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+   754→      {/* Camiseta blanca interior */}
+   755→      <path d="M 86 116 L 100 134 L 114 116 L 114 140 L 86 140 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+   756→      {/* Botones dorados del chaleco */}
+   757→      <circle cx="76" cy="128" r="2" fill="#fbbf24" />
+   758→      <circle cx="76" cy="142" r="2" fill="#fbbf24" />
+   759→      <circle cx="76" cy="156" r="2" fill="#fbbf24" />
+   760→      {/* Cinturón amarillo */}
+   761→      <rect x="70" y="158" width="60" height="8" rx="2" fill="#fbbf24" stroke="#ca8a04" strokeWidth="1" />
+   762→      {/* Cabeza */}
+   763→      <CabezaBase
+   764→        pielSide="#f5c08c"
+   765→        pielBottom="#d99a5e"
+   766→        ojos={
+   767→          <>
+   768→            <circle cx="84" cy="78" r="6" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   769→            <circle cx="116" cy="78" r="6" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   770→            <circle cx="85" cy="79" r="3.5" fill="#1e293b" />
+   771→            <circle cx="117" cy="79" r="3.5" fill="#1e293b" />
+   772→            <circle cx="86" cy="77" r="1.3" fill="#ffffff" />
+   773→            <circle cx="118" cy="77" r="1.3" fill="#ffffff" />
+   774→          </>
+   775→        }
+   776→        boca={
+   777→          <>
+   778→            {/* Sonrisa grande de Luffy */}
+   779→            <path d="M 80 92 Q 100 108 120 92 Q 100 100 80 92 Z" fill="#7a1a1a" stroke="#1e293b" strokeWidth="1.5" strokeLinejoin="round" />
+   780→            <path d="M 84 94 Q 100 104 116 94" fill="#ffffff" stroke="none" />
+   781→          </>
+   782→        }
+   783→      />
+   784→      {/* Cicatriz bajo el ojo izquierdo */}
+   785→      <path d="M 84 86 L 84 90 M 82 88 L 86 88" stroke="#7a1a1a" strokeWidth="1.2" strokeLinecap="round" />
+   786→      {/* Pelo negro */}
+   787→      <path d="M 58 46 Q 60 26 100 24 Q 140 26 142 46 L 142 54 Q 100 48 58 54 Z" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
+   788→      <path d="M 64 44 Q 72 50 80 46 Q 88 50 96 46 Q 104 50 112 46 Q 120 50 128 44 L 128 52 Q 100 56 64 52 Z" fill="#334155" />
+   789→      {/* Sombrero de paja */}
+   790→      <g>
+   791→        {/* Ala del sombrero */}
+   792→        <ellipse cx="100" cy="34" rx="48" ry="8" fill="#eab308" stroke="#a16207" strokeWidth="1.5" />
+   793→        <ellipse cx="100" cy="33" rx="46" ry="5" fill="#facc15" />
+   794→        {/* Cinta roja alrededor */}
+   795→        <rect x="56" y="32" width="88" height="6" rx="2" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
+   796→        {/* Copa del sombrero */}
+   797→        <path d="M 72 34 Q 72 14 100 12 Q 128 14 128 34 Z" fill="#facc15" stroke="#a16207" strokeWidth="1.5" />
+   798→        {/* Detalle de trenza (líneas) */}
+   799→        <path d="M 78 22 L 122 22 M 78 26 L 122 26" stroke="#a16207" strokeWidth="0.8" opacity="0.5" />
+   800→      </g>
+   801→    </g>
+   802→  );
+   803→}
+   804→
+   805→// ZORO - Pelo verde, tres katanas, sash verde, banda negra
+   806→function ZoroSVG() {
+   807→  return (
+   808→    <g>
+   809→      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#f5c08c" />
+   810→      {/* Camiseta blanca abierta */}
+   811→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+   812→      {/* Cuerpo abierto (pecho) */}
+   813→      <path d="M 86 116 L 100 130 L 114 116" fill="#f5c08c" />
+   814→      {/* Haramaki verde (faja) */}
+   815→      <rect x="70" y="150" width="60" height="16" rx="2" fill="#16a34a" stroke="#15803d" strokeWidth="1.5" />
+   816→      {/* Detalle del tejido */}
+   817→      <line x1="74" y1="158" x2="126" y2="158" stroke="#15803d" strokeWidth="0.8" opacity="0.6" />
+   818→      {/* Cabeza */}
+   819→      <CabezaBase
+   820→        pielSide="#f5c08c"
+   821→        pielBottom="#d99a5e"
+   822→        ojos={
+   823→          <>
+   824→            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   825→            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   826→            <circle cx="83" cy="80" r="3.5" fill="#1e293b" />
+   827→            <circle cx="119" cy="80" r="3.5" fill="#1e293b" />
+   828→            {/* Ojo izquierdo con cicatriz */}
+   829→            <path d="M 76 72 L 80 78" stroke="#7a1a1a" strokeWidth="1.2" strokeLinecap="round" />
+   830→          </>
+   831→        }
+   832→        boca={<path d="M 88 96 L 112 96" stroke="#7a4422" strokeWidth="2.8" strokeLinecap="round" fill="none" />}
+   833→      />
+   834→      {/* Pelo verde corto */}
+   835→      <path d="M 58 46 Q 60 24 100 22 Q 140 24 142 46 L 142 52 Q 100 46 58 52 Z" fill="#16a34a" stroke="#15803d" strokeWidth="1" />
+   836→      <path d="M 64 42 Q 70 50 78 44 Q 86 50 94 44 Q 102 50 110 44 Q 118 50 126 42 L 128 50 Q 100 54 64 50 Z" fill="#22c55e" />
+   837→      {/* Banda negra (en la cabeza) */}
+   838→      <rect x="58" y="52" width="84" height="6" rx="1" fill="#0f172a" />
+   839→      {/* Tres katanas (dos a la derecha, una a la izquierda) */}
+   840→      <g>
+   841→        {/* Katana 1 (espalda, derecha) */}
+   842→        <line x1="128" y1="170" x2="148" y2="100" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+   843→        <rect x="124" y="166" width="10" height="16" rx="2" fill="#1e293b" />
+   844→        {/* Katana 2 (espalda, derecha, paralela) */}
+   845→        <line x1="132" y1="170" x2="152" y2="104" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" />
+   846→        <rect x="128" y="166" width="10" height="16" rx="2" fill="#dc2626" />
+   847→        {/* Katana 3 (espalda, izquierda) */}
+   848→        <line x1="72" y1="170" x2="52" y2="100" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+   849→        <rect x="66" y="166" width="10" height="16" rx="2" fill="#1e293b" />
+   850→      </g>
+   851→    </g>
+   852→  );
+   853→}
+   854→
+   855→// NAMI - Pelo naranja largo, top azul con rayas, tatuaje de mandarina
+   856→function NamiSVG() {
+   857→  return (
+   858→    <g>
+   859→      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e3a8a" piernaDark="#1e293b" brazoLado="#f5c08c" />
+   860→      {/* Top azul con rayas blancas */}
+   861→      <rect x="70" y="116" width="60" height="44" rx="5" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+   862→      {/* Rayas blancas horizontales */}
+   863→      <rect x="70" y="122" width="60" height="4" fill="#f8fafc" />
+   864→      <rect x="70" y="134" width="60" height="4" fill="#f8fafc" />
+   865→      <rect x="70" y="146" width="60" height="4" fill="#f8fafc" />
+   866→      {/* Falda naranja corta */}
+   867→      <rect x="70" y="158" width="60" height="14" rx="3" fill="#ea580c" stroke="#c2410c" strokeWidth="1.5" />
+   868→      {/* Cabeza */}
+   869→      <CabezaBase
+   870→        pielSide="#f5c08c"
+   871→        pielBottom="#d99a5e"
+   872→        ojos={
+   873→          <>
+   874→            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   875→            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   876→            <circle cx="83" cy="80" r="3.5" fill="#ca8a04" />
+   877→            <circle cx="119" cy="80" r="3.5" fill="#ca8a04" />
+   878→            <circle cx="84" cy="78" r="1.3" fill="#ffffff" />
+   879→            <circle cx="120" cy="78" r="1.3" fill="#ffffff" />
+   880→          </>
+   881→        }
+   882→        boca={<path d="M 88 94 Q 100 100 112 94" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+   883→      />
+   884→      {/* Pelo naranja largo */}
+   885→      <path d="M 56 46 Q 58 22 100 20 Q 142 22 144 46 L 148 116 L 130 116 L 132 50 Q 100 44 68 50 L 70 116 L 52 116 Z" fill="#f97316" stroke="#c2410c" strokeWidth="1" />
+   886→      {/* Flequillo */}
+   887→      <path d="M 62 44 Q 72 52 82 46 Q 92 52 100 46 Q 108 52 118 46 Q 128 52 138 44 L 138 52 Q 100 56 62 52 Z" fill="#fb923c" />
+   888→      {/* Tatuaje de mandarina en el hombro */}
+   889→      <circle cx="58" cy="130" r="6" fill="#ea580c" stroke="#9a3412" strokeWidth="1" opacity="0.85" />
+   890→      <path d="M 54 130 L 62 130 M 58 126 L 58 134" stroke="#9a3412" strokeWidth="0.8" />
+   891→    </g>
+   892→  );
+   893→}
+   894→
+   895→// USOPP - Nariz larga, overoles blancos, tirachinas, gafas
+   896→function UsoppSVG() {
+   897→  return (
+   898→    <g>
+   899→      <CuerpoBase pielSide="#a16207" pielBottom="#78350f" piernaColor="#4a5568" piernaDark="#2d3748" brazoLado="#a16207" />
+   900→      {/* Overoles blancos con tirantes */}
+   901→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+   902→      {/* Bandas azules en pecho */}
+   903→      <rect x="70" y="116" width="60" height="14" rx="3" fill="#2563eb" />
+   904→      <rect x="74" y="120" width="14" height="6" fill="#1e3a8a" />
+   905→      <rect x="112" y="120" width="14" height="6" fill="#1e3a8a" />
+   906→      {/* Tirantes */}
+   907→      <rect x="80" y="116" width="8" height="56" fill="#4a5568" />
+   908→      <rect x="112" y="116" width="8" height="56" fill="#4a5568" />
+   909→      {/* Cabeza */}
+   910→      <CabezaBase
+   911→        pielSide="#a16207"
+   912→        pielBottom="#78350f"
+   913→        ojos={
+   914→          <>
+   915→            <circle cx="84" cy="74" r="5" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   916→            <circle cx="116" cy="74" r="5" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   917→            <circle cx="85" cy="75" r="3" fill="#1e293b" />
+   918→            <circle cx="117" cy="75" r="3" fill="#1e293b" />
+   919→          </>
+   920→        }
+   921→        boca={<path d="M 90 98 Q 100 102 110 98" stroke="#451a03" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+   922→      />
+   923→      {/* Nariz larga (pinocchio style) */}
+   924→      <path d="M 100 80 L 100 104 Q 104 108 100 110 Q 96 108 100 104" fill="#a16207" stroke="#78350f" strokeWidth="1.2" />
+   925→      <ellipse cx="100" cy="100" rx="4" ry="10" fill="#a16207" stroke="#78350f" strokeWidth="1.2" />
+   926→      {/* Pelo negro rizado */}
+   927→      <path d="M 56 48 Q 56 24 100 22 Q 144 24 144 48 L 144 54 Q 100 48 56 54 Z" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
+   928→      <g fill="#0f172a">
+   929→        <circle cx="64" cy="42" r="5" />
+   930→        <circle cx="76" cy="38" r="5" />
+   931→        <circle cx="88" cy="36" r="5" />
+   932→        <circle cx="100" cy="34" r="5" />
+   933→        <circle cx="112" cy="36" r="5" />
+   934→        <circle cx="124" cy="38" r="5" />
+   935→        <circle cx="136" cy="42" r="5" />
+   936→      </g>
+   937→      {/* Gafas en la frente */}
+   938→      <circle cx="84" cy="56" r="7" fill="none" stroke="#1e293b" strokeWidth="2" />
+   939→      <circle cx="116" cy="56" r="7" fill="none" stroke="#1e293b" strokeWidth="2" />
+   940→      <line x1="91" y1="56" x2="109" y2="56" stroke="#1e293b" strokeWidth="2" />
+   941→      {/* Tirachinas (honda) en la mano */}
+   942→      <g>
+   943→        <path d="M 44 158 Q 36 150 32 140" stroke="#78350f" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+   944→        <rect x="40" y="156" width="8" height="12" rx="2" fill="#78350f" />
+   945→        <line x1="36" y1="148" x2="32" y2="140" stroke="#1e293b" strokeWidth="1" />
+   946→        <line x1="40" y1="146" x2="32" y2="140" stroke="#1e293b" strokeWidth="1" />
+   947→      </g>
+   948→    </g>
+   949→  );
+   950→}
+   951→
+   952→// SANJI - Rubio con pelo tapando un ojo, traje negro, corbata
+   953→function SanjiSVG() {
+   954→  return (
+   955→    <g>
+   956→      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+   957→      {/* Traje negro */}
+   958→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+   959→      {/* Camisa amarilla interior */}
+   960→      <path d="M 88 116 L 100 138 L 112 116 Z" fill="#facc15" />
+   961→      {/* Corbata negra */}
+   962→      <path d="M 96 116 L 104 116 L 102 130 L 100 138 L 98 130 Z" fill="#000000" />
+   963→      {/* Botones del saco */}
+   964→      <circle cx="84" cy="130" r="1.5" fill="#475569" />
+   965→      <circle cx="84" cy="140" r="1.5" fill="#475569" />
+   966→      <circle cx="116" cy="130" r="1.5" fill="#475569" />
+   967→      <circle cx="116" cy="140" r="1.5" fill="#475569" />
+   968→      {/* Cabeza */}
+   969→      <CabezaBase
+   970→        pielSide="#f5c08c"
+   971→        pielBottom="#d99a5e"
+   972→        ojos={
+   973→          <>
+   974→            {/* Solo ojo derecho visible (izquierdo tapado por pelo) */}
+   975→            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+   976→            <circle cx="119" cy="80" r="3.5" fill="#1e293b" />
+   977→            <circle cx="120" cy="78" r="1.3" fill="#ffffff" />
+   978→            {/* Ceja rizada característica */}
+   979→            <path d="M 110 68 Q 116 64 122 68 Q 126 70 122 72" stroke="#ca8a04" strokeWidth="2" fill="none" strokeLinecap="round" />
+   980→          </>
+   981→        }
+   982→        boca={<path d="M 90 96 Q 100 100 110 96" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+   983→      />
+   984→      {/* Pelo rubio cubriendo ojo izquierdo */}
+   985→      <path d="M 56 46 Q 58 24 100 22 Q 142 24 144 46 L 144 56 Q 100 50 56 56 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+   986→      {/* Mechón lateral cubriendo ojo izquierdo */}
+   987→      <path d="M 56 46 Q 56 70 72 84 Q 80 86 82 80 Q 74 72 70 60 Q 64 50 56 46 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+   988→      <path d="M 64 44 Q 74 52 84 46 Q 94 52 104 46 Q 114 52 124 46 Q 134 52 144 44 L 144 52 Q 100 56 64 52 Z" fill="#facc15" />
+   989→      {/* Cigarro (sin encender, para niños) */}
+   990→      <rect x="108" y="96" width="14" height="2.5" rx="1" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="0.5" />
+   991→      <rect x="120" y="95.5" width="3" height="3.5" rx="1" fill="#fbbf24" />
+   992→    </g>
+   993→  );
+   994→}
+   995→
+   996→// CHOPPER - Reno azul con gorro rosa, hocico, cornamenta
+   997→function ChopperSVG() {
+   998→  return (
+   999→    <g>
+  1000→      {/* Piernas cortas marrones */}
+  1001→      <rect x="82" y="178" width="14" height="32" rx="3" fill="#92400e" />
+  1002→      <rect x="104" y="178" width="14" height="32" rx="3" fill="#92400e" />
+  1003→      {/* Zapatos negros */}
+  1004→      <ellipse cx="89" cy="212" rx="12" ry="6" fill="#1e293b" />
+  1005→      <ellipse cx="111" cy="212" rx="12" ry="6" fill="#1e293b" />
+  1006→      {/* Brazos marrones */}
+  1007→      <rect x="56" y="128" width="16" height="44" rx="4" fill="#92400e" />
+  1008→      <rect x="128" y="128" width="16" height="44" rx="4" fill="#92400e" />
+  1009→      {/* Pezuñas */}
+  1010→      <rect x="54" y="168" width="20" height="8" rx="2" fill="#1e293b" />
+  1011→      <rect x="126" y="168" width="20" height="8" rx="2" fill="#1e293b" />
+  1012→      {/* Cuerpo rosado (overol) */}
+  1013→      <rect x="72" y="128" width="56" height="52" rx="8" fill="#f472b6" stroke="#be185d" strokeWidth="1.5" />
+  1014→      {/* Botones blancos del overol */}
+  1015→      <circle cx="84" cy="140" r="2.5" fill="#f8fafc" stroke="#be185d" strokeWidth="0.8" />
+  1016→      <circle cx="116" cy="140" r="2.5" fill="#f8fafc" stroke="#be185d" strokeWidth="0.8" />
+  1017→      {/* Cabeza (cráneo azul de reno) */}
+  1018→      <rect x="62" y="44" width="76" height="64" rx="12" fill="#3b82f6" stroke="#1e40af" strokeWidth="1.5" />
+  1019→      {/* Hocico claro */}
+  1020→      <ellipse cx="100" cy="96" rx="22" ry="14" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.2" />
+  1021→      {/* Nariz azul */}
+  1022→      <ellipse cx="100" cy="92" rx="6" ry="5" fill="#1e40af" />
+  1023→      {/* Cornamenta pequeña */}
+  1024→      <g fill="#78350f" stroke="#451a03" strokeWidth="1">
+  1025→        <path d="M 70 44 Q 60 28 56 18 Q 62 22 66 30 Q 64 20 68 14 Q 72 22 72 32 Z" />
+  1026→        <path d="M 130 44 Q 140 28 144 18 Q 138 22 134 30 Q 136 20 132 14 Q 128 22 128 32 Z" />
+  1027→      </g>
+  1028→      {/* Orejas de reno */}
+  1029→      <ellipse cx="60" cy="60" rx="8" ry="12" fill="#3b82f6" stroke="#1e40af" strokeWidth="1" transform="rotate(-30 60 60)" />
+  1030→      <ellipse cx="140" cy="60" rx="8" ry="12" fill="#3b82f6" stroke="#1e40af" strokeWidth="1" transform="rotate(30 140 60)" />
+  1031→      {/* Gorro rosa con cruz médica */}
+  1032→      <path d="M 64 50 Q 64 28 100 24 Q 136 28 136 50 L 136 58 Q 100 52 64 58 Z" fill="#ec4899" stroke="#be185d" strokeWidth="1.5" />
+  1033→      {/* Cruz blanca médica */}
+  1034→      <rect x="94" y="32" width="12" height="4" fill="#ffffff" />
+  1035→      <rect x="98" y="28" width="4" height="12" fill="#ffffff" />
+  1036→      {/* Ojos grandes */}
+  1037→      <circle cx="82" cy="72" r="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+  1038→      <circle cx="118" cy="72" r="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+  1039→      <circle cx="83" cy="73" r="5" fill="#1e293b" />
+  1040→      <circle cx="119" cy="73" r="5" fill="#1e293b" />
+  1041→      <circle cx="84" cy="71" r="2" fill="#ffffff" />
+  1042→      <circle cx="120" cy="71" r="2" fill="#ffffff" />
+  1043→      {/* Mejillas rosadas */}
+  1044→      <circle cx="72" cy="86" r="5" fill="#f9a8d4" opacity="0.6" />
+  1045→      <circle cx="128" cy="86" r="5" fill="#f9a8d4" opacity="0.6" />
+  1046→      {/* Sonrisa */}
+  1047→      <path d="M 88 96 Q 100 104 112 96" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" fill="none" />
+  1048→    </g>
+  1049→  );
+  1050→}
+  1051→
+  1052→// ROBIN - Pelo negro largo, gafas de sol naranjas, traje morado
+  1053→function RobinSVG() {
+  1054→  return (
+  1055→    <g>
+  1056→      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#7c3aed" />
+  1057→      {/* Traje morado */}
+  1058→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#7c3aed" stroke="#5b21b6" strokeWidth="1.5" />
+  1059→      {/* Cuello en V */}
+  1060→      <path d="M 86 116 L 100 132 L 114 116" fill="#f5c08c" />
+  1061→      {/* Cinturón dorado */}
+  1062→      <rect x="70" y="156" width="60" height="8" rx="2" fill="#fbbf24" stroke="#ca8a04" strokeWidth="1" />
+  1063→      <rect x="94" y="155" width="12" height="10" rx="1" fill="#ca8a04" />
+  1064→      {/* Cabeza */}
+  1065→      <CabezaBase
+  1066→        pielSide="#f5c08c"
+  1067→        pielBottom="#d99a5e"
+  1068→        ojos={
+  1069→          <>
+  1070→            {/* Gafas de sol naranjas (características) */}
+  1071→            <rect x="70" y="72" width="60" height="12" rx="4" fill="#f97316" stroke="#c2410c" strokeWidth="1.5" />
+  1072→            <line x1="100" y1="74" x2="100" y2="82" stroke="#c2410c" strokeWidth="1.5" />
+  1073→            {/* Brillo de las gafas */}
+  1074→            <ellipse cx="80" cy="76" rx="6" ry="2" fill="#fdba74" opacity="0.7" />
+  1075→            <ellipse cx="120" cy="76" rx="6" ry="2" fill="#fdba74" opacity="0.7" />
+  1076→          </>
+  1077→        }
+  1078→        boca={<path d="M 90 96 L 110 96" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+  1079→      />
+  1080→      {/* Pelo negro largo */}
+  1081→      <path d="M 54 46 Q 56 22 100 20 Q 144 22 146 46 L 150 120 L 130 120 L 132 50 Q 100 44 68 50 L 70 120 L 50 120 Z" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
+  1082→      {/* Flequillo recto */}
+  1083→      <path d="M 60 46 L 140 46 L 140 54 Q 100 48 60 54 Z" fill="#334155" />
+  1084→      <path d="M 60 48 L 140 48" stroke="#0f172a" strokeWidth="1.5" />
+  1085→    </g>
+  1086→  );
+  1087→}
+  1088→
+  1089→// FRANKY - Pelo azul, gafas, cuerpo metálico, brazos grandes, estrellas
+  1090→function FrankySVG() {
+  1091→  return (
+  1092→    <g>
+  1093→      {/* Piernas metálicas (speedo negro) */}
+  1094→      <rect x="78" y="168" width="20" height="48" rx="3" fill="#0891b2" />
+  1095→      <rect x="78" y="168" width="6" height="48" rx="2" fill="#0e7490" />
+  1096→      <rect x="102" y="168" width="20" height="48" rx="3" fill="#0891b2" />
+  1097→      <rect x="116" y="168" width="6" height="48" rx="2" fill="#0e7490" />
+  1098→      {/* Zapatos negros */}
+  1099→      <rect x="74" y="208" width="28" height="10" rx="3" fill="#1e293b" />
+  1100→      <rect x="98" y="208" width="28" height="10" rx="3" fill="#1e293b" />
+  1101→      {/* Brazos metálicos grandes */}
+  1102→      <rect x="44" y="116" width="26" height="56" rx="5" fill="#0891b2" stroke="#0e7490" strokeWidth="1.5" />
+  1103→      <rect x="44" y="116" width="8" height="56" rx="3" fill="#0e7490" />
+  1104→      <rect x="130" y="116" width="26" height="56" rx="5" fill="#0891b2" stroke="#0e7490" strokeWidth="1.5" />
+  1105→      <rect x="148" y="116" width="8" height="56" rx="3" fill="#0e7490" />
+  1106→      {/* Guantes metálicos */}
+  1107→      <rect x="44" y="166" width="26" height="12" rx="3" fill="#94a3b8" stroke="#475569" strokeWidth="1" />
+  1108→      <rect x="130" y="166" width="26" height="12" rx="3" fill="#94a3b8" stroke="#475569" strokeWidth="1" />
+  1109→      {/* Torso metálico (camisa hawaiana abierta) */}
+  1110→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#22d3ee" stroke="#0e7490" strokeWidth="1.5" />
+  1111→      {/* Patrón de camisa (estrellas y triángulos) */}
+  1112→      <g fill="#fbbf24" opacity="0.9">
+  1113→        <path d="M 80 128 L 82 132 L 86 132 L 83 135 L 84 139 L 80 137 L 76 139 L 77 135 L 74 132 L 78 132 Z" />
+  1114→        <path d="M 112 144 L 114 148 L 118 148 L 115 151 L 116 155 L 112 153 L 108 155 L 109 151 L 106 148 L 110 148 Z" />
+  1115→      </g>
+  1116→      <g fill="#ec4899" opacity="0.9">
+  1117→        <path d="M 92 130 L 96 136 L 88 136 Z" />
+  1118→        <path d="M 120 130 L 124 136 L 116 136 Z" />
+  1119→      </g>
+  1120→      {/* Speedo negro */}
+  1121→      <rect x="84" y="160" width="32" height="12" rx="3" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+  1122→      {/* Estrellas azules en los brazos (tatuajes) */}
+  1123→      <g fill="#3b82f6">
+  1124→        <path d="M 50 130 L 52 134 L 56 134 L 53 137 L 54 141 L 50 139 L 46 141 L 47 137 L 44 134 L 48 134 Z" />
+  1125→        <path d="M 138 130 L 140 134 L 144 134 L 141 137 L 142 141 L 138 139 L 134 141 L 135 137 L 132 134 L 136 134 Z" />
+  1126→      </g>
+  1127→      {/* Cabeza */}
+  1128→      <CabezaBase
+  1129→        pielSide="#f5c08c"
+  1130→        pielBottom="#d99a5e"
+  1131→        ojos={
+  1132→          <>
+  1133→            {/* Gafas de sol Frankie (estrella amarilla) */}
+  1134→            <rect x="68" y="72" width="64" height="14" rx="5" fill="#facc15" stroke="#ca8a04" strokeWidth="1.5" />
+  1135→            <path d="M 96 76 L 98 80 L 102 80 L 99 82 L 100 86 L 96 84 L 92 86 L 93 82 L 90 80 L 94 80 Z" fill="#1e293b" />
+  1136→          </>
+  1137→        }
+  1138→        boca={<path d="M 86 96 Q 100 104 114 96" stroke="#7a4422" strokeWidth="2.8" strokeLinecap="round" fill="none" />}
+  1139→      />
+  1140→      {/* Pelo azul estilo "pompadour" (hacia adelante) */}
+  1141→      <path d="M 56 46 Q 54 20 100 14 Q 146 20 144 46 L 144 30 Q 100 24 56 30 Z" fill="#0ea5e9" stroke="#0284c7" strokeWidth="1.5" />
+  1142→      <path d="M 56 30 Q 56 8 100 6 Q 144 8 144 30 L 144 36 Q 100 30 56 36 Z" fill="#38bdf8" />
+  1143→      {/* mechones frontales puntiagudos */}
+  1144→      <path d="M 60 30 L 56 10 L 70 26 Z" fill="#0ea5e9" stroke="#0284c7" strokeWidth="1" />
+  1145→      <path d="M 140 30 L 144 10 L 130 26 Z" fill="#0ea5e9" stroke="#0284c7" strokeWidth="1" />
+  1146→    </g>
+  1147→  );
+  1148→}
+  1149→
+  1150→// BROOK - Esqueleto con afro negro, traje negro, violín
+  1151→function BrookSVG() {
+  1152→  return (
+  1153→    <g>
+  1154→      {/* Piernas (hueso) */}
+  1155→      <rect x="82" y="168" width="14" height="44" rx="3" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+  1156→      <rect x="104" y="168" width="14" height="44" rx="3" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+  1157→      {/* Zapatos negros */}
+  1158→      <rect x="76" y="208" width="24" height="10" rx="3" fill="#1e293b" />
+  1159→      <rect x="100" y="208" width="24" height="10" rx="3" fill="#1e293b" />
+  1160→      {/* Brazos (hueso) */}
+  1161→      <rect x="54" y="120" width="14" height="48" rx="4" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+  1162→      <rect x="132" y="120" width="14" height="48" rx="4" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+  1163→      {/* Traje negro con esqueleto visible */}
+  1164→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#000000" strokeWidth="1.5" />
+  1165→      {/* Costillas (hueso visible) */}
+  1166→      <g stroke="#f8fafc" strokeWidth="2" fill="none">
+  1167→        <path d="M 82 126 Q 100 130 118 126" />
+  1168→        <path d="M 82 134 Q 100 138 118 134" />
+  1169→        <path d="M 82 142 Q 100 146 118 142" />
+  1170→      </g>
+  1171→      <line x1="100" y1="120" x2="100" y2="160" stroke="#f8fafc" strokeWidth="2" />
+  1172→      {/* Cabeza calavera (cráneo blanco) */}
+  1173→      <ellipse cx="100" cy="75" rx="40" ry="42" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+  1174→      {/* Cuencas de los ojos (negras profundas) */}
+  1175→      <ellipse cx="84" cy="74" rx="9" ry="11" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+  1176→      <ellipse cx="116" cy="74" rx="9" ry="11" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+  1177→      {/* Brillo en los ojos */}
+  1178→      <circle cx="86" cy="71" r="2" fill="#f8fafc" opacity="0.8" />
+  1179→      <circle cx="118" cy="71" r="2" fill="#f8fafc" opacity="0.8" />
+  1180→      {/* Nariz (agujero triangular) */}
+  1181→      <path d="M 96 88 L 104 88 L 100 96 Z" fill="#0f172a" />
+  1182→      {/* Dientes (sonrisa con separaciones) */}
+  1183→      <rect x="84" y="98" width="32" height="10" rx="2" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+  1184→      <g stroke="#cbd5e1" strokeWidth="1">
+  1185→        <line x1="90" y1="98" x2="90" y2="108" />
+  1186→        <line x1="96" y1="98" x2="96" y2="108" />
+  1187→        <line x1="104" y1="98" x2="104" y2="108" />
+  1188→        <line x1="110" y1="98" x2="110" y2="108" />
+  1189→      </g>
+  1190→      {/* Afro negro gigante */}
+  1191→      <g fill="#0f172a" stroke="#000000" strokeWidth="1.5">
+  1192→        <ellipse cx="100" cy="40" rx="56" ry="34" />
+  1193→        <ellipse cx="60" cy="50" rx="22" ry="18" />
+  1194→        <ellipse cx="140" cy="50" rx="22" ry="18" />
+  1195→        <ellipse cx="100" cy="20" rx="40" ry="20" />
+  1196→      </g>
+  1197→      {/* Textura del afro (círculos pequeños) */}
+  1198→      <g fill="#1e293b" opacity="0.6">
+  1199→        <circle cx="56" cy="36" r="4" />
+  1200→        <circle cx="70" cy="22" r="4" />
+  1201→        <circle cx="100" cy="14" r="4" />
+  1202→        <circle cx="130" cy="22" r="4" />
+  1203→        <circle cx="144" cy="36" r="4" />
+  1204→        <circle cx="48" cy="52" r="4" />
+  1205→        <circle cx="152" cy="52" r="4" />
+  1206→      </g>
+  1207→      {/* Violín (en la mano derecha) */}
+  1208→      <g transform="rotate(-15 152 150)">
+  1209→        <ellipse cx="152" cy="150" rx="12" ry="20" fill="#92400e" stroke="#451a03" strokeWidth="1.5" />
+  1210→        <line x1="152" y1="130" x2="152" y2="170" stroke="#451a03" strokeWidth="1" />
+  1211→        <line x1="149" y1="130" x2="149" y2="170" stroke="#451a03" strokeWidth="0.6" />
+  1212→        <line x1="155" y1="130" x2="155" y2="170" stroke="#451a03" strokeWidth="0.6" />
+  1213→        <rect x="150" y="116" width="4" height="20" rx="1" fill="#451a03" />
+  1214→      </g>
+  1215→      {/* Arco del violín */}
+  1216→      <line x1="160" y1="140" x2="180" y2="160" stroke="#78350f" strokeWidth="2" strokeLinecap="round" />
+  1217→      <line x1="160" y1="140" x2="180" y2="160" stroke="#f8fafc" strokeWidth="0.8" />
+  1218→    </g>
+  1219→  );
+  1220→}
+  1221→
+  1222→// JINBE - Hombre-pez azul, kimono, bigote, corpulento
+  1223→function JinbeSVG() {
+  1224→  return (
+  1225→    <g>
+  1226→      {/* Piernas azules */}
+  1227→      <rect x="78" y="168" width="20" height="48" rx="3" fill="#1e40af" />
+  1228→      <rect x="78" y="168" width="6" height="48" rx="2" fill="#1e3a8a" />
+  1229→      <rect x="102" y="168" width="20" height="48" rx="3" fill="#1e40af" />
+  1230→      <rect x="116" y="168" width="6" height="48" rx="2" fill="#1e3a8a" />
+  1231→      {/* Sandalias */}
+  1232→      <rect x="74" y="208" width="28" height="8" rx="2" fill="#78350f" />
+  1233→      <rect x="98" y="208" width="28" height="8" rx="2" fill="#78350f" />
+  1234→      {/* Brazos azules corpulentos */}
+  1235→      <rect x="46" y="116" width="24" height="56" rx="5" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+  1236→      <rect x="130" y="116" width="24" height="56" rx="5" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+  1237→      {/* Manos azules (tatuaje de Sol) */}
+  1238→      <rect x="46" y="166" width="24" height="12" rx="3" fill="#1e40af" />
+  1239→      <rect x="130" y="166" width="24" height="12" rx="3" fill="#1e40af" />
+  1240→      {/* Tatuaje del Sol (pirata Gyojin) en mano */}
+  1241→      <circle cx="58" cy="172" r="5" fill="#0f172a" />
+  1242→      <g stroke="#0f172a" strokeWidth="1.2" fill="none">
+  1243→        <line x1="58" y1="164" x2="58" y2="167" />
+  1244→        <line x1="58" y1="177" x2="58" y2="180" />
+  1245→        <line x1="50" y1="172" x2="53" y2="172" />
+  1246→        <line x1="63" y1="172" x2="66" y2="172" />
+  1247→      </g>
+  1248→      {/* Kimono tradicional (floreado) */}
+  1249→      <rect x="70" y="116" width="60" height="56" rx="5" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+  1250→      {/* Patrón de flores (círculos amarillos) */}
+  1251→      <g fill="#fbbf24" opacity="0.85">
+  1252→        <circle cx="80" cy="128" r="3" />
+  1253→        <circle cx="110" cy="134" r="3" />
+  1254→        <circle cx="92" cy="150" r="3" />
+  1255→        <circle cx="118" cy="158" r="3" />
+  1256→        <circle cx="78" cy="160" r="3" />
+  1257→      </g>
+  1258→      {/* Obi (cinturón amarillo) */}
+  1259→      <rect x="70" y="156" width="60" height="10" rx="2" fill="#fbbf24" stroke="#ca8a04" strokeWidth="1" />
+  1260→      {/* Solapa del kimono (V) */}
+  1261→      <path d="M 84 116 L 100 138 L 116 116" fill="#7f1d1d" stroke="#991b1b" strokeWidth="1" />
+  1262→      {/* Cabeza azul (Gyojin) */}
+  1263→      <rect x="60" y="40" width="80" height="70" rx="10" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+  1264→      <rect x="60" y="40" width="80" height="6" rx="3" fill="#3b82f6" opacity="0.6" />
+  1265→      {/* Orejas puntiagudas (aletas) */}
+  1266→      <path d="M 56 64 L 48 54 L 56 76 Z" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.2" />
+  1267→      <path d="M 144 64 L 152 54 L 144 76 Z" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.2" />
+  1268→      {/* Branquias (a los lados del cuello) */}
+  1269→      <g stroke="#0f172a" strokeWidth="1.2" fill="none">
+  1270→        <path d="M 64 100 Q 60 104 64 108" />
+  1271→        <path d="M 68 100 Q 64 104 68 108" />
+  1272→        <path d="M 136 100 Q 140 104 136 108" />
+  1273→        <path d="M 132 100 Q 136 104 132 108" />
+  1274→      </g>
+  1275→      {/* Ojos */}
+  1276→      <ellipse cx="82" cy="74" rx="7" ry="9" fill="#ffffff" stroke="#0f172a" strokeWidth="1.5" />
+  1277→      <ellipse cx="118" cy="74" rx="7" ry="9" fill="#ffffff" stroke="#0f172a" strokeWidth="1.5" />
+  1278→      <circle cx="83" cy="76" r="4" fill="#0f172a" />
+  1279→      <circle cx="119" cy="76" r="4" fill="#0f172a" />
+  1280→      <circle cx="84" cy="74" r="1.5" fill="#ffffff" />
+  1281→      <circle cx="120" cy="74" r="1.5" fill="#ffffff" />
+  1282→      {/* Cejas severas */}
+  1283→      <path d="M 74 64 L 90 68" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
+  1284→      <path d="M 126 64 L 110 68" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
+  1285→      {/* Bigote tradicional (ondulado) */}
+  1286→      <path d="M 80 96 Q 90 100 100 96 Q 110 100 120 96" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" fill="none" />
+  1287→      <path d="M 76 98 Q 84 104 90 100" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" fill="none" />
+  1288→      <path d="M 124 98 Q 116 104 110 100" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" fill="none" />
+  1289→      {/* Pelo negro (moño samurai) */}
+  1290→      <path d="M 58 46 Q 60 26 100 24 Q 140 26 142 46 L 142 52 Q 100 46 58 52 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+  1291→      {/* Coleta (moño arriba) */}
+  1292→      <ellipse cx="100" cy="20" rx="14" ry="8" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+  1293→      <rect x="96" y="22" width="8" height="10" fill="#0f172a" />
+  1294→      {/* Cinta del moño */}
+  1295→      <rect x="88" y="18" width="24" height="3" rx="1" fill="#dc2626" />
+  1296→    </g>
+  1297→  );
+  1298→}
+  1299→

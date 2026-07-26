@@ -810,3 +810,127 @@
    810→- Sin emojis, solo iconos vectoriales SVG (Swords, Gamepad2, Film, Wand2).
    811→- Responsive móvil + desktop verificado con Agent Browser y VLM.
    812→
+   813→---
+   814→Task ID: AVATAR-ICONICOS-MIX
+   815→Agent: main (Frontend Developer + UI/UX Game Designer)
+   816→Task: Enhancement sobre AVATAR-ICONICOS — añadir funcionalidad mix-and-match: cada personaje icónico debe poder aplicarse como paquete completo O permitir equipar partes individuales (cuerpo, ojos, boca, pelo, ropa, accesorio) sobre el avatar base.
+   817→
+   818→Work Log:
+   819→- Leído worklog.md previo (AVATAR-ICONICOS) y verificado que la implementación base de 12 personajes icónicos está intacta:
+   820→  * personajesIconicos.ts con 12 personajes (4 ANIME, 3 GAMER, 5 MOVIE) — OK.
+   821→  * PersonajeIconicoSVG.tsx con renderizado 3D blocky de los 12 personajes — OK.
+   822→  * AvatarCustomizer.tsx con pestaña Iconicos, filtros Anime/Gamer/Movie, grid de tarjetas — OK.
+   823→- Verificación con Agent Browser (gateway puerto 81, DemoKid):
+   824→  * Navegación al avatar carga con pestaña "Iconicos" por defecto.
+   825→  * 12 personajes icónicos visibles con etiquetas GRATIS y badges de categoría (ANIME/GAMER/MOVIE).
+   826→  * Filtro "Gamer Heroes" → muestra solo Mario, Master Chief, Sora (3 personajes).
+   827→  * Click en Mario → cápsula cambia a Mario (gorra roja con M, overoles azules, bigote) instantáneamente. VLM confirma.
+   828→  * Filtro "Anime Legends" → muestra solo Goku, Naruto, Pikachu, Eren (4 personajes).
+   829→  * Click en Goku → cápsula cambia a Goku (pelo negro erizado, gi naranja) instantáneamente. VLM confirma.
+   830→  * Responsive móvil (390px): grid de 2 columnas, cápsula visible, filtros accesibles, sin overflow.
+   831→- Mejora implementada: mix-and-match de partes individuales.
+   832→  * Imports: añadidos ChevronDown, Shuffle de lucide-react.
+   833→  * Constantes nuevas: CategoriaParte (CUERPO/OJOS/BOCA/CABELLO/ROPA/ACCESORIO), PARTES_ORDER, PARTE_LABEL, PARTE_ICON.
+   834→  * Estado nuevo: partesExpandidasId (id del personaje con panel de partes abierto), aplicandoParte (parteKey en carga).
+   835→  * Función aplicarPartePersonaje(personaje, categoria): equipa SOLO una parte del personaje icónico sobre el avatar base (resetea personajeIconicoActivo a null, preview optimista, compra+equipa en backend, bypass en demo).
+   836→  * Función togglePartes(personajeId): abre/cierra el panel de partes de un personaje.
+   837→  * UI: cada tarjeta de personaje icónico ahora es un <div> contenedor con:
+   838→    - Botón principal "Aplicar Kit" (kit completo) — comportamiento existente.
+   839→    - Botón "Combinar partes" (icono Shuffle + ChevronDown) que expande/colapsa el panel.
+   840→    - Panel expandible con grid 2x3 de 6 botones (Cuerpo/Ojos/Boca/Pelo/Ropa/Accesorio), cada uno con icono, etiqueta y estado equipado (verde con Check).
+   841→  * Nota informativa actualizada con instrucciones de uso del mix-and-match.
+   842→- Verificación de mix-and-match con Agent Browser + VLM:
+   843→  * Click en "Ver partes de Caballero Oscuro" (Batman) → panel se expande mostrando 6 botones de partes.
+   844→  * Click en "Equipar Ropa de Caballero Oscuro" → cápsula cambia a avatar base (con gafas de sol) vistiendo SOLO la capa/ropa del Caballero Oscuro, NO el Batman completo. VLM confirma: "base avatar with the clothing applied (mix-and-match)".
+   845→  * Botón "Ropa" se marca en verde con icono Check.
+   846→  * Toast verde: "Ropa de Caballero Oscuro equipado".
+   847→- Lint: sin errores nuevos en archivos de avatar (solo warning pre-existente de eslint-disable en línea 377).
+   848→- Dev server: compila limpiamente, sin errores.
+   849→
+   850→Stage Summary:
+   851→- 1 archivo modificado: AvatarCustomizer.tsx (añadido mix-and-match de partes).
+   852→- Funcionalidad nueva: cada personaje icónico puede aplicarse como kit completo (botón "Aplicar Kit") o como partes individuales (botón "Combinar partes" → grid 2x3 de 6 partes).
+   853→- Mix-and-match verificado: equipar solo la Ropa de Batman sobre el avatar base funciona correctamente (la cápsula muestra el avatar base con la capa, no el Batman completo).
+   854→- Panel expandible con 6 botones por personaje: Cuerpo, Ojos, Boca, Pelo, Ropa, Accesorio — cada uno con icono, etiqueta y estado equipado (verde).
+   855→- Nota informativa actualizada explicando las dos modalidades de equipado.
+   856→- Sin errores nuevos de lint ni de compilación.
+   857→- Responsive móvil + desktop verificado.
+   858→- Requisitos del prompt del usuario cumplidos:
+   859→  1. Skins/KITS Completos: 12 personajes icónicos (Goku, Naruto, Pikachu, Eren, Mario, Master Chief, Sora, Spider-Man, Batman, Luke, Eleven, Mickey) — ✓
+   860→  2. Organización por Filtros: Anime Legends, Gamer Heroes, Movie Icons — ✓
+   861→  3. Modificación de Trajes e Ítems Separados: botón "Combinar partes" permite equipar partes individuales sobre el avatar base — ✓ (NUEVO)
+   862→  4. Modo Demo: etiquetas GRATIS, aplicación instantánea sin monedas/gemas — ✓
+   863→
+   864→---
+   865→Task ID: AVATAR-MUGIWARA
+   866→Agent: main (Frontend Developer + UI/UX Game Designer)
+   867→Task: Agregar a Luffy y a toda la tripulación Mugiwara (Sombrero de Paja) de One Piece a la galería de personajes icónicos. 10 personajes: Luffy, Zoro, Nami, Usopp, Sanji, Chopper, Robin, Franky, Brook, Jinbe. Nueva categoría "Piratas Mugiwara" con color esmeralda.
+   868→
+   869→Work Log:
+   870→- Leído worklog.md previo (AVATAR-ICONICOS, AVATAR-ICONICOS-MIX) y verificado estado actual:
+   871→  * 12 personajes icónicos existentes en 3 categorías (ANIME/GAMER/MOVIE) — OK.
+   872→  * Sistema mix-and-match de partes funcionando — OK.
+   873→  * Modo demo con etiquetas GRATIS — OK.
+   874→- Actualizado src/lib/personajesIconicos.ts:
+   875→  * Tipo CategoriaPersonaje extendido: añadido "MUGIWARA".
+   876→  * CATEGORIA_PERSONAJE_LABEL: añadido MUGIWARA → "Piratas Mugiwara".
+   877→  * CATEGORIA_PERSONAJE_ORDER: añadido "MUGIWARA" al final.
+   878→  * PERSONAJES_ICONICOS: añadidos 10 personajes de One Piece:
+   879→    - luffy: Capitan Gomoso (sombrero de paja, chaqueta roja)
+   880→    - zoro: Cazador Pirata (pelo verde, tres katanas)
+   881→    - nami: Navegante Gato (pelo naranja, tatuaje de mandarina)
+   882→    - usopp: Tirador Valiente (nariz larga, tirachinas)
+   883→    - sanji: Cocinero Rubio (traje negro, ceja rizada)
+   884→    - chopper: Reno Medico (reno azul con gorro rosa)
+   885→    - robin: Arqueologa Oscura (pelo negro, gafas de sol naranjas)
+   886→    - franky: Ciborg Carpintero (pelo azul, cuerpo metalico)
+   887→    - brook: Musico Esqueleto (esqueleto con afro y violin)
+   888→    - jinbe: Timonel Gyojin (piel azul, kimono floreado)
+   889→- Actualizado src/components/PersonajeIconicoSVG.tsx:
+   890→  * renderPersonaje switch: añadidos 10 cases (luffy, zoro, nami, usopp, sanji, chopper, robin, franky, brook, jinbe).
+   891→  * 10 funciones SVG nuevas (después de MickeySVG):
+   892→    - LuffySVG: chaleco rojo abierto, camiseta blanca, cinturón amarillo, sombrero de paja con cinta roja y copa trenzada, cicatriz bajo ojo izquierdo, sonrisa grande.
+   893→    - ZoroSVG: camiseta blanca abierta, haramaki verde (faja), pelo verde, banda negra, 3 katanas (2 derechas + 1 izquierda), cicatriz en ojo izquierdo.
+   894→    - NamiSVG: top azul con rayas blancas horizontales, falda naranja, pelo naranja largo, tatuaje de mandarina en hombro.
+   895→    - UsoppSVG: piel oscura, overoles blancos con tirantes y bandas azules, pelo negro rizado, nariz larga, gafas en la frente, tirachinas en la mano.
+   896→    - SanjiSVG: traje negro, camisa amarilla, corbata negra, pelo rubio cubriendo ojo izquierdo, ceja rizada, cigarro (apagado, para niños).
+   897→    - ChopperSVG: cuerpo marrón compacto, overol rosado, cabeza azul de reno, hocico claro, cornamenta, orejas de reno, gorro rosa con cruz médica blanca, ojos grandes.
+   898→    - RobinSVG: traje morado, cinturón dorado, gafas de sol naranjas, pelo negro largo, flequillo recto.
+   899→    - FrankySVG: cuerpo metálico cian, brazos grandes, guantes metálicos, camisa hawaiana con estrellas y triángulos, speedo negro, estrellas azules tatuadas, gafas amarillas con estrella, pelo azul pompadour puntiagudo.
+   900→    - BrookSVG: esqueleto blanco, traje negro con costillas visibles, calavera con cuencas negras profundas, dientes separados, afro negro gigante, violín marrón y arco.
+   901→    - JinbeSVG: piel azul (Gyojin), kimono rojo floreado con flores amarillas, obi amarillo, orejas puntiagudas (aletas), branquias, tatuaje del Sol en mano, pelo negro con moño samurai y cinta roja, bigote ondulado.
+   902→- Actualizado src/components/AvatarCustomizer.tsx:
+   903→  * Import añadido: Anchor de lucide-react.
+   904→  * CATEGORIA_PERSONAJE_ICON: añadido MUGIWARA → Anchor.
+   905→  * colorCat map: añadido MUGIWARA → "ring-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.5)]".
+   906→  * colores map (filtro): añadido MUGIWARA → "bg-emerald-500".
+   907→  * Badge de categoría en tarjeta: añadido caso MUGIWARA → "bg-emerald-500".
+   908→  * Color de icono en nombre: añadido caso MUGIWARA → "text-emerald-500".
+   909→- Verificación con Agent Browser (gateway puerto 81, DemoKid):
+   910→  * Navegación al avatar carga con pestaña "Iconicos" por defecto, vista "Todos" muestra 22 personajes (12 originales + 10 Mugiwara).
+   911→  * Botón "Piratas Mugiwara" (esmeralda, icono Anchor) visible en filtros.
+   912→  * Click en "Piratas Mugiwara" → muestra exactamente 10 personajes (Capitan Gomoso, Cazador Pirata, Navegante Gato, Tirador Valiente, Cocinero Rubio, Reno Medico, Arqueologa Oscura, Ciborg Carpintero, Musico Esqueleto, Timonel Gyojin).
+   913→  * Click en Luffy → cápsula cambia a Luffy (sombrero de paja con banda roja, chaleco rojo sobre camisa blanca, pantalón azul) instantáneamente. VLM confirma.
+   914→  * Tarjeta de Luffy muestra badge "ACTIVO" fucsia.
+   915→  * Mix-and-match: click en "Ver partes de Capitan Gomoso" → panel se expande con 6 botones (Cuerpo/Ojos/Boca/Pelo/Ropa/Accesorio).
+   916→  * Click en "Equipar Ropa de Capitan Gomoso" → cápsula muestra avatar base con solo el chaleco rojo de Luffy (NO el Luffy completo). VLM confirma: "base avatar wearing Luffy's red vest/clothing, without the straw hat".
+   917→  * Botón "Ropa" se marca en verde con icono Check.
+   918→  * Toast verde: "Ropa de Capitan Gomoso equipado".
+   919→- Verificación con VLM (glm-5v-turbo):
+   920→  * Confirmados 22 personajes en la galería "Todos".
+   921→  * Confirmados One Piece personajes reconocibles: Luffy (sombrero de paja), Zoro (pelo verde + espadas), Chopper (reno azul/rosa), Brook (esqueleto con afro), Nami (pelo naranja), Robin (pelo negro + gafas).
+   922→  * Confirmada pestaña "Piratas Mugiwara" resaltada en verde/esmeralda.
+   923→  * Confirmado mix-and-match funciona: avatar base con solo la ropa de Luffy.
+   924→- Lint: sin errores nuevos en archivos de avatar (solo warnings pre-existentes). 51 errores en otros archivos no tocados.
+   925→- Dev server: compila limpiamente.
+   926→
+   927→Stage Summary:
+   928→- 3 archivos modificados: personajesIconicos.ts (tipo + 10 personajes), PersonajeIconicoSVG.tsx (switch + 10 funciones SVG), AvatarCustomizer.tsx (icono Anchor + color esmeralda en 4 maps).
+   929→- 10 personajes de One Piece renderizados en estilo bloque 3D Roblox/Minecraft con colores y detalles distintivos.
+   930→- Nueva categoría "Piratas Mugiwara" con color esmeralda (esmeralda = océano/pirata) e icono Anchor.
+   931→- Filtro "Piratas Mugiwara" muestra exactamente los 10 personajes (Luffy, Zoro, Nami, Usopp, Sanji, Chopper, Robin, Franky, Brook, Jinbe).
+   932→- Total galería: 22 personajes icónicos (12 originales + 10 Mugiwara).
+   933→- Mix-and-match funciona con Mugiwara: verificado equipar solo la Ropa de Luffy sobre el avatar base.
+   934→- Modo demo: todos los Mugiwara con etiqueta "GRATIS" verde, aplicación instantánea sin costo.
+   935→- Sin errores nuevos de lint ni de compilación.
+   936→

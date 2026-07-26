@@ -933,3 +933,69 @@ Stage Summary:
 - Mix-and-match funciona con Mugiwara: verificado equipar solo la Ropa de Luffy sobre el avatar base.
 - Modo demo: todos los Mugiwara con etiqueta "GRATIS" verde, aplicación instantánea sin costo.
 - Sin errores nuevos de lint ni de compilación.
+
+---
+Task ID: AVATAR-CAZADORES
+Agent: main (Frontend Developer + UI/UX Game Designer)
+Task: Agregar a todos los personajes de Demon Slayer (Kimetsu no Yaiba) a la galería de personajes icónicos. 14 personajes: 5 protagonistas (Tanjiro, Nezuko, Zenitsu, Inosuke, Kanao) + 9 Hashira/Pilares (Giyu, Shinobu, Rengoku, Tengen, Mitsuri, Muichiro, Gyomei, Obanai, Sanemi). Nueva categoría "Cazadores de Demonios" con color rojo carmesí e icono Flame.
+
+Work Log:
+- Leído worklog.md previo (AVATAR-ICONICOS, AVATAR-ICONICOS-MIX, AVATAR-MUGIWARA) y verificado estado actual:
+  * 22 personajes icónicos existentes en 4 categorías (ANIME/GAMER/MOVIE/MUGIWARA) — OK.
+  * Sistema mix-and-match de partes funcionando — OK.
+  * Modo demo con etiquetas GRATIS — OK.
+- Actualizado src/lib/personajesIconicos.ts:
+  * Tipo CategoriaPersonaje extendido: añadido "CAZADORES".
+  * CATEGORIA_PERSONAJE_LABEL: añadido CAZADORES → "Cazadores de Demonios".
+  * CATEGORIA_PERSONAJE_ORDER: añadido "CAZADORES" al final.
+  * PERSONAJES_ICONICOS: añadidos 14 personajes de Demon Slayer:
+    - Protagonistas: tanjiro (Cazador Protector), nezuko (Demonio Hermana), zenitsu (Rayo Asustadizo), inosuke (Jabali Salvaje), kanao (Mariposa Silenciosa).
+    - Hashira: giyu (Pilar del Agua), shinobu (Pilar del Insecto), rengoku (Pilar del Fuego), tengen (Pilar del Sonido), mitsuri (Pilar del Amor), muichiro (Pilar de la Niebla), gyomei (Pilar de la Roca), obanai (Pilar de la Serpiente), sanemi (Pilar del Viento).
+- Actualizado src/components/PersonajeIconicoSVG.tsx:
+  * renderPersonaje switch: añadidos 14 cases (tanjiro, nezuko, zenitsu, inosuke, kanao, giyu, shinobu, rengoku, tengen, mitsuri, muichiro, gyomei, obanai, sanemi).
+  * 14 funciones SVG nuevas (después de JinbeSVG):
+    - TanjiroSVG: haori verde/negro cuadriculado (ichimatsu), pelo negro con puntas rojas, ojos rojos, pendientes hanafuda (rojo/amarillo), espada nichirin negra.
+    - NezukoSVG: kimono rosa con patrón asanoha, pelo negro largo con puntas naranjas, ojos rosas de demonio sin pupila, bozal de bambú (con cuerdas y texturas), obi rojo.
+    - ZenitsuSVG: haori naranja con patrón de triángulos blancos (12 triángulos), pelo amarillo espinoso (susto), ojos dorados llorosos, cejas asustadas, lágrima, boca abierta.
+    - InosukeSVG: máscara de jabalí gris (hocico, fosas, colmillos, ojos furiosos rojos, cerda, orejas), pecho desnudo muscular (pectoral, abdominales), dos espadas jagged (nichirin indentado).
+    - KanaoSVG: uniforme rosa/morado con degradado, pelo negro con coletas altas, ojos lavanda sin pupila (mirada vacía), horquilla de mariposa púrpura.
+    - GiyuSVG: haori bicolor (mitad rojo con patrón geométrico blanco / mitad naranja cuadriculado), pelo negro con coleta baja, espada nichirin azul (agua), ojos azules.
+    - ShinobuSVG: haori blanco con patrón de alas de mariposa (gradiente púrpura: claro → oscuro con puntos amarillos), pelo negro con puntas púrpura, moño mariposa arriba, ojos púrpura, sonrisa cerrada, horquilla de mariposa.
+    - RengokuSVG: haori blanco con llamas rojas y amarillas en el borde inferior, pelo rojo con puntas amarillas flameantes, ojos dorados con iris rojo, GRAN sonrisa con dientes blancos, espada de fuego (naranja/rojo) con llamas alrededor.
+    - TengenSVG: pelo blanco plateado, diadema negra con 5 joyas colgantes multicolores (rosa, cyan, amarillo, verde, púrpura), brazos musculosos sin mangas, pulseras coloridas en muñecas y cuello, heterocromia (ojo rosa + ojo cyan).
+    - MitsuriSVG: pelo rosa con tres coletas y puntas verdes, uniforme rosa con solapa en V y botones dorados, ojos verde-rosa con pestañas largas, mechones frontales con puntas verdes.
+    - MuichiroSVG: pelo negro largo con puntas menta (lacio), ojos menta distantes (mirada vacía), uniforme negro holgado con pliegues, boca seria.
+    - GyomeiSVG: calvo, ojos cerrados llorosos (lágrimas cayendo), túnica gris con textura, rosario (mala de cuentas marrones) con cruz colgante, maza gigante (hacha de piedra) en la espalda, cejas tristes.
+    - ObanaiSVG: haori mitad blanca/mitad negra (split vertical), heterocromia (ojo amarillo + ojo cyan), vendas blancas cubriendo boca, pelo negro largo, serpiente blanca alrededor del cuello (con cabeza, ojo amarillo, lengua bífida, escamas).
+    - SanemiSVG: pelo blanco espinoso (10 picos), camisa blanca abierta (pecho descubierto), ojos púrpura pálido con mirada enojada, cicatrices rojas en cara y pecho (múltiples líneas), cejas enojadas, boca seria.
+- Actualizado src/components/AvatarCustomizer.tsx:
+  * Import añadido: Flame de lucide-react.
+  * CATEGORIA_PERSONAJE_ICON: añadido CAZADORES → Flame.
+  * colores map (filtro): añadido CAZADORES → "bg-red-600".
+  * colorCat map (tarjeta activa): añadido CAZADORES → "ring-red-500 shadow-[0_0_14px_rgba(220,38,38,0.5)]".
+  * Badge de categoría en tarjeta: añadido caso CAZADORES → "bg-red-600".
+  * Color de icono en nombre: añadido caso CAZADORES → "text-red-500".
+- Verificación con Agent Browser (gateway puerto 81, DemoKid):
+  * Navegación al avatar carga con pestaña "Iconicos" por defecto.
+  * Botón "Cazadores de Demonios" (rojo carmesí, icono Flame) visible en filtros.
+  * Click en "Cazadores de Demonios" → muestra exactamente 14 personajes (Cazador Protector, Demonio Hermana, Rayo Asustadizo, Jabali Salvaje, Mariposa Silenciosa, Pilar del Agua, Pilar del Insecto, Pilar del Fuego, Pilar del Sonido, Pilar del Amor, Pilar de la Niebla, Pilar de la Roca, Pilar de la Serpiente, Pilar del Viento).
+  * Click en Cazador Protector (Tanjiro) → cápsula cambia a Tanjiro instantáneamente.
+  * Mix-and-match: click en "Ver partes de Pilar del Fuego" → panel se expande con 6 botones (Cuerpo/Ojos/Boca/Pelo/Ropa/Accesorio).
+  * Click en "Equipar Ropa de Pilar del Fuego" → cápsula muestra avatar base con solo la ropa aplicada (NO el Rengoku completo). Toast verde: "Ropa de Pilar del Fuego equipado".
+- Verificación con VLM (glm-5v-turbo):
+  * Tanjiro confirmado: "black hair with red tips, green and black checkered haori, sword (Nichirin Blade)" — recognizable as Tanjiro Kamado.
+  * Galería confirmada: 14 tarjetas visibles, botón "Cazadores de Demonios" resaltado en rojo, badges "CAZADORES" rojos.
+  * Personajes reconocibles confirmados: Pilar del Fuego (pelo flameante naranja/rojo = Rengoku), Jabali Salvaje (máscara de jabalí = Inosuke), Demonio Hermana (pelo negro + bozal de bambú = Nezuko), Pilar del Insecto (Shinobu), Pilar del Amor (Mitsuri), Pilar de la Serpiente (Obanai).
+  * Mix-and-match confirmado: cápsula muestra avatar base (DemoKid con pelo marrón) con solo la ropa equipada, NO el Rengoku completo. Toast confirma "Ropa de Pilar del Fuego equipado".
+- Lint: sin errores nuevos en archivos de avatar (solo warning pre-existente de eslint-disable en línea 379 de AvatarCustomizer.tsx).
+- Dev server: compila limpiamente.
+
+Stage Summary:
+- 3 archivos modificados: personajesIconicos.ts (tipo + 14 personajes), PersonajeIconicoSVG.tsx (switch + 14 funciones SVG), AvatarCustomizer.tsx (icono Flame + color rojo carmesí en 4 maps).
+- 14 personajes de Demon Slayer renderizados en estilo bloque 3D Roblox/Minecraft con colores y detalles distintivos.
+- Nueva categoría "Cazadores de Demonios" con color rojo carmesí (red-600) e icono Flame (fuego = respiración de flama / temática Hashira).
+- Filtro "Cazadores de Demonios" muestra exactamente los 14 personajes (5 protagonistas + 9 Pilares).
+- Total galería: 36 personajes icónicos (12 originales + 10 Mugiwara + 14 Cazadores).
+- Mix-and-match funciona con Cazadores: verificado equipar solo la Ropa de Rengoku sobre el avatar base.
+- Modo demo: todos los Cazadores con etiqueta "GRATIS" verde, aplicación instantánea sin costo.
+- Sin errores nuevos de lint ni de compilación.
