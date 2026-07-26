@@ -1,0 +1,966 @@
+     1→"use client";
+     2→import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+     3→import {
+     4→  ArrowLeft, Lock, Check, Sparkles, Loader2, Wrench,
+     5→  ChevronLeft, ChevronRight, Boxes, Crown, Star, Zap, Shield,
+     6→  Swords, Gamepad2, Film, Wand2,
+     7→} from "lucide-react";
+     8→import { api } from "@/lib/api";
+     9→import { useApp } from "@/context/AppContext";
+    10→import type { CategoriaAvatar, ItemTienda, MiAvatarResponse } from "@/lib/types";
+    11→import { AvatarSVG } from "@/components/AvatarSVG";
+    12→import { PersonajeIconicoSVG } from "@/components/PersonajeIconicoSVG";
+    13→import {
+    14→  PERSONAJES_ICONICOS, CATEGORIA_PERSONAJE_LABEL, CATEGORIA_PERSONAJE_ORDER,
+    15→  type CategoriaPersonaje, type PersonajeIconico,
+    16→} from "@/lib/personajesIconicos";
+    17→import { RunicCoin } from "@/components/RunicCoin";
+    18→import { EssenceCrystal } from "@/components/EssenceCrystal";
+    19→import { CategoryIcon, KitsIcon, CATEGORIAS_ORDER, CATEGORIA_LABEL } from "@/components/CategoryIcon";
+    20→
+    21→// ===== Iconos por categoría de personaje icónico =====
+    22→const CATEGORIA_PERSONAJE_ICON: Record<CategoriaPersonaje, typeof Swords> = {
+    23→  ANIME: Swords,
+    24→  GAMER: Gamepad2,
+    25→  MOVIE: Film,
+    26→};
+    27→
+    28→// ===== Sistema de rareza con bordes neón =====
+    29→const RAREZA_CONFIG: Record<string, {
+    30→  label: string;
+    31→  ring: string;
+    32→  border: string;
+    33→  glow: string;
+    34→  badge: string;
+    35→  icon: typeof Crown;
+    36→}> = {
+    37→  COMUN: {
+    38→    label: "Comun",
+    39→    ring: "ring-1 ring-stone-300",
+    40→    border: "border-stone-300",
+    41→    glow: "",
+    42→    badge: "bg-stone-200 text-stone-700",
+    43→    icon: Check,
+    44→  },
+    45→  RARA: {
+    46→    label: "Raro",
+    47→    ring: "ring-2 ring-cyan-400",
+    48→    border: "border-cyan-400",
+    49→    glow: "shadow-[0_0_12px_rgba(34,211,238,0.5)]",
+    50→    badge: "bg-cyan-500 text-white",
+    51→    icon: Zap,
+    52→  },
+    53→  EPICA: {
+    54→    label: "Epico",
+    55→    ring: "ring-2 ring-fuchsia-500",
+    56→    border: "border-fuchsia-500",
+    57→    glow: "shadow-[0_0_14px_rgba(217,70,239,0.55)]",
+    58→    badge: "bg-fuchsia-600 text-white",
+    59→    icon: Star,
+    60→  },
+    61→  LEGENDARIA: {
+    62→    label: "Legendario",
+    63→    ring: "ring-2 ring-amber-400",
+    64→    border: "border-amber-400",
+    65→    glow: "shadow-[0_0_16px_rgba(251,191,36,0.6)]",
+    66→    badge: "bg-gradient-to-r from-amber-500 to-orange-600 text-white",
+    67→    icon: Crown,
+    68→  },
+    69→};
+    70→
+    71→const RAREZAS_ORDER = ["COMUN", "RARA", "EPICA", "LEGENDARIA"] as const;
+    72→const RAREZA_LABEL: Record<string, string> = {
+    73→  COMUN: "Comun", RARA: "Raro", EPICA: "Epico", LEGENDARIA: "Legendario",
+    74→};
+    75→
+    76→interface PersonajePreset {
+    77→  id: string;
+    78→  nombre: string;
+    79→  icon: typeof Boxes;
+    80→  desc: string;
+    81→  config: {
+    82→    CUERPO: string; OJOS: string; BOCA: string;
+    83→    CABELLO: string; ROPA: string; ACCESORIO: string;
+    84→  };
+    85→}
+    86→
+    87→// Kits de personajes estilo Roblox: skins de cuerpo completo
+    88→const PERSONAJES: PersonajePreset[] = [
+    89→  {
+    90→    id: "novato",
+    91→    nombre: "Novato",
+    92→    icon: Boxes,
+    93→    desc: "Skin inicial, gratis",
+    94→    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-normales", BOCA: "boca-sonrisa", CABELLO: "cabello-nada", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+    95→  },
+    96→  {
+    97→    id: "sonador",
+    98→    nombre: "Soñador",
+    99→    icon: Sparkles,
+   100→    desc: "Relajado con capucha",
+   101→    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-cerrados", BOCA: "boca-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-capucha", ACCESORIO: "accesorio-nada" },
+   102→  },
+   103→  {
+   104→    id: "robot",
+   105→    nombre: "Alien Bloque",
+   106→    icon: Boxes,
+   107→    desc: "Verde del espacio",
+   108→    config: { CUERPO: "cuerpo-verde", OJOS: "ojos-grandes", BOCA: "boca-serio", CABELLO: "cabello-nada", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+   109→  },
+   110→  {
+   111→    id: "artista",
+   112→    nombre: "Artista",
+   113→    icon: Sparkles,
+   114→    desc: "Creativo y feliz",
+   115→    config: { CUERPO: "cuerpo-medio", OJOS: "ojos-felices", BOCA: "boca-gran-sonrisa", CABELLO: "cabello-largo", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+   116→  },
+   117→  {
+   118→    id: "cadete",
+   119→    nombre: "Cadete Espacial",
+   120→    icon: Shield,
+   121→    desc: "Uniforme de mision",
+   122→    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-serio", CABELLO: "cabello-corto", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-nada" },
+   123→  },
+   124→  {
+   125→    id: "pop",
+   126→    nombre: "Estrella Pop",
+   127→    icon: Star,
+   128→    desc: "Travieso con estrella",
+   129→    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-felices", BOCA: "boca-lengua", CABELLO: "cabello-corto", ROPA: "ropa-basica", ACCESORIO: "accesorio-estrella" },
+   130→  },
+   131→  {
+   132→    id: "intellect",
+   133→    nombre: "Genio",
+   134→    icon: Boxes,
+   135→    desc: "Con gafas intelectuales",
+   136→    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-gafas" },
+   137→  },
+   138→  {
+   139→    id: "heroe",
+   140→    nombre: "Superheroe",
+   141→    icon: Shield,
+   142→    desc: "Capa y mascara",
+   143→    config: { CUERPO: "cuerpo-oscuro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-nada", ROPA: "ropa-capas", ACCESORIO: "accesorio-mascara" },
+   144→  },
+   145→];
+   146→
+   147→export function AvatarCustomizer() {
+   148→  const { usuario, setVista, mostrarToast, setUsuario } = useApp();
+   149→  const [data, setData] = useState<MiAvatarResponse | null>(null);
+   150→  const [tienda, setTienda] = useState<ItemTienda[]>([]);
+   151→  const [cargando, setCargando] = useState(true);
+   152→  const [catActiva, setCatActiva] = useState<CategoriaAvatar | "KITS" | "ICONICOS">("ICONICOS");
+   153→  const [rarezaFiltro, setRarezaFiltro] = useState<string>("TODAS");
+   154→  const [filtroIconico, setFiltroIconico] = useState<CategoriaPersonaje | "TODOS">("TODOS");
+   155→  const [personajeIconicoActivo, setPersonajeIconicoActivo] = useState<string | null>(null);
+   156→  const [accionando, setAccionando] = useState<string | null>(null);
+   157→  const [aplicandoPersonaje, setAplicandoPersonaje] = useState(false);
+   158→
+   159→  // ===== MODO DEMO: bandera isDemo =====
+   160→  const isDemo = usuario?.nombre === "DemoKid" || usuario?.nombre === "PadreDemo" || usuario?.nombre === "MaestroDemo";
+   161→
+   162→  // ===== Scroll horizontal con flechas para Personajes rápidos =====
+   163→  const personajesScrollRef = useRef<HTMLDivElement>(null);
+   164→  const [puedeIzq, setPuedeIzq] = useState(false);
+   165→  const [puedeDer, setPuedeDer] = useState(false);
+   166→
+   167→  const verificarScrollPersonajes = useCallback(() => {
+   168→    const el = personajesScrollRef.current;
+   169→    if (!el) return;
+   170→    setPuedeIzq(el.scrollLeft > 4);
+   171→    setPuedeDer(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+   172→  }, []);
+   173→
+   174→  const desplazarPersonajes = (dir: 1 | -1) => {
+   175→    const el = personajesScrollRef.current;
+   176→    if (!el) return;
+   177→    el.scrollBy({ left: dir * 280, behavior: "smooth" });
+   178→  };
+   179→
+   180→  useEffect(() => {
+   181→    if (cargando) return;
+   182→    const el = personajesScrollRef.current;
+   183→    if (!el) return;
+   184→    verificarScrollPersonajes();
+   185→    const rafId = requestAnimationFrame(verificarScrollPersonajes);
+   186→    el.addEventListener("scroll", verificarScrollPersonajes, { passive: true });
+   187→    window.addEventListener("resize", verificarScrollPersonajes);
+   188→    const resizeObserver = new ResizeObserver(() => verificarScrollPersonajes());
+   189→    resizeObserver.observe(el);
+   190→    const timeoutId = setTimeout(verificarScrollPersonajes, 400);
+   191→    return () => {
+   192→      cancelAnimationFrame(rafId);
+   193→      clearTimeout(timeoutId);
+   194→      el.removeEventListener("scroll", verificarScrollPersonajes);
+   195→      window.removeEventListener("resize", verificarScrollPersonajes);
+   196→      resizeObserver.disconnect();
+   197→    };
+   198→  }, [verificarScrollPersonajes, cargando]);
+   199→
+   200→  // Aplica un personaje completo (kits): en modo demo, sin costo ni restricciones
+   201→  const aplicarPersonaje = async (p: PersonajePreset) => {
+   202→    if (!usuario || !data) return;
+   203→    setAplicandoPersonaje(true);
+   204→    // Preview optimista: aplica el look completo al instante en la cápsula
+   205→    const configOptimista = { ...data.config, ...p.config };
+   206→    setData((prev) => (prev ? { ...prev, config: configOptimista } : prev));
+   207→    try {
+   208→      let configActual = configOptimista;
+   209→      let monedasActual = data.monedas;
+   210→      let gemasActual = data.gemas;
+   211→      let ownedActual = [...data.itemsOwned];
+   212→      let faltaron = 0;
+   213→      let equipados = 0;
+   214→      for (const [cat, clave] of Object.entries(p.config)) {
+   215→        const item = tienda.find((it) => it.categoria === cat && it.clave === clave);
+   216→        if (!item) { faltaron++; continue; }
+   217→        const yaPosee = ownedActual.includes(item.id);
+   218→        const esGratis = item.precioMonedas === 0 && item.precioGemas === 0;
+   219→        if (!esGratis && !yaPosee) {
+   220→          if (!isDemo) {
+   221→            const nivelOk = (data.nivel) >= item.nivelRequerido;
+   222→            const fondosOk = item.precioGemas > 0 ? gemasActual >= item.precioGemas : monedasActual >= item.precioMonedas;
+   223→            if (!nivelOk || !fondosOk) { faltaron++; continue; }
+   224→          }
+   225→          try {
+   226→            const res = await api.comprar(usuario.id, item.id);
+   227→            monedasActual = res.monedas;
+   228→            gemasActual = res.gemas;
+   229→            ownedActual = [...ownedActual, item.id];
+   230→          } catch {
+   231→            faltaron++; continue;
+   232→          }
+   233→        }
+   234→        try {
+   235→          const res = await api.equipar(usuario.id, item.id);
+   236→          configActual = res.config;
+   237→          equipados++;
+   238→        } catch {
+   239→          faltaron++;
+   240→        }
+   241→      }
+   242→      setData((prev) => (prev ? { ...prev, config: configActual, monedas: monedasActual, gemas: gemasActual, itemsOwned: ownedActual } : prev));
+   243→      setUsuario({ ...usuario, monedas: monedasActual, gemas: gemasActual });
+   244→      if (faltaron === 0) {
+   245→        mostrarToast(`${p.nombre} aplicado · ${equipados} piezas equipadas`, "exito");
+   246→      } else if (equipados > 0) {
+   247→        mostrarToast(`${p.nombre} parcial · ${equipados} piezas, ${faltaron} bloqueadas`, "info");
+   248→      } else {
+   249→        mostrarToast(`No se pudo aplicar ${p.nombre}`, "error");
+   250→      }
+   251→    } catch (err) {
+   252→      mostrarToast(err instanceof Error ? err.message : "Error al aplicar el personaje", "error");
+   253→      await cargar();
+   254→    } finally {
+   255→      setAplicandoPersonaje(false);
+   256→    }
+   257→  };
+   258→
+   259→  // ===== Aplicar personaje icónico al Protagonista (modo demo: instantáneo y gratis) =====
+   260→  const aplicarPersonajeIconico = async (p: PersonajeIconico) => {
+   261→    if (!usuario || !data) return;
+   262→    setAplicandoPersonaje(true);
+   263→    // Preview optimista: cambia el Protagonista al instante
+   264→    setPersonajeIconicoActivo(p.id);
+   265→    try {
+   266→      // En modo demo, aplicar el config del personaje icónico al avatar (compra+equipa las partes)
+   267→      let configActual = { ...data.config, ...p.config };
+   268→      let monedasActual = data.monedas;
+   269→      let gemasActual = data.gemas;
+   270→      let ownedActual = [...data.itemsOwned];
+   271→      for (const [cat, clave] of Object.entries(p.config)) {
+   272→        const item = tienda.find((it) => it.categoria === cat && it.clave === clave);
+   273→        if (!item) continue;
+   274→        const yaPosee = ownedActual.includes(item.id);
+   275→        const esGratis = item.precioMonedas === 0 && item.precioGemas === 0;
+   276→        if (!esGratis && !yaPosee) {
+   277→          if (!isDemo) {
+   278→            const nivelOk = (data.nivel) >= item.nivelRequerido;
+   279→            const fondosOk = item.precioGemas > 0 ? gemasActual >= item.precioGemas : monedasActual >= item.precioMonedas;
+   280→            if (!nivelOk || !fondosOk) continue;
+   281→          }
+   282→          try {
+   283→            const res = await api.comprar(usuario.id, item.id);
+   284→            monedasActual = res.monedas;
+   285→            gemasActual = res.gemas;
+   286→            ownedActual = [...ownedActual, item.id];
+   287→          } catch { continue; }
+   288→        }
+   289→        try {
+   290→          const res = await api.equipar(usuario.id, item.id);
+   291→          configActual = res.config;
+   292→        } catch { /* ignore */ }
+   293→      }
+   294→      setData((prev) => (prev ? { ...prev, config: configActual, monedas: monedasActual, gemas: gemasActual, itemsOwned: ownedActual } : prev));
+   295→      setUsuario({ ...usuario, monedas: monedasActual, gemas: gemasActual });
+   296→      mostrarToast(`${p.nombre} equipado en el Protagonista`, "exito");
+   297→    } catch (err) {
+   298→      mostrarToast(err instanceof Error ? err.message : "Error al aplicar el personaje", "error");
+   299→    } finally {
+   300→      setAplicandoPersonaje(false);
+   301→    }
+   302→  };
+   303→
+   304→  // Reset del Protagonista al avatar normal (sin personaje icónico)
+   305→  const quitarPersonajeIconico = () => {
+   306→    setPersonajeIconicoActivo(null);
+   307→    mostrarToast("Protagonista reseteado", "info");
+   308→  };
+   309→
+   310→  const cargar = async () => {
+   311→    if (!usuario) return;
+   312→    try {
+   313→      const [mi, tiendaData] = await Promise.all([api.obtenerMiAvatar(usuario.id), api.obtenerTienda()]);
+   314→      setData(mi); setTienda(tiendaData);
+   315→    } catch (err) { mostrarToast(err instanceof Error ? err.message : "Error al cargar el avatar", "error"); }
+   316→    finally { setCargando(false); }
+   317→  };
+   318→  useEffect(() => { cargar(); /* eslint-disable-next-line */ }, [usuario?.id]);
+   319→
+   320→  const itemsCat = useMemo(() => {
+   321→    let items = tienda.filter((i) => i.categoria === catActiva);
+   322→    if (rarezaFiltro !== "TODAS") items = items.filter((i) => i.raridad === rarezaFiltro);
+   323→    return items;
+   324→  }, [tienda, catActiva, rarezaFiltro]);
+   325→
+   326→  // Personajes icónicos filtrados por categoría (Anime/Gamer/Movie)
+   327→  const personajesIconicosFiltrados = useMemo(() => {
+   328→    if (filtroIconico === "TODOS") return PERSONAJES_ICONICOS;
+   329→    return PERSONAJES_ICONICOS.filter((p) => p.categoria === filtroIconico);
+   330→  }, [filtroIconico]);
+   331→
+   332→  const estaEquipado = (item: ItemTienda): boolean => {
+   333→    if (!data) return false;
+   334→    const campo = item.categoria.toLowerCase() as keyof typeof data.config;
+   335→    return data.config[campo] === item.clave;
+   336→  };
+   337→  const esPropio = (item: ItemTienda): boolean => data?.itemsOwned.includes(item.id) ?? false;
+   338→  const esGratis = (item: ItemTienda): boolean => item.precioMonedas === 0 && item.precioGemas === 0;
+   339→  const puedeComprar = (item: ItemTienda): boolean => {
+   340→    if (!data) return false;
+   341→    if (data.nivel < item.nivelRequerido) return false;
+   342→    if (item.precioGemas > 0) return data.gemas >= item.precioGemas;
+   343→    return data.monedas >= item.precioMonedas;
+   344→  };
+   345→
+   346→  const handleComprar = async (item: ItemTienda) => {
+   347→    if (!usuario) return;
+   348→    setAccionando(item.id);
+   349→    try {
+   350→      const res = await api.comprar(usuario.id, item.id);
+   351→      setData((prev) => prev ? { ...prev, monedas: res.monedas, gemas: res.gemas, itemsOwned: [...prev.itemsOwned, item.id] } : prev);
+   352→      setUsuario({ ...usuario, monedas: res.monedas, gemas: res.gemas });
+   353→      mostrarToast(res.mensaje, "exito");
+   354→      await handleEquipar(item, true);
+   355→    } catch (err) { mostrarToast(err instanceof Error ? err.message : "Error al comprar", "error"); }
+   356→    finally { setAccionando(null); }
+   357→  };
+   358→
+   359→  const handleEquipar = async (item: ItemTienda, silencioso = false) => {
+   360→    if (!usuario) return;
+   361→    if (!silencioso) setAccionando(item.id);
+   362→    try {
+   363→      const res = await api.equipar(usuario.id, item.id);
+   364→      setData((prev) => (prev ? { ...prev, config: res.config } : prev));
+   365→      if (!silencioso) mostrarToast(res.mensaje, "exito");
+   366→    } catch (err) { if (!silencioso) mostrarToast(err instanceof Error ? err.message : "Error al equipar", "error"); }
+   367→    finally { if (!silencioso) setAccionando(null); }
+   368→  };
+   369→
+   370→  // En modo demo: equipar directamente sin comprar (el backend permite la equipación)
+   371→  const handleEquiparDemo = async (item: ItemTienda) => {
+   372→    if (!usuario) return;
+   373→    setAccionando(item.id);
+   374→    // Preview optimista: actualiza el Protagonista al instante
+   375→    setData((prev) => prev ? { ...prev, config: { ...prev.config, [item.categoria.toLowerCase()]: item.clave } } : prev);
+   376→    try {
+   377→      // Intentar comprar (gratis en demo) y luego equipar
+   378→      if (!esPropio(item) && !esGratis(item)) {
+   379→        try { await api.comprar(usuario.id, item.id); } catch { /* en demo, ignorar errores de compra */ }
+   380→      }
+   381→      const res = await api.equipar(usuario.id, item.id);
+   382→      setData((prev) => (prev ? { ...prev, config: res.config } : prev));
+   383→      mostrarToast(`${item.nombre} equipado`, "exito");
+   384→    } catch (err) {
+   385→      mostrarToast(err instanceof Error ? err.message : "Error al equipar", "error");
+   386→      await cargar();
+   387→    } finally { setAccionando(null); }
+   388→  };
+   389→
+   390→  if (cargando) return (
+   391→    <div className="flex min-h-[70vh] items-center justify-center bg-stone-100">
+   392→      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-lg ring-2 ring-cyan-200">
+   393→        <Loader2 className="h-8 w-8 animate-spin text-cyan-600" />
+   394→      </div>
+   395→    </div>
+   396→  );
+   397→
+   398→  return (
+   399→    <div className="relative min-h-screen bg-gradient-to-b from-stone-100 via-stone-50 to-stone-200 text-stone-800">
+   400→      {/* ===== Decoración de fondo: cuadrícula isométrica ===== */}
+   401→      <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+   402→        <div className="absolute -top-20 left-[10%] h-72 w-72 rounded-full bg-cyan-300/30 blur-[90px]" />
+   403→        <div className="absolute bottom-0 right-[10%] h-72 w-72 rounded-full bg-orange-300/25 blur-[90px]" />
+   404→        <div className="absolute top-1/3 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-violet-300/20 blur-[90px]" />
+   405→      </div>
+   406→
+   407→      <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:py-8">
+   408→        {/* ===== Header ===== */}
+   409→        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+   410→          <button
+   411→            onClick={() => setVista("dashboard")}
+   412→            className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-stone-600 shadow-md ring-1 ring-stone-200 transition-all hover:text-cyan-600 hover:ring-cyan-300"
+   413→          >
+   414→            <ArrowLeft size={16} strokeWidth={2.5} /> Volver
+   415→          </button>
+   416→          <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-stone-800">
+   417→            <Wrench size={22} className="text-cyan-600" strokeWidth={2.5} />
+   418→            Estudio Avatar 3D
+   419→          </h1>
+   420→        </div>
+   421→
+   422→        {/* ===== Banner Modo Demo ===== */}
+   423→        {isDemo && (
+   424→          <div className="mb-5 flex items-center gap-3 rounded-2xl border-2 border-emerald-400 bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 px-4 py-3 shadow-lg shadow-emerald-200/50">
+   425→            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
+   426→              <Check size={20} strokeWidth={3} />
+   427→            </div>
+   428→            <div className="min-w-0 flex-1">
+   429→              <p className="text-sm font-black text-emerald-800">DEMO ACTIVO · Acceso total al catalogo</p>
+   430→              <p className="text-xs font-semibold text-emerald-700">Equipa cualquier skin, traje o accesorio al instante, sin costo de monedas ni gemas</p>
+   431→            </div>
+   432→            <span className="hidden rounded-full bg-emerald-500 px-3 py-1 text-xs font-black uppercase tracking-wide text-white shadow sm:inline">DEMO</span>
+   433→          </div>
+   434→        )}
+   435→
+   436→        <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+   437→          {/* ===== IZQUIERDA: Cápsula central con Protagonista ===== */}
+   438→          <div className="lg:sticky lg:top-6 lg:self-start">
+   439→            <div className="rounded-3xl bg-white p-6 text-center shadow-xl ring-1 ring-stone-200">
+   440→              {/* Etiqueta de cápsula activa */}
+   441→              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-cyan-100 px-3 py-1">
+   442→                <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+   443→                <p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Capsula activa</p>
+   444→              </div>
+   445→              <p className="mb-1 text-2xl font-black text-stone-800">{usuario?.nombre}</p>
+   446→              <p className="mb-4 text-xs font-semibold text-stone-500">
+   447→                {personajeIconicoActivo
+   448→                  ? `Protagonista · ${PERSONAJES_ICONICOS.find((p) => p.id === personajeIconicoActivo)?.nombre ?? ""}`
+   449→                  : "Protagonista 3D · Bloque Humanoide"}
+   450→              </p>
+   451→
+   452→              {/* ===== Cápsula cilíndrica de cristal con podio ===== */}
+   453→              <div className="relative mx-auto mb-4 flex h-96 w-72 items-end justify-center">
+   454→                {/* Glow del podio (haz de luz ascendente) */}
+   455→                <div className="absolute bottom-0 left-1/2 h-80 w-56 -translate-x-1/2 rounded-full bg-cyan-300/40 blur-[50px] animate-pulse" />
+   456→
+   457→                {/* Cúpula de cristal cilíndrica */}
+   458→                <div className="absolute inset-x-0 bottom-16 top-0 overflow-hidden rounded-t-[10rem] rounded-b-[2.5rem] border-2 border-cyan-200/60 bg-gradient-to-b from-cyan-50/40 via-white/20 to-cyan-100/30 backdrop-blur-sm">
+   459→                  {/* Brillo especular izquierdo */}
+   460→                  <div className="absolute left-4 top-8 h-3/4 w-6 rounded-full bg-white/40 blur-md" />
+   461→                  {/* Brillo especular derecho */}
+   462→                  <div className="absolute right-6 top-12 h-1/2 w-3 rounded-full bg-white/30 blur-sm" />
+   463→                  {/* Protagonista: personaje icónico o avatar normal */}
+   464→                  <div className="flex h-full items-end justify-center pb-6">
+   465→                    {personajeIconicoActivo ? (
+   466→                      <PersonajeIconicoSVG personajeId={personajeIconicoActivo} size={200} className="drop-shadow-2xl animate-[float_3s_ease-in-out_infinite]" />
+   467→                    ) : (
+   468→                      <AvatarSVG config={data?.config} size={200} className="drop-shadow-2xl animate-[float_3s_ease-in-out_infinite]" />
+   469→                    )}
+   470→                  </div>
+   471→                </div>
+   472→
+   473→                {/* Podio iluminado (plataforma 3D) */}
+   474→                <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
+   475→                  {/* Anillo de luz */}
+   476→                  <div className="absolute -top-1 left-1/2 h-6 w-56 -translate-x-1/2 rounded-full bg-cyan-400/60 blur-md animate-pulse" />
+   477→                  {/* Plataforma elíptica superior */}
+   478→                  <div className="relative h-6 w-60 rounded-[50%] bg-gradient-to-b from-cyan-200 via-cyan-300 to-cyan-500 shadow-[0_8px_24px_rgba(34,211,238,0.45)]" />
+   479→                  {/* Cuerpo del podio (trapecio) */}
+   480→                  <div className="mx-auto h-6 w-52 -mt-1 bg-gradient-to-b from-cyan-500 to-cyan-700" style={{ clipPath: "polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)" }} />
+   481→                  {/* Base */}
+   482→                  <div className="mx-auto h-2 w-56 -mt-1 rounded-b-xl bg-gradient-to-b from-cyan-700 to-cyan-900" />
+   483→                  {/* Brillo especular */}
+   484→                  <div className="absolute top-0 left-1/2 h-2 w-40 -translate-x-1/2 rounded-full bg-white/60 blur-[1px]" />
+   485→                </div>
+   486→              </div>
+   487→
+   488→              {/* Billetera (oculta en modo demo) */}
+   489→              {!isDemo && (
+   490→                <div className="mb-3 grid grid-cols-2 gap-2.5">
+   491→                  <div className="flex items-center justify-center gap-2 rounded-full bg-stone-100 px-3 py-2.5 ring-1 ring-stone-200">
+   492→                    <RunicCoin size={22} />
+   493→                    <span className="text-lg font-black text-amber-700">{data?.monedas ?? 0}</span>
+   494→                  </div>
+   495→                  <div className="flex items-center justify-center gap-2 rounded-full bg-stone-100 px-3 py-2.5 ring-1 ring-stone-200">
+   496→                    <EssenceCrystal size={20} tint="cyan" />
+   497→                    <span className="text-lg font-black text-cyan-700">{data?.gemas ?? 0}</span>
+   498→                  </div>
+   499→                </div>
+   500→              )}
+   501→
+   502→              {/* Placa de nivel (oculta en modo demo) */}
+   503→              {!isDemo && (
+   504→                <div className="rounded-2xl bg-stone-100 px-4 py-2.5 ring-1 ring-stone-200">
+   505→                  <p className="text-xs font-bold uppercase tracking-wide text-cyan-600">Nivel {data?.nivel ?? 1}</p>
+   506→                  <p className="text-sm font-bold text-stone-700">{data?.experiencia ?? 0} XP</p>
+   507→                </div>
+   508→              )}
+   509→              {isDemo && (
+   510→                <div className="rounded-2xl bg-emerald-50 px-4 py-2.5 ring-1 ring-emerald-200">
+   511→                  <p className="flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wide text-emerald-600">
+   512→                    <Check size={12} strokeWidth={3} /> Acceso total · Sin restricciones
+   513→                  </p>
+   514→                </div>
+   515→              )}
+   516→            </div>
+   517→          </div>
+   518→
+   519→          {/* ===== DERECHA: Catálogo ===== */}
+   520→          <div className="min-w-0">
+   521→            {/* ===== Kits de Personajes (skins completos) ===== */}
+   522→            <div className="mb-5 rounded-2xl bg-white p-4 shadow-md ring-1 ring-stone-200">
+   523→              <div className="mb-3 flex items-center gap-2">
+   524→                <Boxes size={20} strokeWidth={2.5} className="text-orange-500" />
+   525→                <h2 className="text-base font-black text-stone-800">Kits de Personajes</h2>
+   526→                <span className="ml-auto rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-700">
+   527→                  {PERSONAJES.length} skins
+   528→                </span>
+   529→              </div>
+   530→              <div className="relative">
+   531→                {/* Degradados de borde */}
+   532→                <div aria-hidden className={`pointer-events-none absolute left-0 top-0 bottom-2 z-10 w-10 rounded-l-2xl bg-gradient-to-r from-stone-100/90 to-transparent transition-opacity duration-200 ${puedeIzq ? "opacity-100" : "opacity-0"}`} />
+   533→                <div aria-hidden className={`pointer-events-none absolute right-0 top-0 bottom-2 z-10 w-10 rounded-r-2xl bg-gradient-to-l from-stone-100/90 to-transparent transition-opacity duration-200 ${puedeDer ? "opacity-100" : "opacity-0"}`} />
+   534→
+   535→                {/* Flecha izquierda */}
+   536→                <button
+   537→                  onClick={() => desplazarPersonajes(-1)}
+   538→                  disabled={!puedeIzq}
+   539→                  className={`absolute left-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-cyan-600 shadow-lg ring-2 ring-cyan-200 transition-all hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${puedeIzq ? "opacity-100" : "opacity-0"}`}
+   540→                  aria-label="Ver personajes anteriores"
+   541→                >
+   542→                  <ChevronLeft size={22} strokeWidth={2.5} />
+   543→                </button>
+   544→
+   545→                {/* Contenedor scroll oculto */}
+   546→                <div
+   547→                  ref={personajesScrollRef}
+   548→                  className="flex min-w-0 gap-3 overflow-x-auto px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+   549→                >
+   550→                  {PERSONAJES.map((p) => {
+   551→                    const Icon = p.icon;
+   552→                    return (
+   553→                      <button
+   554→                        key={p.id}
+   555→                        onClick={() => aplicarPersonaje(p)}
+   556→                        disabled={aplicandoPersonaje}
+   557→                        className="group flex w-32 shrink-0 flex-col items-center gap-1.5 rounded-2xl bg-stone-50 p-3 ring-1 ring-stone-200 transition-all hover:scale-105 hover:ring-cyan-300 hover:shadow-md disabled:opacity-50"
+   558→                        aria-label={`Aplicar personaje ${p.nombre}`}
+   559→                      >
+   560→                        <div className="relative flex h-28 w-24 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-cyan-50 to-white ring-1 ring-cyan-100">
+   561→                          <AvatarSVG config={p.config} size={72} className="transition-transform group-hover:scale-110" />
+   562→                          {isDemo && (
+   563→                            <span className="absolute left-1 top-1 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">DEMO</span>
+   564→                          )}
+   565→                        </div>
+   566→                        <span className="flex items-center gap-1 text-center text-[11px] font-black leading-tight text-stone-800">
+   567→                          <Icon size={11} strokeWidth={2.5} className="text-orange-500" /> {p.nombre}
+   568→                        </span>
+   569→                        <span className="text-center text-[9px] font-medium leading-tight text-stone-500">{p.desc}</span>
+   570→                      </button>
+   571→                    );
+   572→                  })}
+   573→                </div>
+   574→
+   575→                {/* Flecha derecha */}
+   576→                <button
+   577→                  onClick={() => desplazarPersonajes(1)}
+   578→                  disabled={!puedeDer}
+   579→                  className={`absolute right-1 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-cyan-600 shadow-lg ring-2 ring-cyan-200 transition-all hover:scale-110 active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${puedeDer ? "opacity-100" : "opacity-0"}`}
+   580→                  aria-label="Ver personajes siguientes"
+   581→                >
+   582→                  <ChevronRight size={22} strokeWidth={2.5} />
+   583→                </button>
+   584→
+   585→                <p className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-medium text-stone-400">
+   586→                  <ChevronLeft size={11} strokeWidth={2.5} />
+   587→                  Desliza para ver los {PERSONAJES.length} skins
+   588→                  <ChevronRight size={11} strokeWidth={2.5} />
+   589→                </p>
+   590→              </div>
+   591→              <p className="mt-1.5 text-center text-[10px] font-medium text-stone-400">
+   592→                {isDemo
+   593→                  ? "Toca un skin para aplicarlo al Protagonista al instante (modo demo)"
+   594→                  : "Toca un skin para aplicarlo (compra y equipa automaticamente)"}
+   595→              </p>
+   596→            </div>
+   597→
+   598→            {/* ===== Pestañas de categorías con iconos SVG ===== */}
+   599→            <div className="mb-4 grid grid-cols-4 gap-2 sm:grid-cols-8">
+   600→              {/* Botón ICONICOS (galería de personajes famosos) */}
+   601→              <button
+   602→                onClick={() => setCatActiva("ICONICOS")}
+   603→                aria-label="Personajes Iconicos"
+   604→                className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 transition-all hover:scale-105 ${
+   605→                  catActiva === "ICONICOS"
+   606→                    ? "bg-gradient-to-br from-fuchsia-500 to-purple-600 text-white shadow-lg shadow-fuchsia-200"
+   607→                    : "bg-white text-stone-500 ring-1 ring-stone-200 hover:text-fuchsia-500"
+   608→                }`}
+   609→              >
+   610→                <Wand2 size={26} strokeWidth={2.5} className={catActiva === "ICONICOS" ? "text-white" : "text-fuchsia-500"} />
+   611→                <span className="text-[10px] font-black leading-tight">Iconicos</span>
+   612→              </button>
+   613→              {/* Botón KITS */}
+   614→              <button
+   615→                onClick={() => setCatActiva("KITS")}
+   616→                aria-label="Kits de Personajes"
+   617→                className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 transition-all hover:scale-105 ${
+   618→                  catActiva === "KITS"
+   619→                    ? "bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-200"
+   620→                    : "bg-white text-stone-500 ring-1 ring-stone-200 hover:text-orange-500"
+   621→                }`}
+   622→              >
+   623→                <KitsIcon categoria={"CUERPO" as any} size={26} strokeWidth={2.5} className={catActiva === "KITS" ? "text-white" : "text-orange-500"} />
+   624→                <span className="text-[10px] font-black leading-tight">Kits</span>
+   625→              </button>
+   626→              {CATEGORIAS_ORDER.map((catId) => {
+   627→                const activo = catActiva === catId;
+   628→                return (
+   629→                  <button
+   630→                    key={catId}
+   631→                    onClick={() => setCatActiva(catId)}
+   632→                    aria-label={CATEGORIA_LABEL[catId]}
+   633→                    className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 transition-all hover:scale-105 ${
+   634→                      activo
+   635→                        ? "bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-200"
+   636→                        : "bg-white text-stone-500 ring-1 ring-stone-200 hover:text-cyan-600"
+   637→                    }`}
+   638→                  >
+   639→                    <CategoryIcon categoria={catId} size={26} strokeWidth={2.5} className={activo ? "text-white" : ""} />
+   640→                    <span className="text-[10px] font-black leading-tight">{CATEGORIA_LABEL[catId]}</span>
+   641→                  </button>
+   642→                );
+   643→              })}
+   644→            </div>
+   645→
+   646→            {/* ===== Pestañas de rareza (bordes neón) ===== */}
+   647→            {(catActiva !== "KITS" && catActiva !== "ICONICOS") && (
+   648→              <div className="mb-4 flex flex-wrap items-center gap-2">
+   649→                <button
+   650→                  onClick={() => setRarezaFiltro("TODAS")}
+   651→                  className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+   652→                    rarezaFiltro === "TODAS"
+   653→                      ? "bg-stone-800 text-white shadow-md"
+   654→                      : "bg-white text-stone-600 ring-1 ring-stone-200 hover:ring-stone-400"
+   655→                  }`}
+   656→                >
+   657→                  Todas
+   658→                </button>
+   659→                {RAREZAS_ORDER.map((rz) => {
+   660→                  const cfg = RAREZA_CONFIG[rz];
+   661→                  const Icon = cfg.icon;
+   662→                  const activo = rarezaFiltro === rz;
+   663→                  return (
+   664→                    <button
+   665→                      key={rz}
+   666→                      onClick={() => setRarezaFiltro(rz)}
+   667→                      className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all ${
+   668→                        activo ? `${cfg.badge} shadow-md ${cfg.glow}` : `bg-white text-stone-600 ring-1 ${cfg.border} hover:scale-105`
+   669→                      }`}
+   670→                    >
+   671→                      <Icon size={11} strokeWidth={2.5} />
+   672→                      {RAREZA_LABEL[rz]}
+   673→                    </button>
+   674→                  );
+   675→                })}
+   676→              </div>
+   677→            )}
+   678→
+   679→            {/* ===== Pestañas de filtro para personajes icónicos (Anime/Gamer/Movie) ===== */}
+   680→            {catActiva === "ICONICOS" && (
+   681→              <div className="mb-4 flex flex-wrap items-center gap-2">
+   682→                <button
+   683→                  onClick={() => setFiltroIconico("TODOS")}
+   684→                  className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+   685→                    filtroIconico === "TODOS"
+   686→                      ? "bg-stone-800 text-white shadow-md"
+   687→                      : "bg-white text-stone-600 ring-1 ring-stone-200 hover:ring-stone-400"
+   688→                  }`}
+   689→                >
+   690→                  Todos
+   691→                </button>
+   692→                {CATEGORIA_PERSONAJE_ORDER.map((cat) => {
+   693→                  const Icon = CATEGORIA_PERSONAJE_ICON[cat];
+   694→                  const activo = filtroIconico === cat;
+   695→                  const colores: Record<CategoriaPersonaje, string> = {
+   696→                    ANIME: "bg-rose-500",
+   697→                    GAMER: "bg-violet-600",
+   698→                    MOVIE: "bg-amber-500",
+   699→                  };
+   700→                  return (
+   701→                    <button
+   702→                      key={cat}
+   703→                      onClick={() => setFiltroIconico(cat)}
+   704→                      className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all ${
+   705→                        activo ? `${colores[cat]} text-white shadow-md` : `bg-white text-stone-600 ring-1 ring-stone-200 hover:scale-105`
+   706→                      }`}
+   707→                    >
+   708→                      <Icon size={11} strokeWidth={2.5} />
+   709→                      {CATEGORIA_PERSONAJE_LABEL[cat]}
+   710→                    </button>
+   711→                  );
+   712→                })}
+   713→              </div>
+   714→            )}
+   715→
+   716→            {/* ===== Sección ICONICOS (galería de personajes famosos) ===== */}
+   717→            {catActiva === "ICONICOS" ? (
+   718→              <div>
+   719→                {/* Encabezado de sección */}
+   720→                <div className="mb-4 flex items-center justify-between rounded-2xl bg-white px-4 py-2.5 shadow-sm ring-1 ring-stone-200">
+   721→                  <div className="flex items-center gap-2">
+   722→                    <Wand2 size={18} strokeWidth={2.5} className="text-fuchsia-500" />
+   723→                    <h2 className="text-base font-black text-stone-800">
+   724→                      {filtroIconico === "TODOS" ? "Galería de Iconicos" : CATEGORIA_PERSONAJE_LABEL[filtroIconico]}
+   725→                    </h2>
+   726→                  </div>
+   727→                  <span className="rounded-full bg-fuchsia-100 px-2.5 py-0.5 text-xs font-bold text-fuchsia-700">
+   728→                    {personajesIconicosFiltrados.length} personajes
+   729→                  </span>
+   730→                </div>
+   731→
+   732→                {/* Grid de personajes icónicos */}
+   733→                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+   734→                  {personajesIconicosFiltrados.map((p) => {
+   735→                    const CatIcon = CATEGORIA_PERSONAJE_ICON[p.categoria];
+   736→                    const estaActivo = personajeIconicoActivo === p.id;
+   737→                    const colorCat: Record<CategoriaPersonaje, string> = {
+   738→                      ANIME: "ring-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.5)]",
+   739→                      GAMER: "ring-violet-500 shadow-[0_0_14px_rgba(139,92,246,0.5)]",
+   740→                      MOVIE: "ring-amber-400 shadow-[0_0_14px_rgba(251,191,36,0.5)]",
+   741→                    };
+   742→                    return (
+   743→                      <button
+   744→                        key={p.id}
+   745→                        onClick={() => aplicarPersonajeIconico(p)}
+   746→                        disabled={aplicandoPersonaje}
+   747→                        className={`group relative flex flex-col items-center gap-2 rounded-2xl bg-white p-3 ring-2 transition-all hover:scale-[1.03] hover:shadow-lg disabled:opacity-50 ${
+   748→                          estaActivo ? colorCat[p.categoria] + " scale-[1.02]" : "ring-stone-200 hover:ring-fuchsia-300"
+   749→                        }`}
+   750→                      >
+   751→                        {/* Etiqueta DEMO ACTIVO / GRATIS EN DEMO */}
+   752→                        {isDemo && (
+   753→                          <span className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
+   754→                            <Check size={8} strokeWidth={3} /> GRATIS
+   755→                          </span>
+   756→                        )}
+   757→                        {/* Badge de categoría */}
+   758→                        <span className={`absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow ${
+   759→                          p.categoria === "ANIME" ? "bg-rose-500" : p.categoria === "GAMER" ? "bg-violet-600" : "bg-amber-500"
+   760→                        }`}>
+   761→                          <CatIcon size={8} strokeWidth={2.5} />
+   762→                          {p.categoria}
+   763→                        </span>
+   764→                        {/* Indicador de personaje activo */}
+   765→                        {estaActivo && (
+   766→                          <span className="absolute left-2 top-9 z-10 flex items-center gap-0.5 rounded-md bg-fuchsia-600 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
+   767→                            <Check size={8} strokeWidth={3} /> ACTIVO
+   768→                          </span>
+   769→                        )}
+   770→                        {/* Preview del personaje icónico */}
+   771→                        <div className="flex h-36 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-fuchsia-50 to-white ring-1 ring-fuchsia-100">
+   772→                          <PersonajeIconicoSVG personajeId={p.id} size={92} className="transition-transform group-hover:scale-110" />
+   773→                        </div>
+   774→                        <div className="flex w-full items-center justify-center gap-1 text-sm font-black text-stone-800">
+   775→                          <CatIcon size={13} strokeWidth={2.5} className={
+   776→                            p.categoria === "ANIME" ? "text-rose-500" : p.categoria === "GAMER" ? "text-violet-500" : "text-amber-500"
+   777→                          } /> {p.nombre}
+   778→                        </div>
+   779→                        <p className="text-center text-[10px] font-medium text-stone-500">{p.desc}</p>
+   780→                        <div className={`mt-auto w-full rounded-lg py-1.5 text-center text-xs font-black text-white shadow-sm transition-colors ${
+   781→                          estaActivo ? "bg-fuchsia-600" : "bg-fuchsia-500 group-hover:bg-fuchsia-600"
+   782→                        }`}>
+   783→                          {aplicandoPersonaje ? <Loader2 size={12} className="mx-auto animate-spin" /> : estaActivo ? "Equipado" : "Aplicar"}
+   784→                        </div>
+   785→                      </button>
+   786→                    );
+   787→                  })}
+   788→                </div>
+   789→
+   790→                {/* Botón para resetear el Protagonista */}
+   791→                {personajeIconicoActivo && (
+   792→                  <div className="mt-4 flex justify-center">
+   793→                    <button
+   794→                      onClick={quitarPersonajeIconico}
+   795→                      className="flex items-center gap-1.5 rounded-full bg-stone-200 px-4 py-2 text-xs font-bold text-stone-700 ring-1 ring-stone-300 transition-all hover:bg-stone-300"
+   796→                    >
+   797→                      <ArrowLeft size={12} strokeWidth={2.5} /> Resetear Protagonista
+   798→                    </button>
+   799→                  </div>
+   800→                )}
+   801→
+   802→                {/* Nota informativa */}
+   803→                <p className="mt-3 text-center text-[10px] font-medium text-stone-400">
+   804→                  {isDemo
+   805→                    ? "Todos los personajes iconicos estan GRATIS en modo demo · aplicalos al instante"
+   806→                    : "Selecciona un personaje iconico para aplicarlo al Protagonista"}
+   807→                </p>
+   808→              </div>
+   809→            ) : catActiva === "KITS" ? (
+   810→              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+   811→                {PERSONAJES.map((p) => {
+   812→                  const Icon = p.icon;
+   813→                  return (
+   814→                    <button
+   815→                      key={p.id}
+   816→                      onClick={() => aplicarPersonaje(p)}
+   817→                      disabled={aplicandoPersonaje}
+   818→                      className="group relative flex flex-col items-center gap-2 rounded-2xl bg-white p-3 ring-1 ring-stone-200 transition-all hover:scale-[1.03] hover:shadow-lg disabled:opacity-50"
+   819→                    >
+   820→                      {isDemo && (
+   821→                        <span className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
+   822→                          <Check size={8} strokeWidth={3} /> DEMO
+   823→                        </span>
+   824→                      )}
+   825→                      <span className="absolute right-2 top-2 rounded-md bg-orange-100 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-orange-700">
+   826→                        KIT
+   827→                      </span>
+   828→                      <div className="flex h-36 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-cyan-50 to-white ring-1 ring-cyan-100">
+   829→                        <AvatarSVG config={p.config} size={88} className="transition-transform group-hover:scale-110" />
+   830→                      </div>
+   831→                      <div className="flex w-full items-center justify-center gap-1 text-sm font-black text-stone-800">
+   832→                        <Icon size={13} strokeWidth={2.5} className="text-orange-500" /> {p.nombre}
+   833→                      </div>
+   834→                      <p className="text-center text-[10px] font-medium text-stone-500">{p.desc}</p>
+   835→                      <div className="mt-auto w-full rounded-lg bg-cyan-500 py-1.5 text-center text-xs font-black text-white shadow-sm transition-colors group-hover:bg-cyan-600">
+   836→                        {aplicandoPersonaje ? <Loader2 size={12} className="mx-auto animate-spin" /> : "Aplicar Skin"}
+   837→                      </div>
+   838→                    </button>
+   839→                  );
+   840→                })}
+   841→              </div>
+   842→            ) : (
+   843→              /* ===== Grid de catálogo (items por categoría) ===== */
+   844→              <>
+   845→                {/* Encabezado de sección */}
+   846→                <div className="mb-4 flex items-center justify-between rounded-2xl bg-white px-4 py-2.5 shadow-sm ring-1 ring-stone-200">
+   847→                  <div className="flex items-center gap-2">
+   848→                    <CategoryIcon categoria={catActiva} size={18} strokeWidth={2.5} className="text-cyan-600" />
+   849→                    <h2 className="text-base font-black text-stone-800">{CATEGORIA_LABEL[catActiva]}</h2>
+   850→                  </div>
+   851→                  <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-xs font-bold text-cyan-700">
+   852→                    {itemsCat.length} piezas
+   853→                  </span>
+   854→                </div>
+   855→
+   856→                {/* Grid de items */}
+   857→                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+   858→                  {itemsCat.map((item) => {
+   859→                    const equipado = estaEquipado(item);
+   860→                    const propio = esPropio(item);
+   861→                    const gratis = esGratis(item);
+   862→                    const puede = puedeComprar(item);
+   863→                    const bloqueadoNivel = (data?.nivel ?? 1) < item.nivelRequerido;
+   864→                    const cargandoItem = accionando === item.id;
+   865→                    const disponibleDirecto = isDemo || propio || gratis;
+   866→                    const rzCfg = RAREZA_CONFIG[item.raridad] ?? RAREZA_CONFIG.COMUN;
+   867→                    const RzIcon = rzCfg.icon;
+   868→                    return (
+   869→                      <div
+   870→                        key={item.id}
+   871→                        className={`relative flex flex-col rounded-2xl bg-white p-3 ring-1 transition-all hover:scale-[1.03] hover:shadow-lg ${equipado ? "ring-2 ring-emerald-400 shadow-md shadow-emerald-100" : rzCfg.ring + " " + rzCfg.glow}`}
+   872→                      >
+   873→                        {/* Badge de rareza (esquina superior derecha) */}
+   874→                        <span className={`absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide shadow-sm ${rzCfg.badge}`}>
+   875→                          <RzIcon size={8} strokeWidth={2.5} />
+   876→                          {isDemo ? "DEMO" : RAREZA_LABEL[item.raridad]}
+   877→                        </span>
+   878→
+   879→                        {/* Etiqueta DEMO ACTIVO (esquina superior izquierda) */}
+   880→                        {isDemo && (
+   881→                          <span className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
+   882→                            <Check size={8} strokeWidth={3} /> DEMO
+   883→                          </span>
+   884→                        )}
+   885→
+   886→                        {/* Ventana de preview */}
+   887→                        <div className="mb-2.5 flex h-32 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-stone-50 to-white ring-1 ring-stone-100">
+   888→                          <AvatarSVG config={{ ...data?.config, [item.categoria.toLowerCase()]: item.clave } as any} size={78} />
+   889→                        </div>
+   890→
+   891→                        <p className="text-sm font-black leading-tight text-stone-800">{item.nombre}</p>
+   892→                        {item.descripcion && (
+   893→                          <p className="mt-0.5 line-clamp-2 text-[10px] font-medium text-stone-500">{item.descripcion}</p>
+   894→                        )}
+   895→
+   896→                        {/* Área de acción */}
+   897→                        <div className="mt-auto pt-2.5">
+   898→                          {equipado ? (
+   899→                            <div className="flex items-center justify-center gap-1 rounded-lg bg-emerald-500 py-2 text-xs font-black text-white shadow-sm">
+   900→                              <Check size={13} strokeWidth={3} /> Equipado
+   901→                            </div>
+   902→                          ) : disponibleDirecto ? (
+   903→                            <button
+   904→                              onClick={() => isDemo ? handleEquiparDemo(item) : handleEquipar(item)}
+   905→                              disabled={cargandoItem}
+   906→                              className="flex w-full items-center justify-center gap-1 rounded-lg bg-cyan-500 py-2 text-xs font-black text-white shadow-sm transition-all hover:bg-cyan-600 hover:scale-105 disabled:opacity-50"
+   907→                            >
+   908→                              {cargandoItem ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} strokeWidth={3} />}
+   909→                              Equipar
+   910→                            </button>
+   911→                          ) : bloqueadoNivel ? (
+   912→                            <div className="flex items-center justify-center gap-1 rounded-lg bg-stone-100 py-2 text-xs font-bold text-stone-400 ring-1 ring-stone-200">
+   913→                              <Lock size={12} strokeWidth={2.5} /> Nivel {item.nivelRequerido}
+   914→                            </div>
+   915→                          ) : (
+   916→                            <button
+   917→                              onClick={() => handleComprar(item)}
+   918→                              disabled={!puede || cargandoItem}
+   919→                              className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-black text-white shadow-sm transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 ${
+   920→                                item.precioGemas > 0 ? "bg-fuchsia-500 hover:bg-fuchsia-600" : "bg-amber-500 hover:bg-amber-600"
+   921→                              }`}
+   922→                            >
+   923→                              {cargandoItem ? (
+   924→                                <Loader2 size={12} className="animate-spin" />
+   925→                              ) : item.precioGemas > 0 ? (
+   926→                                <>
+   927→                                  <EssenceCrystal size={14} tint="rose" />
+   928→                                  {item.precioGemas}
+   929→                                </>
+   930→                              ) : (
+   931→                                <>
+   932→                                  <RunicCoin size={16} />
+   933→                                  {item.precioMonedas}
+   934→                                </>
+   935→                              )}
+   936→                            </button>
+   937→                          )}
+   938→                        </div>
+   939→                      </div>
+   940→                    );
+   941→                  })}
+   942→                </div>
+   943→                {itemsCat.length === 0 && (
+   944→                  <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-12 text-stone-400 ring-1 ring-stone-200">
+   945→                    <Boxes size={40} strokeWidth={1.5} className="mb-2 opacity-50" />
+   946→                    <p className="text-sm font-bold">No hay piezas de esta rareza</p>
+   947→                    <p className="text-xs">Prueba con otra rareza o categoria</p>
+   948→                  </div>
+   949→                )}
+   950→              </>
+   951→            )}
+   952→          </div>
+   953→        </div>
+   954→      </div>
+   955→
+   956→      {/* Animación de flotación del avatar (inline para evitar dependencias) */}
+   957→      <style jsx>{`
+   958→        @keyframes float {
+   959→          0%, 100% { transform: translateY(0); }
+   960→          50% { transform: translateY(-8px); }
+   961→        }
+   962→      `}</style>
+   963→    </div>
+   964→  );
+   965→}
+   966→

@@ -809,3 +809,54 @@ Stage Summary:
 - Botón "Resetear Protagonista" para volver al avatar normal.
 - Sin emojis, solo iconos vectoriales SVG (Swords, Gamepad2, Film, Wand2).
 - Responsive móvil + desktop verificado con Agent Browser y VLM.
+
+---
+Task ID: AVATAR-ICONICOS-MIX
+Agent: main (Frontend Developer + UI/UX Game Designer)
+Task: Enhancement sobre AVATAR-ICONICOS — añadir funcionalidad mix-and-match: cada personaje icónico debe poder aplicarse como paquete completo O permitir equipar partes individuales (cuerpo, ojos, boca, pelo, ropa, accesorio) sobre el avatar base.
+
+Work Log:
+- Leído worklog.md previo (AVATAR-ICONICOS) y verificado que la implementación base de 12 personajes icónicos está intacta:
+  * personajesIconicos.ts con 12 personajes (4 ANIME, 3 GAMER, 5 MOVIE) — OK.
+  * PersonajeIconicoSVG.tsx con renderizado 3D blocky de los 12 personajes — OK.
+  * AvatarCustomizer.tsx con pestaña Iconicos, filtros Anime/Gamer/Movie, grid de tarjetas — OK.
+- Verificación con Agent Browser (gateway puerto 81, DemoKid):
+  * Navegación al avatar carga con pestaña "Iconicos" por defecto.
+  * 12 personajes icónicos visibles con etiquetas GRATIS y badges de categoría (ANIME/GAMER/MOVIE).
+  * Filtro "Gamer Heroes" → muestra solo Mario, Master Chief, Sora (3 personajes).
+  * Click en Mario → cápsula cambia a Mario (gorra roja con M, overoles azules, bigote) instantáneamente. VLM confirma.
+  * Filtro "Anime Legends" → muestra solo Goku, Naruto, Pikachu, Eren (4 personajes).
+  * Click en Goku → cápsula cambia a Goku (pelo negro erizado, gi naranja) instantáneamente. VLM confirma.
+  * Responsive móvil (390px): grid de 2 columnas, cápsula visible, filtros accesibles, sin overflow.
+- Mejora implementada: mix-and-match de partes individuales.
+  * Imports: añadidos ChevronDown, Shuffle de lucide-react.
+  * Constantes nuevas: CategoriaParte (CUERPO/OJOS/BOCA/CABELLO/ROPA/ACCESORIO), PARTES_ORDER, PARTE_LABEL, PARTE_ICON.
+  * Estado nuevo: partesExpandidasId (id del personaje con panel de partes abierto), aplicandoParte (parteKey en carga).
+  * Función aplicarPartePersonaje(personaje, categoria): equipa SOLO una parte del personaje icónico sobre el avatar base (resetea personajeIconicoActivo a null, preview optimista, compra+equipa en backend, bypass en demo).
+  * Función togglePartes(personajeId): abre/cierra el panel de partes de un personaje.
+  * UI: cada tarjeta de personaje icónico ahora es un <div> contenedor con:
+    - Botón principal "Aplicar Kit" (kit completo) — comportamiento existente.
+    - Botón "Combinar partes" (icono Shuffle + ChevronDown) que expande/colapsa el panel.
+    - Panel expandible con grid 2x3 de 6 botones (Cuerpo/Ojos/Boca/Pelo/Ropa/Accesorio), cada uno con icono, etiqueta y estado equipado (verde con Check).
+  * Nota informativa actualizada con instrucciones de uso del mix-and-match.
+- Verificación de mix-and-match con Agent Browser + VLM:
+  * Click en "Ver partes de Caballero Oscuro" (Batman) → panel se expande mostrando 6 botones de partes.
+  * Click en "Equipar Ropa de Caballero Oscuro" → cápsula cambia a avatar base (con gafas de sol) vistiendo SOLO la capa/ropa del Caballero Oscuro, NO el Batman completo. VLM confirma: "base avatar with the clothing applied (mix-and-match)".
+  * Botón "Ropa" se marca en verde con icono Check.
+  * Toast verde: "Ropa de Caballero Oscuro equipado".
+- Lint: sin errores nuevos en archivos de avatar (solo warning pre-existente de eslint-disable en línea 377).
+- Dev server: compila limpiamente, sin errores.
+
+Stage Summary:
+- 1 archivo modificado: AvatarCustomizer.tsx (añadido mix-and-match de partes).
+- Funcionalidad nueva: cada personaje icónico puede aplicarse como kit completo (botón "Aplicar Kit") o como partes individuales (botón "Combinar partes" → grid 2x3 de 6 partes).
+- Mix-and-match verificado: equipar solo la Ropa de Batman sobre el avatar base funciona correctamente (la cápsula muestra el avatar base con la capa, no el Batman completo).
+- Panel expandible con 6 botones por personaje: Cuerpo, Ojos, Boca, Pelo, Ropa, Accesorio — cada uno con icono, etiqueta y estado equipado (verde).
+- Nota informativa actualizada explicando las dos modalidades de equipado.
+- Sin errores nuevos de lint ni de compilación.
+- Responsive móvil + desktop verificado.
+- Requisitos del prompt del usuario cumplidos:
+  1. Skins/KITS Completos: 12 personajes icónicos (Goku, Naruto, Pikachu, Eren, Mario, Master Chief, Sora, Spider-Man, Batman, Luke, Eleven, Mickey) — ✓
+  2. Organización por Filtros: Anime Legends, Gamer Heroes, Movie Icons — ✓
+  3. Modificación de Trajes e Ítems Separados: botón "Combinar partes" permite equipar partes individuales sobre el avatar base — ✓ (NUEVO)
+  4. Modo Demo: etiquetas GRATIS, aplicación instantánea sin monedas/gemas — ✓

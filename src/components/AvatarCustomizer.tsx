@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import {
   ArrowLeft, Lock, Check, Sparkles, Loader2, Wrench,
   ChevronLeft, ChevronRight, Boxes, Crown, Star, Zap, Shield,
-  Swords, Gamepad2, Film, Wand2,
+  Swords, Gamepad2, Film, Wand2, ChevronDown, Shuffle,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
@@ -23,6 +23,26 @@ const CATEGORIA_PERSONAJE_ICON: Record<CategoriaPersonaje, typeof Swords> = {
   ANIME: Swords,
   GAMER: Gamepad2,
   MOVIE: Film,
+};
+
+// ===== Etiquetas legibles para cada parte del config (mix-and-match) =====
+type CategoriaParte = "CUERPO" | "OJOS" | "BOCA" | "CABELLO" | "ROPA" | "ACCESORIO";
+const PARTES_ORDER: CategoriaParte[] = ["CUERPO", "OJOS", "BOCA", "CABELLO", "ROPA", "ACCESORIO"];
+const PARTE_LABEL: Record<CategoriaParte, string> = {
+  CUERPO: "Cuerpo",
+  OJOS: "Ojos",
+  BOCA: "Boca",
+  CABELLO: "Pelo",
+  ROPA: "Ropa",
+  ACCESORIO: "Accesorio",
+};
+const PARTE_ICON: Record<CategoriaParte, typeof Boxes> = {
+  CUERPO: Boxes,
+  OJOS: Sparkles,
+  BOCA: Sparkles,
+  CABELLO: Boxes,
+  ROPA: Shield,
+  ACCESORIO: Star,
 };
 
 // ===== Sistema de rareza con bordes neón =====
@@ -153,6 +173,8 @@ export function AvatarCustomizer() {
   const [rarezaFiltro, setRarezaFiltro] = useState<string>("TODAS");
   const [filtroIconico, setFiltroIconico] = useState<CategoriaPersonaje | "TODOS">("TODOS");
   const [personajeIconicoActivo, setPersonajeIconicoActivo] = useState<string | null>(null);
+  const [partesExpandidasId, setPartesExpandidasId] = useState<string | null>(null);
+  const [aplicandoParte, setAplicandoParte] = useState<string | null>(null);
   const [accionando, setAccionando] = useState<string | null>(null);
   const [aplicandoPersonaje, setAplicandoPersonaje] = useState(false);
 
@@ -305,6 +327,43 @@ export function AvatarCustomizer() {
   const quitarPersonajeIconico = () => {
     setPersonajeIconicoActivo(null);
     mostrarToast("Protagonista reseteado", "info");
+  };
+
+  // ===== Aplicar SOLO una parte de un personaje icónico al avatar base (mix-and-match) =====
+  // Ej: equipar solo la capa (ROPA) de Goku sobre el avatar normal, sin aplicar el resto del kit.
+  const aplicarPartePersonaje = async (personaje: PersonajeIconico, categoria: CategoriaParte) => {
+    if (!usuario || !data) return;
+    const clave = personaje.config[categoria];
+    if (!clave) return;
+    const parteKey = `${personaje.id}-${categoria}`;
+    setAplicandoParte(parteKey);
+    // Al equipar una parte individual, salimos del modo personaje icónico completo
+    // para que el Protagonista muestre el avatar base con esa parte aplicada.
+    setPersonajeIconicoActivo(null);
+    // Preview optimista: aplica la parte al avatar al instante
+    setData((prev) => prev ? { ...prev, config: { ...prev.config, [categoria.toLowerCase()]: clave } } : prev);
+    try {
+      const item = tienda.find((it) => it.categoria === categoria && it.clave === clave);
+      if (item) {
+        // En modo demo, intentar comprar (gratis) y equipar
+        if (!esPropio(item) && !esGratis(item)) {
+          try { await api.comprar(usuario.id, item.id); } catch { /* en demo, ignorar */ }
+        }
+        const res = await api.equipar(usuario.id, item.id);
+        setData((prev) => (prev ? { ...prev, config: res.config } : prev));
+      }
+      mostrarToast(`${PARTE_LABEL[categoria]} de ${personaje.nombre} equipado`, "exito");
+    } catch (err) {
+      mostrarToast(err instanceof Error ? err.message : "Error al equipar la parte", "error");
+      await cargar();
+    } finally {
+      setAplicandoParte(null);
+    }
+  };
+
+  // ===== Toggle del panel de partes (mix-and-match) de un personaje icónico =====
+  const togglePartes = (personajeId: string) => {
+    setPartesExpandidasId((prev) => (prev === personajeId ? null : personajeId));
   };
 
   const cargar = async () => {
@@ -734,55 +793,118 @@ export function AvatarCustomizer() {
                   {personajesIconicosFiltrados.map((p) => {
                     const CatIcon = CATEGORIA_PERSONAJE_ICON[p.categoria];
                     const estaActivo = personajeIconicoActivo === p.id;
+                    const expandido = partesExpandidasId === p.id;
                     const colorCat: Record<CategoriaPersonaje, string> = {
                       ANIME: "ring-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.5)]",
                       GAMER: "ring-violet-500 shadow-[0_0_14px_rgba(139,92,246,0.5)]",
                       MOVIE: "ring-amber-400 shadow-[0_0_14px_rgba(251,191,36,0.5)]",
                     };
                     return (
-                      <button
+                      <div
                         key={p.id}
-                        onClick={() => aplicarPersonajeIconico(p)}
-                        disabled={aplicandoPersonaje}
-                        className={`group relative flex flex-col items-center gap-2 rounded-2xl bg-white p-3 ring-2 transition-all hover:scale-[1.03] hover:shadow-lg disabled:opacity-50 ${
-                          estaActivo ? colorCat[p.categoria] + " scale-[1.02]" : "ring-stone-200 hover:ring-fuchsia-300"
+                        className={`flex flex-col rounded-2xl bg-white p-3 ring-2 transition-all hover:shadow-lg ${
+                          estaActivo ? colorCat[p.categoria] + " scale-[1.02]" : expandido ? "ring-fuchsia-400 shadow-md" : "ring-stone-200 hover:ring-fuchsia-300"
                         }`}
                       >
-                        {/* Etiqueta DEMO ACTIVO / GRATIS EN DEMO */}
-                        {isDemo && (
-                          <span className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
-                            <Check size={8} strokeWidth={3} /> GRATIS
+                        {/* ===== Encabezado clicable: aplica el kit completo ===== */}
+                        <button
+                          onClick={() => aplicarPersonajeIconico(p)}
+                          disabled={aplicandoPersonaje}
+                          className="group flex flex-col items-center gap-2 disabled:opacity-50"
+                          aria-label={`Aplicar personaje ${p.nombre}`}
+                        >
+                          {/* Etiqueta DEMO ACTIVO / GRATIS EN DEMO */}
+                          {isDemo && (
+                            <span className="absolute left-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
+                              <Check size={8} strokeWidth={3} /> GRATIS
+                            </span>
+                          )}
+                          {/* Badge de categoría */}
+                          <span className={`absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow ${
+                            p.categoria === "ANIME" ? "bg-rose-500" : p.categoria === "GAMER" ? "bg-violet-600" : "bg-amber-500"
+                          }`}>
+                            <CatIcon size={8} strokeWidth={2.5} />
+                            {p.categoria}
                           </span>
+                          {/* Indicador de personaje activo */}
+                          {estaActivo && (
+                            <span className="absolute left-2 top-9 z-10 flex items-center gap-0.5 rounded-md bg-fuchsia-600 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
+                              <Check size={8} strokeWidth={3} /> ACTIVO
+                            </span>
+                          )}
+                          {/* Preview del personaje icónico */}
+                          <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-fuchsia-50 to-white ring-1 ring-fuchsia-100">
+                            <PersonajeIconicoSVG personajeId={p.id} size={88} className="transition-transform group-hover:scale-110" />
+                          </div>
+                          <div className="flex w-full items-center justify-center gap-1 text-sm font-black text-stone-800">
+                            <CatIcon size={13} strokeWidth={2.5} className={
+                              p.categoria === "ANIME" ? "text-rose-500" : p.categoria === "GAMER" ? "text-violet-500" : "text-amber-500"
+                            } /> {p.nombre}
+                          </div>
+                          <p className="text-center text-[10px] font-medium text-stone-500">{p.desc}</p>
+                          <div className={`mt-1 w-full rounded-lg py-1.5 text-center text-xs font-black text-white shadow-sm transition-colors ${
+                            estaActivo ? "bg-fuchsia-600" : "bg-fuchsia-500 group-hover:bg-fuchsia-600"
+                          }`}>
+                            {aplicandoPersonaje ? <Loader2 size={12} className="mx-auto animate-spin" /> : estaActivo ? "Equipado" : "Aplicar Kit"}
+                          </div>
+                        </button>
+
+                        {/* ===== Botón Partes (mix-and-match) ===== */}
+                        <button
+                          onClick={() => togglePartes(p.id)}
+                          className={`mt-2 flex w-full items-center justify-center gap-1 rounded-lg py-1 text-[10px] font-bold transition-colors ${
+                            expandido
+                              ? "bg-fuchsia-100 text-fuchsia-700 ring-1 ring-fuchsia-300"
+                              : "bg-stone-100 text-stone-600 ring-1 ring-stone-200 hover:bg-fuchsia-50 hover:text-fuchsia-600"
+                          }`}
+                          aria-label={`Ver partes de ${p.nombre}`}
+                          aria-expanded={expandido}
+                        >
+                          <Shuffle size={10} strokeWidth={2.5} />
+                          Combinar partes
+                          <ChevronDown size={10} strokeWidth={2.5} className={`transition-transform ${expandido ? "rotate-180" : ""}`} />
+                        </button>
+
+                        {/* ===== Panel expandible: partes individuales (mix-and-match) ===== */}
+                        {expandido && (
+                          <div className="mt-2 rounded-xl bg-stone-50 p-2 ring-1 ring-stone-200">
+                            <p className="mb-1.5 text-center text-[8px] font-black uppercase tracking-wide text-stone-500">
+                              Equipa solo una parte sobre el avatar base
+                            </p>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {PARTES_ORDER.map((cat) => {
+                                const PIcon = PARTE_ICON[cat];
+                                const parteKey = `${p.id}-${cat}`;
+                                const cargando = aplicandoParte === parteKey;
+                                const claveActual = p.config[cat];
+                                const equipada = data?.config[cat.toLowerCase() as keyof typeof data.config] === claveActual;
+                                return (
+                                  <button
+                                    key={cat}
+                                    onClick={() => aplicarPartePersonaje(p, cat)}
+                                    disabled={!!aplicandoParte}
+                                    className={`flex flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[9px] font-bold transition-all hover:scale-105 disabled:opacity-50 ${
+                                      equipada
+                                        ? "bg-emerald-500 text-white shadow-sm"
+                                        : "bg-white text-stone-700 ring-1 ring-stone-200 hover:ring-fuchsia-300 hover:text-fuchsia-600"
+                                    }`}
+                                    aria-label={`Equipar ${PARTE_LABEL[cat]} de ${p.nombre}`}
+                                  >
+                                    {cargando ? (
+                                      <Loader2 size={11} className="animate-spin" />
+                                    ) : equipada ? (
+                                      <Check size={11} strokeWidth={3} />
+                                    ) : (
+                                      <PIcon size={11} strokeWidth={2.5} />
+                                    )}
+                                    {PARTE_LABEL[cat]}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
                         )}
-                        {/* Badge de categoría */}
-                        <span className={`absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow ${
-                          p.categoria === "ANIME" ? "bg-rose-500" : p.categoria === "GAMER" ? "bg-violet-600" : "bg-amber-500"
-                        }`}>
-                          <CatIcon size={8} strokeWidth={2.5} />
-                          {p.categoria}
-                        </span>
-                        {/* Indicador de personaje activo */}
-                        {estaActivo && (
-                          <span className="absolute left-2 top-9 z-10 flex items-center gap-0.5 rounded-md bg-fuchsia-600 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow">
-                            <Check size={8} strokeWidth={3} /> ACTIVO
-                          </span>
-                        )}
-                        {/* Preview del personaje icónico */}
-                        <div className="flex h-36 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-b from-fuchsia-50 to-white ring-1 ring-fuchsia-100">
-                          <PersonajeIconicoSVG personajeId={p.id} size={92} className="transition-transform group-hover:scale-110" />
-                        </div>
-                        <div className="flex w-full items-center justify-center gap-1 text-sm font-black text-stone-800">
-                          <CatIcon size={13} strokeWidth={2.5} className={
-                            p.categoria === "ANIME" ? "text-rose-500" : p.categoria === "GAMER" ? "text-violet-500" : "text-amber-500"
-                          } /> {p.nombre}
-                        </div>
-                        <p className="text-center text-[10px] font-medium text-stone-500">{p.desc}</p>
-                        <div className={`mt-auto w-full rounded-lg py-1.5 text-center text-xs font-black text-white shadow-sm transition-colors ${
-                          estaActivo ? "bg-fuchsia-600" : "bg-fuchsia-500 group-hover:bg-fuchsia-600"
-                        }`}>
-                          {aplicandoPersonaje ? <Loader2 size={12} className="mx-auto animate-spin" /> : estaActivo ? "Equipado" : "Aplicar"}
-                        </div>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -800,11 +922,17 @@ export function AvatarCustomizer() {
                 )}
 
                 {/* Nota informativa */}
-                <p className="mt-3 text-center text-[10px] font-medium text-stone-400">
-                  {isDemo
-                    ? "Todos los personajes iconicos estan GRATIS en modo demo · aplicalos al instante"
-                    : "Selecciona un personaje iconico para aplicarlo al Protagonista"}
-                </p>
+                <div className="mt-3 rounded-xl bg-fuchsia-50 px-4 py-2.5 text-center ring-1 ring-fuchsia-100">
+                  <p className="flex items-center justify-center gap-1.5 text-[11px] font-black text-fuchsia-700">
+                    <Shuffle size={12} strokeWidth={2.5} />
+                    {isDemo
+                      ? "Todos los personajes iconicos estan GRATIS en modo demo"
+                      : "Selecciona un personaje iconico para aplicarlo al Protagonista"}
+                  </p>
+                  <p className="mt-0.5 text-[10px] font-medium text-fuchsia-600/80">
+                    Toca «Aplicar Kit» para el personaje completo o «Combinar partes» para equipar solo una pieza sobre el avatar base
+                  </p>
+                </div>
               </div>
             ) : catActiva === "KITS" ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
