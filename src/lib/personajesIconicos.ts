@@ -1,7 +1,7 @@
 // Base de datos de personajes icónicos inspirados en anime, videojuegos y películas
 // Estilo bloque 3D Roblox/Minecraft — sin emojis, solo iconos vectoriales
 
-export type CategoriaPersonaje = "ANIME" | "GAMER" | "MOVIE";
+export type CategoriaPersonaje = "ANIME" | "GAMER" | "MOVIE" | "MUGIWARA";
 
 export interface PersonajeIconico {
   id: string;
@@ -23,9 +23,10 @@ export const CATEGORIA_PERSONAJE_LABEL: Record<CategoriaPersonaje, string> = {
   ANIME: "Anime Legends",
   GAMER: "Gamer Heroes",
   MOVIE: "Movie Icons",
+  MUGIWARA: "Piratas Mugiwara",
 };
 
-export const CATEGORIA_PERSONAJE_ORDER: CategoriaPersonaje[] = ["ANIME", "GAMER", "MOVIE"];
+export const CATEGORIA_PERSONAJE_ORDER: CategoriaPersonaje[] = ["ANIME", "GAMER", "MOVIE", "MUGIWARA"];
 
 export const PERSONAJES_ICONICOS: PersonajeIconico[] = [
   // ===== ANIME LEGENDS =====
@@ -114,6 +115,77 @@ export const PERSONAJES_ICONICOS: PersonajeIconico[] = [
     categoria: "MOVIE",
     desc: "Orejas redondas y pantalon corto",
     config: { CUERPO: "cuerpo-oscuro", OJOS: "ojos-grandes", BOCA: "boca-gran-sonrisa", CABELLO: "cabello-nada", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+  },
+  // ===== PIRATAS MUGIWARA (One Piece) =====
+  {
+    id: "luffy",
+    nombre: "Capitan Gomoso",
+    categoria: "MUGIWARA",
+    desc: "Sombrero de paja y chaqueta roja",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-gran-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-capas", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "zoro",
+    nombre: "Cazador Pirata",
+    categoria: "MUGIWARA",
+    desc: "Pelo verde y tres katanas",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-corto", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-varita" },
+  },
+  {
+    id: "nami",
+    nombre: "Navegante Gato",
+    categoria: "MUGIWARA",
+    desc: "Pelo naranja y tatuaje de mandarina",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-largo", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "usopp",
+    nombre: "Tirador Valiente",
+    categoria: "MUGIWARA",
+    desc: "Nariz larga y tirachinas",
+    config: { CUERPO: "cuerpo-oscuro", OJOS: "ojos-grandes", BOCA: "boca-sonrisa", CABELLO: "cabello-corto", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-gafas" },
+  },
+  {
+    id: "sanji",
+    nombre: "Cocinero Rubio",
+    categoria: "MUGIWARA",
+    desc: "Traje negro y ceja rizada",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-corto", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "chopper",
+    nombre: "Reno Medico",
+    categoria: "MUGIWARA",
+    desc: "Reno azul con gorro rosa",
+    config: { CUERPO: "cuerpo-verde", OJOS: "ojos-grandes", BOCA: "boca-gran-sonrisa", CABELLO: "cabello-nada", ROPA: "ropa-basica", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "robin",
+    nombre: "Arqueologa Oscura",
+    categoria: "MUGIWARA",
+    desc: "Pelo negro y gafas de sol",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-cerrados", BOCA: "boca-serio", CABELLO: "cabello-largo", ROPA: "ropa-basica", ACCESORIO: "accesorio-gafas-sol" },
+  },
+  {
+    id: "franky",
+    nombre: "Ciborg Carpintero",
+    categoria: "MUGIWARA",
+    desc: "Pelo azul y cuerpo metalico",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-grandes", BOCA: "boca-gran-sonrisa", CABELLO: "cabello-mohawk", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-gafas-sol" },
+  },
+  {
+    id: "brook",
+    nombre: "Musico Esqueleto",
+    categoria: "MUGIWARA",
+    desc: "Esqueleto con afro y violin",
+    config: { CUERPO: "cuerpo-claro", OJOS: "ojos-cerrados", BOCA: "boca-sonrisa", CABELLO: "cabello-largo", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-nada" },
+  },
+  {
+    id: "jinbe",
+    nombre: "Timonel Gyojin",
+    categoria: "MUGIWARA",
+    desc: "Piel azul y kimono de judo",
+    config: { CUERPO: "cuerpo-oscuro", OJOS: "ojos-normales", BOCA: "boca-serio", CABELLO: "cabello-nada", ROPA: "ropa-uniforme", ACCESORIO: "accesorio-nada" },
   },
 ];
 

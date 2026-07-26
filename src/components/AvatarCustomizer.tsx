@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import {
   ArrowLeft, Lock, Check, Sparkles, Loader2, Wrench,
   ChevronLeft, ChevronRight, Boxes, Crown, Star, Zap, Shield,
-  Swords, Gamepad2, Film, Wand2, ChevronDown, Shuffle,
+  Swords, Gamepad2, Film, Wand2, ChevronDown, Shuffle, Anchor,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
@@ -23,6 +23,7 @@ const CATEGORIA_PERSONAJE_ICON: Record<CategoriaPersonaje, typeof Swords> = {
   ANIME: Swords,
   GAMER: Gamepad2,
   MOVIE: Film,
+  MUGIWARA: Anchor,
 };
 
 // ===== Etiquetas legibles para cada parte del config (mix-and-match) =====
@@ -755,6 +756,7 @@ export function AvatarCustomizer() {
                     ANIME: "bg-rose-500",
                     GAMER: "bg-violet-600",
                     MOVIE: "bg-amber-500",
+                    MUGIWARA: "bg-emerald-500",
                   };
                   return (
                     <button
@@ -798,6 +800,7 @@ export function AvatarCustomizer() {
                       ANIME: "ring-rose-400 shadow-[0_0_14px_rgba(244,63,94,0.5)]",
                       GAMER: "ring-violet-500 shadow-[0_0_14px_rgba(139,92,246,0.5)]",
                       MOVIE: "ring-amber-400 shadow-[0_0_14px_rgba(251,191,36,0.5)]",
+                      MUGIWARA: "ring-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.5)]",
                     };
                     return (
                       <div
@@ -821,7 +824,7 @@ export function AvatarCustomizer() {
                           )}
                           {/* Badge de categoría */}
                           <span className={`absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white shadow ${
-                            p.categoria === "ANIME" ? "bg-rose-500" : p.categoria === "GAMER" ? "bg-violet-600" : "bg-amber-500"
+                            p.categoria === "ANIME" ? "bg-rose-500" : p.categoria === "GAMER" ? "bg-violet-600" : p.categoria === "MUGIWARA" ? "bg-emerald-500" : "bg-amber-500"
                           }`}>
                             <CatIcon size={8} strokeWidth={2.5} />
                             {p.categoria}
@@ -838,7 +841,7 @@ export function AvatarCustomizer() {
                           </div>
                           <div className="flex w-full items-center justify-center gap-1 text-sm font-black text-stone-800">
                             <CatIcon size={13} strokeWidth={2.5} className={
-                              p.categoria === "ANIME" ? "text-rose-500" : p.categoria === "GAMER" ? "text-violet-500" : "text-amber-500"
+                              p.categoria === "ANIME" ? "text-rose-500" : p.categoria === "GAMER" ? "text-violet-500" : p.categoria === "MUGIWARA" ? "text-emerald-500" : "text-amber-500"
                             } /> {p.nombre}
                           </div>
                           <p className="text-center text-[10px] font-medium text-stone-500">{p.desc}</p>

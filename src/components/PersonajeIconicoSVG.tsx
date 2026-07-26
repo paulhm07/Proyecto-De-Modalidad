@@ -53,6 +53,17 @@ function renderPersonaje(id: string) {
     case "luke": return <LukeSVG />;
     case "eleven": return <ElevenSVG />;
     case "mickey": return <MickeySVG />;
+    // Piratas Mugiwara (One Piece)
+    case "luffy": return <LuffySVG />;
+    case "zoro": return <ZoroSVG />;
+    case "nami": return <NamiSVG />;
+    case "usopp": return <UsoppSVG />;
+    case "sanji": return <SanjiSVG />;
+    case "chopper": return <ChopperSVG />;
+    case "robin": return <RobinSVG />;
+    case "franky": return <FrankySVG />;
+    case "brook": return <BrookSVG />;
+    case "jinbe": return <JinbeSVG />;
     default: return <GokuSVG />;
   }
 }
@@ -725,6 +736,563 @@ function MickeySVG() {
       {/* Mejillas rosadas */}
       <circle cx="78" cy="88" r="4" fill="#f9a8d4" opacity="0.5" />
       <circle cx="122" cy="88" r="4" fill="#f9a8d4" opacity="0.5" />
+    </g>
+  );
+}
+
+// ============================================================
+// ===== PIRATAS MUGIWARA (One Piece) =====
+// ============================================================
+
+// LUFFY - Sombrero de paja, chaqueta roja, pantalón azul, cicatriz bajo el ojo
+function LuffySVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e3a8a" piernaDark="#1e293b" brazoLado="#f5c08c" />
+      {/* Chaleco rojo abierto */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+      {/* Camiseta blanca interior */}
+      <path d="M 86 116 L 100 134 L 114 116 L 114 140 L 86 140 Z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+      {/* Botones dorados del chaleco */}
+      <circle cx="76" cy="128" r="2" fill="#fbbf24" />
+      <circle cx="76" cy="142" r="2" fill="#fbbf24" />
+      <circle cx="76" cy="156" r="2" fill="#fbbf24" />
+      {/* Cinturón amarillo */}
+      <rect x="70" y="158" width="60" height="8" rx="2" fill="#fbbf24" stroke="#ca8a04" strokeWidth="1" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            <circle cx="84" cy="78" r="6" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="116" cy="78" r="6" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="85" cy="79" r="3.5" fill="#1e293b" />
+            <circle cx="117" cy="79" r="3.5" fill="#1e293b" />
+            <circle cx="86" cy="77" r="1.3" fill="#ffffff" />
+            <circle cx="118" cy="77" r="1.3" fill="#ffffff" />
+          </>
+        }
+        boca={
+          <>
+            {/* Sonrisa grande de Luffy */}
+            <path d="M 80 92 Q 100 108 120 92 Q 100 100 80 92 Z" fill="#7a1a1a" stroke="#1e293b" strokeWidth="1.5" strokeLinejoin="round" />
+            <path d="M 84 94 Q 100 104 116 94" fill="#ffffff" stroke="none" />
+          </>
+        }
+      />
+      {/* Cicatriz bajo el ojo izquierdo */}
+      <path d="M 84 86 L 84 90 M 82 88 L 86 88" stroke="#7a1a1a" strokeWidth="1.2" strokeLinecap="round" />
+      {/* Pelo negro */}
+      <path d="M 58 46 Q 60 26 100 24 Q 140 26 142 46 L 142 54 Q 100 48 58 54 Z" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
+      <path d="M 64 44 Q 72 50 80 46 Q 88 50 96 46 Q 104 50 112 46 Q 120 50 128 44 L 128 52 Q 100 56 64 52 Z" fill="#334155" />
+      {/* Sombrero de paja */}
+      <g>
+        {/* Ala del sombrero */}
+        <ellipse cx="100" cy="34" rx="48" ry="8" fill="#eab308" stroke="#a16207" strokeWidth="1.5" />
+        <ellipse cx="100" cy="33" rx="46" ry="5" fill="#facc15" />
+        {/* Cinta roja alrededor */}
+        <rect x="56" y="32" width="88" height="6" rx="2" fill="#dc2626" stroke="#991b1b" strokeWidth="1" />
+        {/* Copa del sombrero */}
+        <path d="M 72 34 Q 72 14 100 12 Q 128 14 128 34 Z" fill="#facc15" stroke="#a16207" strokeWidth="1.5" />
+        {/* Detalle de trenza (líneas) */}
+        <path d="M 78 22 L 122 22 M 78 26 L 122 26" stroke="#a16207" strokeWidth="0.8" opacity="0.5" />
+      </g>
+    </g>
+  );
+}
+
+// ZORO - Pelo verde, tres katanas, sash verde, banda negra
+function ZoroSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#f5c08c" />
+      {/* Camiseta blanca abierta */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+      {/* Cuerpo abierto (pecho) */}
+      <path d="M 86 116 L 100 130 L 114 116" fill="#f5c08c" />
+      {/* Haramaki verde (faja) */}
+      <rect x="70" y="150" width="60" height="16" rx="2" fill="#16a34a" stroke="#15803d" strokeWidth="1.5" />
+      {/* Detalle del tejido */}
+      <line x1="74" y1="158" x2="126" y2="158" stroke="#15803d" strokeWidth="0.8" opacity="0.6" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="83" cy="80" r="3.5" fill="#1e293b" />
+            <circle cx="119" cy="80" r="3.5" fill="#1e293b" />
+            {/* Ojo izquierdo con cicatriz */}
+            <path d="M 76 72 L 80 78" stroke="#7a1a1a" strokeWidth="1.2" strokeLinecap="round" />
+          </>
+        }
+        boca={<path d="M 88 96 L 112 96" stroke="#7a4422" strokeWidth="2.8" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo verde corto */}
+      <path d="M 58 46 Q 60 24 100 22 Q 140 24 142 46 L 142 52 Q 100 46 58 52 Z" fill="#16a34a" stroke="#15803d" strokeWidth="1" />
+      <path d="M 64 42 Q 70 50 78 44 Q 86 50 94 44 Q 102 50 110 44 Q 118 50 126 42 L 128 50 Q 100 54 64 50 Z" fill="#22c55e" />
+      {/* Banda negra (en la cabeza) */}
+      <rect x="58" y="52" width="84" height="6" rx="1" fill="#0f172a" />
+      {/* Tres katanas (dos a la derecha, una a la izquierda) */}
+      <g>
+        {/* Katana 1 (espalda, derecha) */}
+        <line x1="128" y1="170" x2="148" y2="100" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+        <rect x="124" y="166" width="10" height="16" rx="2" fill="#1e293b" />
+        {/* Katana 2 (espalda, derecha, paralela) */}
+        <line x1="132" y1="170" x2="152" y2="104" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" />
+        <rect x="128" y="166" width="10" height="16" rx="2" fill="#dc2626" />
+        {/* Katana 3 (espalda, izquierda) */}
+        <line x1="72" y1="170" x2="52" y2="100" stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" />
+        <rect x="66" y="166" width="10" height="16" rx="2" fill="#1e293b" />
+      </g>
+    </g>
+  );
+}
+
+// NAMI - Pelo naranja largo, top azul con rayas, tatuaje de mandarina
+function NamiSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e3a8a" piernaDark="#1e293b" brazoLado="#f5c08c" />
+      {/* Top azul con rayas blancas */}
+      <rect x="70" y="116" width="60" height="44" rx="5" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+      {/* Rayas blancas horizontales */}
+      <rect x="70" y="122" width="60" height="4" fill="#f8fafc" />
+      <rect x="70" y="134" width="60" height="4" fill="#f8fafc" />
+      <rect x="70" y="146" width="60" height="4" fill="#f8fafc" />
+      {/* Falda naranja corta */}
+      <rect x="70" y="158" width="60" height="14" rx="3" fill="#ea580c" stroke="#c2410c" strokeWidth="1.5" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            <ellipse cx="82" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="83" cy="80" r="3.5" fill="#ca8a04" />
+            <circle cx="119" cy="80" r="3.5" fill="#ca8a04" />
+            <circle cx="84" cy="78" r="1.3" fill="#ffffff" />
+            <circle cx="120" cy="78" r="1.3" fill="#ffffff" />
+          </>
+        }
+        boca={<path d="M 88 94 Q 100 100 112 94" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo naranja largo */}
+      <path d="M 56 46 Q 58 22 100 20 Q 142 22 144 46 L 148 116 L 130 116 L 132 50 Q 100 44 68 50 L 70 116 L 52 116 Z" fill="#f97316" stroke="#c2410c" strokeWidth="1" />
+      {/* Flequillo */}
+      <path d="M 62 44 Q 72 52 82 46 Q 92 52 100 46 Q 108 52 118 46 Q 128 52 138 44 L 138 52 Q 100 56 62 52 Z" fill="#fb923c" />
+      {/* Tatuaje de mandarina en el hombro */}
+      <circle cx="58" cy="130" r="6" fill="#ea580c" stroke="#9a3412" strokeWidth="1" opacity="0.85" />
+      <path d="M 54 130 L 62 130 M 58 126 L 58 134" stroke="#9a3412" strokeWidth="0.8" />
+    </g>
+  );
+}
+
+// USOPP - Nariz larga, overoles blancos, tirachinas, gafas
+function UsoppSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#a16207" pielBottom="#78350f" piernaColor="#4a5568" piernaDark="#2d3748" brazoLado="#a16207" />
+      {/* Overoles blancos con tirantes */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+      {/* Bandas azules en pecho */}
+      <rect x="70" y="116" width="60" height="14" rx="3" fill="#2563eb" />
+      <rect x="74" y="120" width="14" height="6" fill="#1e3a8a" />
+      <rect x="112" y="120" width="14" height="6" fill="#1e3a8a" />
+      {/* Tirantes */}
+      <rect x="80" y="116" width="8" height="56" fill="#4a5568" />
+      <rect x="112" y="116" width="8" height="56" fill="#4a5568" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#a16207"
+        pielBottom="#78350f"
+        ojos={
+          <>
+            <circle cx="84" cy="74" r="5" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="116" cy="74" r="5" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="85" cy="75" r="3" fill="#1e293b" />
+            <circle cx="117" cy="75" r="3" fill="#1e293b" />
+          </>
+        }
+        boca={<path d="M 90 98 Q 100 102 110 98" stroke="#451a03" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+      />
+      {/* Nariz larga (pinocchio style) */}
+      <path d="M 100 80 L 100 104 Q 104 108 100 110 Q 96 108 100 104" fill="#a16207" stroke="#78350f" strokeWidth="1.2" />
+      <ellipse cx="100" cy="100" rx="4" ry="10" fill="#a16207" stroke="#78350f" strokeWidth="1.2" />
+      {/* Pelo negro rizado */}
+      <path d="M 56 48 Q 56 24 100 22 Q 144 24 144 48 L 144 54 Q 100 48 56 54 Z" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
+      <g fill="#0f172a">
+        <circle cx="64" cy="42" r="5" />
+        <circle cx="76" cy="38" r="5" />
+        <circle cx="88" cy="36" r="5" />
+        <circle cx="100" cy="34" r="5" />
+        <circle cx="112" cy="36" r="5" />
+        <circle cx="124" cy="38" r="5" />
+        <circle cx="136" cy="42" r="5" />
+      </g>
+      {/* Gafas en la frente */}
+      <circle cx="84" cy="56" r="7" fill="none" stroke="#1e293b" strokeWidth="2" />
+      <circle cx="116" cy="56" r="7" fill="none" stroke="#1e293b" strokeWidth="2" />
+      <line x1="91" y1="56" x2="109" y2="56" stroke="#1e293b" strokeWidth="2" />
+      {/* Tirachinas (honda) en la mano */}
+      <g>
+        <path d="M 44 158 Q 36 150 32 140" stroke="#78350f" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <rect x="40" y="156" width="8" height="12" rx="2" fill="#78350f" />
+        <line x1="36" y1="148" x2="32" y2="140" stroke="#1e293b" strokeWidth="1" />
+        <line x1="40" y1="146" x2="32" y2="140" stroke="#1e293b" strokeWidth="1" />
+      </g>
+    </g>
+  );
+}
+
+// SANJI - Rubio con pelo tapando un ojo, traje negro, corbata
+function SanjiSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#1e293b" />
+      {/* Traje negro */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+      {/* Camisa amarilla interior */}
+      <path d="M 88 116 L 100 138 L 112 116 Z" fill="#facc15" />
+      {/* Corbata negra */}
+      <path d="M 96 116 L 104 116 L 102 130 L 100 138 L 98 130 Z" fill="#000000" />
+      {/* Botones del saco */}
+      <circle cx="84" cy="130" r="1.5" fill="#475569" />
+      <circle cx="84" cy="140" r="1.5" fill="#475569" />
+      <circle cx="116" cy="130" r="1.5" fill="#475569" />
+      <circle cx="116" cy="140" r="1.5" fill="#475569" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Solo ojo derecho visible (izquierdo tapado por pelo) */}
+            <ellipse cx="118" cy="78" rx="6" ry="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+            <circle cx="119" cy="80" r="3.5" fill="#1e293b" />
+            <circle cx="120" cy="78" r="1.3" fill="#ffffff" />
+            {/* Ceja rizada característica */}
+            <path d="M 110 68 Q 116 64 122 68 Q 126 70 122 72" stroke="#ca8a04" strokeWidth="2" fill="none" strokeLinecap="round" />
+          </>
+        }
+        boca={<path d="M 90 96 Q 100 100 110 96" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo rubio cubriendo ojo izquierdo */}
+      <path d="M 56 46 Q 58 24 100 22 Q 142 24 144 46 L 144 56 Q 100 50 56 56 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+      {/* Mechón lateral cubriendo ojo izquierdo */}
+      <path d="M 56 46 Q 56 70 72 84 Q 80 86 82 80 Q 74 72 70 60 Q 64 50 56 46 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+      <path d="M 64 44 Q 74 52 84 46 Q 94 52 104 46 Q 114 52 124 46 Q 134 52 144 44 L 144 52 Q 100 56 64 52 Z" fill="#facc15" />
+      {/* Cigarro (sin encender, para niños) */}
+      <rect x="108" y="96" width="14" height="2.5" rx="1" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="0.5" />
+      <rect x="120" y="95.5" width="3" height="3.5" rx="1" fill="#fbbf24" />
+    </g>
+  );
+}
+
+// CHOPPER - Reno azul con gorro rosa, hocico, cornamenta
+function ChopperSVG() {
+  return (
+    <g>
+      {/* Piernas cortas marrones */}
+      <rect x="82" y="178" width="14" height="32" rx="3" fill="#92400e" />
+      <rect x="104" y="178" width="14" height="32" rx="3" fill="#92400e" />
+      {/* Zapatos negros */}
+      <ellipse cx="89" cy="212" rx="12" ry="6" fill="#1e293b" />
+      <ellipse cx="111" cy="212" rx="12" ry="6" fill="#1e293b" />
+      {/* Brazos marrones */}
+      <rect x="56" y="128" width="16" height="44" rx="4" fill="#92400e" />
+      <rect x="128" y="128" width="16" height="44" rx="4" fill="#92400e" />
+      {/* Pezuñas */}
+      <rect x="54" y="168" width="20" height="8" rx="2" fill="#1e293b" />
+      <rect x="126" y="168" width="20" height="8" rx="2" fill="#1e293b" />
+      {/* Cuerpo rosado (overol) */}
+      <rect x="72" y="128" width="56" height="52" rx="8" fill="#f472b6" stroke="#be185d" strokeWidth="1.5" />
+      {/* Botones blancos del overol */}
+      <circle cx="84" cy="140" r="2.5" fill="#f8fafc" stroke="#be185d" strokeWidth="0.8" />
+      <circle cx="116" cy="140" r="2.5" fill="#f8fafc" stroke="#be185d" strokeWidth="0.8" />
+      {/* Cabeza (cráneo azul de reno) */}
+      <rect x="62" y="44" width="76" height="64" rx="12" fill="#3b82f6" stroke="#1e40af" strokeWidth="1.5" />
+      {/* Hocico claro */}
+      <ellipse cx="100" cy="96" rx="22" ry="14" fill="#dbeafe" stroke="#1e40af" strokeWidth="1.2" />
+      {/* Nariz azul */}
+      <ellipse cx="100" cy="92" rx="6" ry="5" fill="#1e40af" />
+      {/* Cornamenta pequeña */}
+      <g fill="#78350f" stroke="#451a03" strokeWidth="1">
+        <path d="M 70 44 Q 60 28 56 18 Q 62 22 66 30 Q 64 20 68 14 Q 72 22 72 32 Z" />
+        <path d="M 130 44 Q 140 28 144 18 Q 138 22 134 30 Q 136 20 132 14 Q 128 22 128 32 Z" />
+      </g>
+      {/* Orejas de reno */}
+      <ellipse cx="60" cy="60" rx="8" ry="12" fill="#3b82f6" stroke="#1e40af" strokeWidth="1" transform="rotate(-30 60 60)" />
+      <ellipse cx="140" cy="60" rx="8" ry="12" fill="#3b82f6" stroke="#1e40af" strokeWidth="1" transform="rotate(30 140 60)" />
+      {/* Gorro rosa con cruz médica */}
+      <path d="M 64 50 Q 64 28 100 24 Q 136 28 136 50 L 136 58 Q 100 52 64 58 Z" fill="#ec4899" stroke="#be185d" strokeWidth="1.5" />
+      {/* Cruz blanca médica */}
+      <rect x="94" y="32" width="12" height="4" fill="#ffffff" />
+      <rect x="98" y="28" width="4" height="12" fill="#ffffff" />
+      {/* Ojos grandes */}
+      <circle cx="82" cy="72" r="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+      <circle cx="118" cy="72" r="8" fill="#ffffff" stroke="#1e293b" strokeWidth="1.5" />
+      <circle cx="83" cy="73" r="5" fill="#1e293b" />
+      <circle cx="119" cy="73" r="5" fill="#1e293b" />
+      <circle cx="84" cy="71" r="2" fill="#ffffff" />
+      <circle cx="120" cy="71" r="2" fill="#ffffff" />
+      {/* Mejillas rosadas */}
+      <circle cx="72" cy="86" r="5" fill="#f9a8d4" opacity="0.6" />
+      <circle cx="128" cy="86" r="5" fill="#f9a8d4" opacity="0.6" />
+      {/* Sonrisa */}
+      <path d="M 88 96 Q 100 104 112 96" stroke="#1e293b" strokeWidth="2" strokeLinecap="round" fill="none" />
+    </g>
+  );
+}
+
+// ROBIN - Pelo negro largo, gafas de sol naranjas, traje morado
+function RobinSVG() {
+  return (
+    <g>
+      <CuerpoBase pielSide="#f5c08c" pielBottom="#d99a5e" piernaColor="#1e293b" piernaDark="#0f172a" brazoLado="#7c3aed" />
+      {/* Traje morado */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#7c3aed" stroke="#5b21b6" strokeWidth="1.5" />
+      {/* Cuello en V */}
+      <path d="M 86 116 L 100 132 L 114 116" fill="#f5c08c" />
+      {/* Cinturón dorado */}
+      <rect x="70" y="156" width="60" height="8" rx="2" fill="#fbbf24" stroke="#ca8a04" strokeWidth="1" />
+      <rect x="94" y="155" width="12" height="10" rx="1" fill="#ca8a04" />
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Gafas de sol naranjas (características) */}
+            <rect x="70" y="72" width="60" height="12" rx="4" fill="#f97316" stroke="#c2410c" strokeWidth="1.5" />
+            <line x1="100" y1="74" x2="100" y2="82" stroke="#c2410c" strokeWidth="1.5" />
+            {/* Brillo de las gafas */}
+            <ellipse cx="80" cy="76" rx="6" ry="2" fill="#fdba74" opacity="0.7" />
+            <ellipse cx="120" cy="76" rx="6" ry="2" fill="#fdba74" opacity="0.7" />
+          </>
+        }
+        boca={<path d="M 90 96 L 110 96" stroke="#7a4422" strokeWidth="2.5" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo negro largo */}
+      <path d="M 54 46 Q 56 22 100 20 Q 144 22 146 46 L 150 120 L 130 120 L 132 50 Q 100 44 68 50 L 70 120 L 50 120 Z" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
+      {/* Flequillo recto */}
+      <path d="M 60 46 L 140 46 L 140 54 Q 100 48 60 54 Z" fill="#334155" />
+      <path d="M 60 48 L 140 48" stroke="#0f172a" strokeWidth="1.5" />
+    </g>
+  );
+}
+
+// FRANKY - Pelo azul, gafas, cuerpo metálico, brazos grandes, estrellas
+function FrankySVG() {
+  return (
+    <g>
+      {/* Piernas metálicas (speedo negro) */}
+      <rect x="78" y="168" width="20" height="48" rx="3" fill="#0891b2" />
+      <rect x="78" y="168" width="6" height="48" rx="2" fill="#0e7490" />
+      <rect x="102" y="168" width="20" height="48" rx="3" fill="#0891b2" />
+      <rect x="116" y="168" width="6" height="48" rx="2" fill="#0e7490" />
+      {/* Zapatos negros */}
+      <rect x="74" y="208" width="28" height="10" rx="3" fill="#1e293b" />
+      <rect x="98" y="208" width="28" height="10" rx="3" fill="#1e293b" />
+      {/* Brazos metálicos grandes */}
+      <rect x="44" y="116" width="26" height="56" rx="5" fill="#0891b2" stroke="#0e7490" strokeWidth="1.5" />
+      <rect x="44" y="116" width="8" height="56" rx="3" fill="#0e7490" />
+      <rect x="130" y="116" width="26" height="56" rx="5" fill="#0891b2" stroke="#0e7490" strokeWidth="1.5" />
+      <rect x="148" y="116" width="8" height="56" rx="3" fill="#0e7490" />
+      {/* Guantes metálicos */}
+      <rect x="44" y="166" width="26" height="12" rx="3" fill="#94a3b8" stroke="#475569" strokeWidth="1" />
+      <rect x="130" y="166" width="26" height="12" rx="3" fill="#94a3b8" stroke="#475569" strokeWidth="1" />
+      {/* Torso metálico (camisa hawaiana abierta) */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#22d3ee" stroke="#0e7490" strokeWidth="1.5" />
+      {/* Patrón de camisa (estrellas y triángulos) */}
+      <g fill="#fbbf24" opacity="0.9">
+        <path d="M 80 128 L 82 132 L 86 132 L 83 135 L 84 139 L 80 137 L 76 139 L 77 135 L 74 132 L 78 132 Z" />
+        <path d="M 112 144 L 114 148 L 118 148 L 115 151 L 116 155 L 112 153 L 108 155 L 109 151 L 106 148 L 110 148 Z" />
+      </g>
+      <g fill="#ec4899" opacity="0.9">
+        <path d="M 92 130 L 96 136 L 88 136 Z" />
+        <path d="M 120 130 L 124 136 L 116 136 Z" />
+      </g>
+      {/* Speedo negro */}
+      <rect x="84" y="160" width="32" height="12" rx="3" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      {/* Estrellas azules en los brazos (tatuajes) */}
+      <g fill="#3b82f6">
+        <path d="M 50 130 L 52 134 L 56 134 L 53 137 L 54 141 L 50 139 L 46 141 L 47 137 L 44 134 L 48 134 Z" />
+        <path d="M 138 130 L 140 134 L 144 134 L 141 137 L 142 141 L 138 139 L 134 141 L 135 137 L 132 134 L 136 134 Z" />
+      </g>
+      {/* Cabeza */}
+      <CabezaBase
+        pielSide="#f5c08c"
+        pielBottom="#d99a5e"
+        ojos={
+          <>
+            {/* Gafas de sol Frankie (estrella amarilla) */}
+            <rect x="68" y="72" width="64" height="14" rx="5" fill="#facc15" stroke="#ca8a04" strokeWidth="1.5" />
+            <path d="M 96 76 L 98 80 L 102 80 L 99 82 L 100 86 L 96 84 L 92 86 L 93 82 L 90 80 L 94 80 Z" fill="#1e293b" />
+          </>
+        }
+        boca={<path d="M 86 96 Q 100 104 114 96" stroke="#7a4422" strokeWidth="2.8" strokeLinecap="round" fill="none" />}
+      />
+      {/* Pelo azul estilo "pompadour" (hacia adelante) */}
+      <path d="M 56 46 Q 54 20 100 14 Q 146 20 144 46 L 144 30 Q 100 24 56 30 Z" fill="#0ea5e9" stroke="#0284c7" strokeWidth="1.5" />
+      <path d="M 56 30 Q 56 8 100 6 Q 144 8 144 30 L 144 36 Q 100 30 56 36 Z" fill="#38bdf8" />
+      {/* mechones frontales puntiagudos */}
+      <path d="M 60 30 L 56 10 L 70 26 Z" fill="#0ea5e9" stroke="#0284c7" strokeWidth="1" />
+      <path d="M 140 30 L 144 10 L 130 26 Z" fill="#0ea5e9" stroke="#0284c7" strokeWidth="1" />
+    </g>
+  );
+}
+
+// BROOK - Esqueleto con afro negro, traje negro, violín
+function BrookSVG() {
+  return (
+    <g>
+      {/* Piernas (hueso) */}
+      <rect x="82" y="168" width="14" height="44" rx="3" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+      <rect x="104" y="168" width="14" height="44" rx="3" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+      {/* Zapatos negros */}
+      <rect x="76" y="208" width="24" height="10" rx="3" fill="#1e293b" />
+      <rect x="100" y="208" width="24" height="10" rx="3" fill="#1e293b" />
+      {/* Brazos (hueso) */}
+      <rect x="54" y="120" width="14" height="48" rx="4" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+      <rect x="132" y="120" width="14" height="48" rx="4" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+      {/* Traje negro con esqueleto visible */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#1e293b" stroke="#000000" strokeWidth="1.5" />
+      {/* Costillas (hueso visible) */}
+      <g stroke="#f8fafc" strokeWidth="2" fill="none">
+        <path d="M 82 126 Q 100 130 118 126" />
+        <path d="M 82 134 Q 100 138 118 134" />
+        <path d="M 82 142 Q 100 146 118 142" />
+      </g>
+      <line x1="100" y1="120" x2="100" y2="160" stroke="#f8fafc" strokeWidth="2" />
+      {/* Cabeza calavera (cráneo blanco) */}
+      <ellipse cx="100" cy="75" rx="40" ry="42" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5" />
+      {/* Cuencas de los ojos (negras profundas) */}
+      <ellipse cx="84" cy="74" rx="9" ry="11" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+      <ellipse cx="116" cy="74" rx="9" ry="11" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+      {/* Brillo en los ojos */}
+      <circle cx="86" cy="71" r="2" fill="#f8fafc" opacity="0.8" />
+      <circle cx="118" cy="71" r="2" fill="#f8fafc" opacity="0.8" />
+      {/* Nariz (agujero triangular) */}
+      <path d="M 96 88 L 104 88 L 100 96 Z" fill="#0f172a" />
+      {/* Dientes (sonrisa con separaciones) */}
+      <rect x="84" y="98" width="32" height="10" rx="2" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1" />
+      <g stroke="#cbd5e1" strokeWidth="1">
+        <line x1="90" y1="98" x2="90" y2="108" />
+        <line x1="96" y1="98" x2="96" y2="108" />
+        <line x1="104" y1="98" x2="104" y2="108" />
+        <line x1="110" y1="98" x2="110" y2="108" />
+      </g>
+      {/* Afro negro gigante */}
+      <g fill="#0f172a" stroke="#000000" strokeWidth="1.5">
+        <ellipse cx="100" cy="40" rx="56" ry="34" />
+        <ellipse cx="60" cy="50" rx="22" ry="18" />
+        <ellipse cx="140" cy="50" rx="22" ry="18" />
+        <ellipse cx="100" cy="20" rx="40" ry="20" />
+      </g>
+      {/* Textura del afro (círculos pequeños) */}
+      <g fill="#1e293b" opacity="0.6">
+        <circle cx="56" cy="36" r="4" />
+        <circle cx="70" cy="22" r="4" />
+        <circle cx="100" cy="14" r="4" />
+        <circle cx="130" cy="22" r="4" />
+        <circle cx="144" cy="36" r="4" />
+        <circle cx="48" cy="52" r="4" />
+        <circle cx="152" cy="52" r="4" />
+      </g>
+      {/* Violín (en la mano derecha) */}
+      <g transform="rotate(-15 152 150)">
+        <ellipse cx="152" cy="150" rx="12" ry="20" fill="#92400e" stroke="#451a03" strokeWidth="1.5" />
+        <line x1="152" y1="130" x2="152" y2="170" stroke="#451a03" strokeWidth="1" />
+        <line x1="149" y1="130" x2="149" y2="170" stroke="#451a03" strokeWidth="0.6" />
+        <line x1="155" y1="130" x2="155" y2="170" stroke="#451a03" strokeWidth="0.6" />
+        <rect x="150" y="116" width="4" height="20" rx="1" fill="#451a03" />
+      </g>
+      {/* Arco del violín */}
+      <line x1="160" y1="140" x2="180" y2="160" stroke="#78350f" strokeWidth="2" strokeLinecap="round" />
+      <line x1="160" y1="140" x2="180" y2="160" stroke="#f8fafc" strokeWidth="0.8" />
+    </g>
+  );
+}
+
+// JINBE - Hombre-pez azul, kimono, bigote, corpulento
+function JinbeSVG() {
+  return (
+    <g>
+      {/* Piernas azules */}
+      <rect x="78" y="168" width="20" height="48" rx="3" fill="#1e40af" />
+      <rect x="78" y="168" width="6" height="48" rx="2" fill="#1e3a8a" />
+      <rect x="102" y="168" width="20" height="48" rx="3" fill="#1e40af" />
+      <rect x="116" y="168" width="6" height="48" rx="2" fill="#1e3a8a" />
+      {/* Sandalias */}
+      <rect x="74" y="208" width="28" height="8" rx="2" fill="#78350f" />
+      <rect x="98" y="208" width="28" height="8" rx="2" fill="#78350f" />
+      {/* Brazos azules corpulentos */}
+      <rect x="46" y="116" width="24" height="56" rx="5" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+      <rect x="130" y="116" width="24" height="56" rx="5" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+      {/* Manos azules (tatuaje de Sol) */}
+      <rect x="46" y="166" width="24" height="12" rx="3" fill="#1e40af" />
+      <rect x="130" y="166" width="24" height="12" rx="3" fill="#1e40af" />
+      {/* Tatuaje del Sol (pirata Gyojin) en mano */}
+      <circle cx="58" cy="172" r="5" fill="#0f172a" />
+      <g stroke="#0f172a" strokeWidth="1.2" fill="none">
+        <line x1="58" y1="164" x2="58" y2="167" />
+        <line x1="58" y1="177" x2="58" y2="180" />
+        <line x1="50" y1="172" x2="53" y2="172" />
+        <line x1="63" y1="172" x2="66" y2="172" />
+      </g>
+      {/* Kimono tradicional (floreado) */}
+      <rect x="70" y="116" width="60" height="56" rx="5" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+      {/* Patrón de flores (círculos amarillos) */}
+      <g fill="#fbbf24" opacity="0.85">
+        <circle cx="80" cy="128" r="3" />
+        <circle cx="110" cy="134" r="3" />
+        <circle cx="92" cy="150" r="3" />
+        <circle cx="118" cy="158" r="3" />
+        <circle cx="78" cy="160" r="3" />
+      </g>
+      {/* Obi (cinturón amarillo) */}
+      <rect x="70" y="156" width="60" height="10" rx="2" fill="#fbbf24" stroke="#ca8a04" strokeWidth="1" />
+      {/* Solapa del kimono (V) */}
+      <path d="M 84 116 L 100 138 L 116 116" fill="#7f1d1d" stroke="#991b1b" strokeWidth="1" />
+      {/* Cabeza azul (Gyojin) */}
+      <rect x="60" y="40" width="80" height="70" rx="10" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.5" />
+      <rect x="60" y="40" width="80" height="6" rx="3" fill="#3b82f6" opacity="0.6" />
+      {/* Orejas puntiagudas (aletas) */}
+      <path d="M 56 64 L 48 54 L 56 76 Z" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.2" />
+      <path d="M 144 64 L 152 54 L 144 76 Z" fill="#1e40af" stroke="#1e3a8a" strokeWidth="1.2" />
+      {/* Branquias (a los lados del cuello) */}
+      <g stroke="#0f172a" strokeWidth="1.2" fill="none">
+        <path d="M 64 100 Q 60 104 64 108" />
+        <path d="M 68 100 Q 64 104 68 108" />
+        <path d="M 136 100 Q 140 104 136 108" />
+        <path d="M 132 100 Q 136 104 132 108" />
+      </g>
+      {/* Ojos */}
+      <ellipse cx="82" cy="74" rx="7" ry="9" fill="#ffffff" stroke="#0f172a" strokeWidth="1.5" />
+      <ellipse cx="118" cy="74" rx="7" ry="9" fill="#ffffff" stroke="#0f172a" strokeWidth="1.5" />
+      <circle cx="83" cy="76" r="4" fill="#0f172a" />
+      <circle cx="119" cy="76" r="4" fill="#0f172a" />
+      <circle cx="84" cy="74" r="1.5" fill="#ffffff" />
+      <circle cx="120" cy="74" r="1.5" fill="#ffffff" />
+      {/* Cejas severas */}
+      <path d="M 74 64 L 90 68" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M 126 64 L 110 68" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" />
+      {/* Bigote tradicional (ondulado) */}
+      <path d="M 80 96 Q 90 100 100 96 Q 110 100 120 96" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" fill="none" />
+      <path d="M 76 98 Q 84 104 90 100" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <path d="M 124 98 Q 116 104 110 100" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" fill="none" />
+      {/* Pelo negro (moño samurai) */}
+      <path d="M 58 46 Q 60 26 100 24 Q 140 26 142 46 L 142 52 Q 100 46 58 52 Z" fill="#0f172a" stroke="#000000" strokeWidth="1" />
+      {/* Coleta (moño arriba) */}
+      <ellipse cx="100" cy="20" rx="14" ry="8" fill="#0f172a" stroke="#000000" strokeWidth="1.5" />
+      <rect x="96" y="22" width="8" height="10" fill="#0f172a" />
+      {/* Cinta del moño */}
+      <rect x="88" y="18" width="24" height="3" rx="1" fill="#dc2626" />
     </g>
   );
 }

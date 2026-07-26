@@ -860,3 +860,76 @@ Stage Summary:
   2. Organización por Filtros: Anime Legends, Gamer Heroes, Movie Icons — ✓
   3. Modificación de Trajes e Ítems Separados: botón "Combinar partes" permite equipar partes individuales sobre el avatar base — ✓ (NUEVO)
   4. Modo Demo: etiquetas GRATIS, aplicación instantánea sin monedas/gemas — ✓
+
+---
+Task ID: AVATAR-MUGIWARA
+Agent: main (Frontend Developer + UI/UX Game Designer)
+Task: Agregar a Luffy y a toda la tripulación Mugiwara (Sombrero de Paja) de One Piece a la galería de personajes icónicos. 10 personajes: Luffy, Zoro, Nami, Usopp, Sanji, Chopper, Robin, Franky, Brook, Jinbe. Nueva categoría "Piratas Mugiwara" con color esmeralda.
+
+Work Log:
+- Leído worklog.md previo (AVATAR-ICONICOS, AVATAR-ICONICOS-MIX) y verificado estado actual:
+  * 12 personajes icónicos existentes en 3 categorías (ANIME/GAMER/MOVIE) — OK.
+  * Sistema mix-and-match de partes funcionando — OK.
+  * Modo demo con etiquetas GRATIS — OK.
+- Actualizado src/lib/personajesIconicos.ts:
+  * Tipo CategoriaPersonaje extendido: añadido "MUGIWARA".
+  * CATEGORIA_PERSONAJE_LABEL: añadido MUGIWARA → "Piratas Mugiwara".
+  * CATEGORIA_PERSONAJE_ORDER: añadido "MUGIWARA" al final.
+  * PERSONAJES_ICONICOS: añadidos 10 personajes de One Piece:
+    - luffy: Capitan Gomoso (sombrero de paja, chaqueta roja)
+    - zoro: Cazador Pirata (pelo verde, tres katanas)
+    - nami: Navegante Gato (pelo naranja, tatuaje de mandarina)
+    - usopp: Tirador Valiente (nariz larga, tirachinas)
+    - sanji: Cocinero Rubio (traje negro, ceja rizada)
+    - chopper: Reno Medico (reno azul con gorro rosa)
+    - robin: Arqueologa Oscura (pelo negro, gafas de sol naranjas)
+    - franky: Ciborg Carpintero (pelo azul, cuerpo metalico)
+    - brook: Musico Esqueleto (esqueleto con afro y violin)
+    - jinbe: Timonel Gyojin (piel azul, kimono floreado)
+- Actualizado src/components/PersonajeIconicoSVG.tsx:
+  * renderPersonaje switch: añadidos 10 cases (luffy, zoro, nami, usopp, sanji, chopper, robin, franky, brook, jinbe).
+  * 10 funciones SVG nuevas (después de MickeySVG):
+    - LuffySVG: chaleco rojo abierto, camiseta blanca, cinturón amarillo, sombrero de paja con cinta roja y copa trenzada, cicatriz bajo ojo izquierdo, sonrisa grande.
+    - ZoroSVG: camiseta blanca abierta, haramaki verde (faja), pelo verde, banda negra, 3 katanas (2 derechas + 1 izquierda), cicatriz en ojo izquierdo.
+    - NamiSVG: top azul con rayas blancas horizontales, falda naranja, pelo naranja largo, tatuaje de mandarina en hombro.
+    - UsoppSVG: piel oscura, overoles blancos con tirantes y bandas azules, pelo negro rizado, nariz larga, gafas en la frente, tirachinas en la mano.
+    - SanjiSVG: traje negro, camisa amarilla, corbata negra, pelo rubio cubriendo ojo izquierdo, ceja rizada, cigarro (apagado, para niños).
+    - ChopperSVG: cuerpo marrón compacto, overol rosado, cabeza azul de reno, hocico claro, cornamenta, orejas de reno, gorro rosa con cruz médica blanca, ojos grandes.
+    - RobinSVG: traje morado, cinturón dorado, gafas de sol naranjas, pelo negro largo, flequillo recto.
+    - FrankySVG: cuerpo metálico cian, brazos grandes, guantes metálicos, camisa hawaiana con estrellas y triángulos, speedo negro, estrellas azules tatuadas, gafas amarillas con estrella, pelo azul pompadour puntiagudo.
+    - BrookSVG: esqueleto blanco, traje negro con costillas visibles, calavera con cuencas negras profundas, dientes separados, afro negro gigante, violín marrón y arco.
+    - JinbeSVG: piel azul (Gyojin), kimono rojo floreado con flores amarillas, obi amarillo, orejas puntiagudas (aletas), branquias, tatuaje del Sol en mano, pelo negro con moño samurai y cinta roja, bigote ondulado.
+- Actualizado src/components/AvatarCustomizer.tsx:
+  * Import añadido: Anchor de lucide-react.
+  * CATEGORIA_PERSONAJE_ICON: añadido MUGIWARA → Anchor.
+  * colorCat map: añadido MUGIWARA → "ring-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.5)]".
+  * colores map (filtro): añadido MUGIWARA → "bg-emerald-500".
+  * Badge de categoría en tarjeta: añadido caso MUGIWARA → "bg-emerald-500".
+  * Color de icono en nombre: añadido caso MUGIWARA → "text-emerald-500".
+- Verificación con Agent Browser (gateway puerto 81, DemoKid):
+  * Navegación al avatar carga con pestaña "Iconicos" por defecto, vista "Todos" muestra 22 personajes (12 originales + 10 Mugiwara).
+  * Botón "Piratas Mugiwara" (esmeralda, icono Anchor) visible en filtros.
+  * Click en "Piratas Mugiwara" → muestra exactamente 10 personajes (Capitan Gomoso, Cazador Pirata, Navegante Gato, Tirador Valiente, Cocinero Rubio, Reno Medico, Arqueologa Oscura, Ciborg Carpintero, Musico Esqueleto, Timonel Gyojin).
+  * Click en Luffy → cápsula cambia a Luffy (sombrero de paja con banda roja, chaleco rojo sobre camisa blanca, pantalón azul) instantáneamente. VLM confirma.
+  * Tarjeta de Luffy muestra badge "ACTIVO" fucsia.
+  * Mix-and-match: click en "Ver partes de Capitan Gomoso" → panel se expande con 6 botones (Cuerpo/Ojos/Boca/Pelo/Ropa/Accesorio).
+  * Click en "Equipar Ropa de Capitan Gomoso" → cápsula muestra avatar base con solo el chaleco rojo de Luffy (NO el Luffy completo). VLM confirma: "base avatar wearing Luffy's red vest/clothing, without the straw hat".
+  * Botón "Ropa" se marca en verde con icono Check.
+  * Toast verde: "Ropa de Capitan Gomoso equipado".
+- Verificación con VLM (glm-5v-turbo):
+  * Confirmados 22 personajes en la galería "Todos".
+  * Confirmados One Piece personajes reconocibles: Luffy (sombrero de paja), Zoro (pelo verde + espadas), Chopper (reno azul/rosa), Brook (esqueleto con afro), Nami (pelo naranja), Robin (pelo negro + gafas).
+  * Confirmada pestaña "Piratas Mugiwara" resaltada en verde/esmeralda.
+  * Confirmado mix-and-match funciona: avatar base con solo la ropa de Luffy.
+- Lint: sin errores nuevos en archivos de avatar (solo warnings pre-existentes). 51 errores en otros archivos no tocados.
+- Dev server: compila limpiamente.
+
+Stage Summary:
+- 3 archivos modificados: personajesIconicos.ts (tipo + 10 personajes), PersonajeIconicoSVG.tsx (switch + 10 funciones SVG), AvatarCustomizer.tsx (icono Anchor + color esmeralda en 4 maps).
+- 10 personajes de One Piece renderizados en estilo bloque 3D Roblox/Minecraft con colores y detalles distintivos.
+- Nueva categoría "Piratas Mugiwara" con color esmeralda (esmeralda = océano/pirata) e icono Anchor.
+- Filtro "Piratas Mugiwara" muestra exactamente los 10 personajes (Luffy, Zoro, Nami, Usopp, Sanji, Chopper, Robin, Franky, Brook, Jinbe).
+- Total galería: 22 personajes icónicos (12 originales + 10 Mugiwara).
+- Mix-and-match funciona con Mugiwara: verificado equipar solo la Ropa de Luffy sobre el avatar base.
+- Modo demo: todos los Mugiwara con etiqueta "GRATIS" verde, aplicación instantánea sin costo.
+- Sin errores nuevos de lint ni de compilación.
