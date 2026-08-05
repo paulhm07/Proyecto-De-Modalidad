@@ -999,3 +999,33 @@ Stage Summary:
 - Mix-and-match funciona con Cazadores: verificado equipar solo la Ropa de Rengoku sobre el avatar base.
 - Modo demo: todos los Cazadores con etiqueta "GRATIS" verde, aplicación instantánea sin costo.
 - Sin errores nuevos de lint ni de compilación.
+
+---
+Task ID: APP-START
+Agent: main
+Task: Correr la app de Mundilex (backend NestJS + frontend Next.js + gateway Caddy + watchdog)
+
+Work Log:
+- Verificado estado previo: worklog con AVATAR-MUGIWARA y AVATAR-CAZADORES completados.
+- Backend en /home/z/my-project/Proyecto-De-Modalidad/backend: node_modules vacío (faltaba @nestjs/core).
+- Ejecutado `bun install` en backend → 476 paquetes instalados.
+- Ejecutado `bunx prisma generate` → Prisma Client v7.9.0 generado.
+- Arrancado backend como daemon (double-fork setsid nohup) en puerto 3001 → HTTP 200 en /api/usuarios/ranking.
+- Arrancado frontend Next.js 16 (Turbopack) en puerto 3000 como daemon → HTTP 200, ready in 1326ms.
+- Arrancado watchdog.sh como daemon para mantener servicios vivos (reinicia FE/BE si caen).
+- Verificado gateway Caddy en puerto 81: reenvía a 3000 por defecto y a 3001 cuando hay ?XTransformPort=3001.
+- Descubierto: abrir el navegador en puerto 3000 directo causa 404 en llamadas API (XTransformPort no se procesa sin Caddy). Solución: acceder SIEMPRE vía gateway puerto 81.
+- Verificación con Agent Browser vía http://127.0.0.1:81/:
+  * Login screen renderiza: título "Mundilex", botones de rol, formulario, 3 cuentas demo.
+  * Click "Estudiante DemoKid" → login exitoso vía POST /api/usuarios/demo?XTransformPort=3001.
+  * Dashboard carga: "¡Hola, DemoKid! 👋", nav (Inicio/Avatar/Ranking/Perfil/Salir), "Mis aventuras" con los 7 mini-juegos (Pulpería de Fracciones, Camión de Multiplicaciones, Bus de Letras, Carta Mal Enviada, Atrapa el Acento, Alimenta al Monstruo, Cazador de Sílabas).
+  * Sin errores de consola ni de runtime en dev.log.
+  * Screenshot guardado en app-running-dashboard.png.
+
+Stage Summary:
+- 3 servicios corriendo y verificados: backend NestJS (3001), frontend Next.js (3000), gateway Caddy (81).
+- Watchdog activo monitoreando cada 10s.
+- Login demo funcional para DemoKid/PadreDemo/MaestroDemo.
+- Dashboard con los 7 mini-juegos operativo.
+- IMPORTANTE: el acceso debe ser vía gateway puerto 81 (no puerto 3000 directo) para que las llamadas API con XTransformPort funcionen.
+- App lista para usar desde el Preview Panel.
