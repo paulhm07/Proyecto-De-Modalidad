@@ -1,0 +1,902 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+     4→import {
+     5→  ArrowRight,
+     6→  Check,
+     7→  Hand,
+     8→  PartyPopper,
+     9→  RefreshCw,
+    10→  Scissors,
+    11→  ShoppingCart,
+    12→  Sparkles,
+    13→  Store,
+    14→  Trophy,
+    15→  Undo2,
+    16→} from "lucide-react";
+    17→import { nivelesPulperia, type NivelPulperia } from "@/data/pulperiaFracciones";
+    18→import { Confetti } from "@/components/Toasts";
+    19→
+    20→/* ============================================================
+    21→   La Pulpería de Fracciones — Minijuego educativo
+    22→   ------------------------------------------------------------
+    23→   Mecánica:
+    24→   1. Llega un cliente y pide una fracción de un producto.
+    25→   2. El niño corta el producto en `denominador_cortes` partes.
+    26→   3. Arrastra (o toca) `numerador_pedido` partes a la canasta.
+    27→   4. Entrega el pedido. Si acierta, celebra y avanza de nivel.
+    28→   ============================================================ */
+    29→
+    30→type Estado =
+    31→  | "presentacion"
+    32→  | "cortando"
+    33→  | "arrastrando"
+    34→  | "verificando"
+    35→  | "celebrando"
+    36→  | "completado";
+    37→
+    38→type ObjetoVisual = NivelPulperia["objeto_visual"];
+    39→
+    40→const AVATARES_CLIENTES = [
+    41→  "👵", "👨‍🦱", "🧒", "👩‍🦰", "🧑‍🦱", "👴", "👧", "🧔", "🧓", "👨",
+    42→];
+    43→
+    44→const OBJETO_EMOJI: Record<ObjetoVisual, string> = {
+    45→  sandía: "🍉",
+    46→  "pastel de tres leches": "🍰",
+    47→  piña: "🍍",
+    48→  cuajada: "🧀",
+    49→  "barra de jabón de lavar": "🧼",
+    50→};
+    51→
+    52→const OBJETO_NOMBRE: Record<ObjetoVisual, string> = {
+    53→  sandía: "Sandía",
+    54→  "pastel de tres leches": "Pastel de tres leches",
+    55→  piña: "Piña",
+    56→  cuajada: "Cuajada",
+    57→  "barra de jabón de lavar": "Jabón de lavar",
+    58→};
+    59→
+    60→const TOTAL_NIVELES = nivelesPulperia.length;
+    61→
+    62→/* ----------------------- Helpers geométricos ----------------------- */
+    63→
+    64→function polar(cx: number, cy: number, r: number, deg: number) {
+    65→  const rad = ((deg - 90) * Math.PI) / 180;
+    66→  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+    67→}
+    68→
+    69→function pieSlicePath(cx: number, cy: number, r: number, a1: number, a2: number) {
+    70→  const p1 = polar(cx, cy, r, a1);
+    71→  const p2 = polar(cx, cy, r, a2);
+    72→  const largeArc = a2 - a1 > 180 ? 1 : 0;
+    73→  return `M ${cx} ${cy} L ${p1.x} ${p1.y} A ${r} ${r} 0 ${largeArc} 1 ${p2.x} ${p2.y} Z`;
+    74→}
+    75→
+    76→/* ----------------------- Fracción visual ----------------------- */
+    77→
+    78→function Fraccion({
+    79→  num,
+    80→  den,
+    81→  className = "",
+    82→}: {
+    83→  num: string | number;
+    84→  den: string | number;
+    85→  className?: string;
+    86→}) {
+    87→  return (
+    88→    <span
+    89→      className={`inline-flex flex-col items-center align-middle mx-1 leading-none ${className}`}
+    90→    >
+    91→      <span className="font-bold text-lg sm:text-xl">{num}</span>
+    92→      <span className="block w-full border-t-[3px] border-current my-0.5" />
+    93→      <span className="font-bold text-lg sm:text-xl">{den}</span>
+    94→    </span>
+    95→  );
+    96→}
+    97→
+    98→/** Convierte "Hola $\frac{1}{2}$ porfa" en nodos React con fracción visual. */
+    99→function renderFrase(frase: string): React.ReactNode[] {
+   100→  const partes: React.ReactNode[] = [];
+   101→  const regex = /\$\\frac\{(\d+)\}\{(\d+)\}\$/g;
+   102→  let ultimo = 0;
+   103→  let m: RegExpExecArray | null;
+   104→  let k = 0;
+   105→  while ((m = regex.exec(frase)) !== null) {
+   106→    if (m.index > ultimo) {
+   107→      partes.push(<span key={`t-${k++}`}>{frase.slice(ultimo, m.index)}</span>);
+   108→    }
+   109→    partes.push(<Fraccion key={`f-${k++}`} num={m[1]} den={m[2]} />);
+   110→    ultimo = regex.lastIndex;
+   111→  }
+   112→  if (ultimo < frase.length) {
+   113→    partes.push(<span key={`t-${k++}`}>{frase.slice(ultimo)}</span>);
+   114→  }
+   115→  return partes;
+   116→}
+   117→
+   118→/* ----------------------- SVG del producto ----------------------- */
+   119→
+   120→/** Dibuja una sola pieza (circular o rectangular) del producto. */
+   121→function PiezaProducto({
+   122→  objeto,
+   123→  indice,
+   124→  total,
+   125→  cortesHechos,
+   126→  oculta,
+   127→  draggable,
+   128→  onClick,
+   129→  onDragStart,
+   130→}: {
+   131→  objeto: ObjetoVisual;
+   132→  indice: number;
+   133→  total: number;
+   134→  cortesHechos: boolean;
+   135→  oculta: boolean;
+   136→  draggable: boolean;
+   137→  onClick: () => void;
+   138→  onDragStart: () => void;
+   139→}) {
+   140→  const delayCorte = `${indice * 110}ms`;
+   141→  const estiloCorte: React.CSSProperties = {
+   142→    opacity: cortesHechos ? 1 : 0,
+   143→    transition: "opacity 0.45s ease",
+   144→    transitionDelay: delayCorte,
+   145→  };
+   146→  const estiloGrupo: React.CSSProperties = {
+   147→    opacity: oculta ? 0 : 1,
+   148→    transition: "opacity 0.35s ease",
+   149→    cursor: draggable && !oculta ? "grab" : "default",
+   150→    pointerEvents: oculta ? "none" : "auto",
+   151→  };
+   152→
+   153→  let contenido: React.ReactNode = null;
+   154→
+   155→  if (objeto === "sandía") {
+   156→    const a1 = indice * (360 / total);
+   157→    const a2 = (indice + 1) * (360 / total);
+   158→    contenido = (
+   159→      <>
+   160→        {/* Cascá verde (radio exterior) */}
+   161→        <path d={pieSlicePath(100, 100, 92, a1, a2)} fill="#16a34a" />
+   162→        {/* Pulpa rosada (radio interior) */}
+   163→        <path d={pieSlicePath(100, 100, 78, a1, a2)} fill="#fb7185" />
+   164→        {/* Brillo sutil de la pulpa */}
+   165→        <path
+   166→          d={pieSlicePath(100, 100, 78, a1, a2)}
+   167→          fill="none"
+   168→          stroke="#fda4af"
+   169→          strokeWidth={2}
+   170→          opacity={0.55}
+   171→        />
+   172→        {/* Semillas */}
+   173→        {semillasSandia(indice, total, a1, a2)}
+   174→        {/* Borde de corte */}
+   175→        <path
+   176→          d={pieSlicePath(100, 100, 92, a1, a2)}
+   177→          fill="none"
+   178→          stroke="#14532d"
+   179→          strokeWidth={1.8}
+   180→          style={estiloCorte}
+   181→        />
+   182→      </>
+   183→    );
+   184→  } else if (objeto === "cuajada") {
+   185→    const a1 = indice * (360 / total);
+   186→    const a2 = (indice + 1) * (360 / total);
+   187→    contenido = (
+   188→      <>
+   189→        <path d={pieSlicePath(100, 100, 90, a1, a2)} fill="#fef3c7" />
+   190→        {/* Capa tostada superior */}
+   191→        <path d={pieSlicePath(100, 100, 90, a1, a2)} fill="#fcd34d" opacity={0.45} />
+   192→        {/* Textura de la cuajada */}
+   193→        <path
+   194→          d={pieSlicePath(100, 100, 90, a1, a2)}
+   195→          fill="none"
+   196→          stroke="#d97706"
+   197→          strokeWidth={1}
+   198→          opacity={0.35}
+   199→        />
+   200→        {/* Borde de corte */}
+   201→        <path
+   202→          d={pieSlicePath(100, 100, 90, a1, a2)}
+   203→          fill="none"
+   204→          stroke="#92400e"
+   205→          strokeWidth={1.8}
+   206→          style={estiloCorte}
+   207→        />
+   208→      </>
+   209→    );
+   210→  } else if (objeto === "pastel de tres leches") {
+   211→    const stripW = 160 / total;
+   212→    const x = 20 + indice * stripW;
+   213→    const yTop = 45;
+   214→    const alto = 120;
+   215→    contenido = (
+   216→      <>
+   217→        {/* Bizcocho abajo */}
+   218→        <rect x={x} y={yTop + alto * 0.62} width={stripW} height={alto * 0.38} fill="#fcd34d" />
+   219→        {/* Crema del medio */}
+   220→        <rect x={x} y={yTop + alto * 0.3} width={stripW} height={alto * 0.32} fill="#fff7ed" />
+   221→        {/* Bizcocho arriba */}
+   222→        <rect x={x} y={yTop} width={stripW} height={alto * 0.3} fill="#fde68a" />
+   223→        {/* Glaseado blanco encima */}
+   224→        <rect x={x} y={yTop - 4} width={stripW} height={8} fill="#ffffff" rx={2} />
+   225→        {/* Cereza en el pedazo central */}
+   226→        {indice === Math.floor(total / 2) && (
+   227→          <>
+   228→            <circle cx={x + stripW / 2} cy={yTop - 8} r={6} fill="#dc2626" />
+   229→            <path
+   230→              d={`M ${x + stripW / 2} ${yTop - 14} q 4 -4 8 -2`}
+   231→              fill="none"
+   232→              stroke="#16a34a"
+   233→              strokeWidth={2}
+   234→              strokeLinecap="round"
+   235→            />
+   236→          </>
+   237→        )}
+   238→        {/* Borde de corte */}
+   239→        <rect
+   240→          x={x}
+   241→          y={yTop}
+   242→          width={stripW}
+   243→          height={alto}
+   244→          fill="none"
+   245→          stroke="#92400e"
+   246→          strokeWidth={1.8}
+   247→          style={estiloCorte}
+   248→        />
+   249→      </>
+   250→    );
+   251→  } else if (objeto === "piña") {
+   252→    const stripW = 150 / total;
+   253→    const x = 25 + indice * stripW;
+   254→    const yTop = 55;
+   255→    const alto = 120;
+   256→    contenido = (
+   257→      <>
+   258→        {/* Cuerpo amarillo */}
+   259→        <rect x={x} y={yTop} width={stripW} height={alto} fill="#fde047" rx={2} />
+   260→        {/* Patrón de rombos marrones */}
+   261→        {Array.from({ length: 4 }).map((_, r) =>
+   262→          Array.from({ length: Math.max(1, Math.ceil(total / 2)) }).map((_, c) => {
+   263→            const cx = x + 6 + c * 10;
+   264→            const cy = yTop + 12 + r * 28;
+   265→            if (cx < x || cx > x + stripW - 4) return null;
+   266→            return (
+   267→              <path
+   268→                key={`r-${r}-${c}`}
+   269→                d={`M ${cx} ${cy - 4} L ${cx + 4} ${cy} L ${cx} ${cy + 4} L ${cx - 4} ${cy} Z`}
+   270→                fill="#92400e"
+   271→                opacity={0.55}
+   272→              />
+   273→            );
+   274→          }),
+   275→        )}
+   276→        {/* Hojas de la corona (solo en los pedazos de los extremos y centro) */}
+   277→        {(indice === 0 || indice === total - 1 || indice === Math.floor(total / 2)) && (
+   278→          <path
+   279→            d={`M ${x + stripW / 2} ${yTop} L ${x + stripW / 2 - 6} ${yTop - 22} L ${x + stripW / 2} ${yTop - 14} L ${x + stripW / 2 + 6} ${yTop - 22} Z`}
+   280→            fill="#16a34a"
+   281→          />
+   282→        )}
+   283→        {/* Borde de corte */}
+   284→        <rect
+   285→          x={x}
+   286→          y={yTop}
+   287→          width={stripW}
+   288→          height={alto}
+   289→          fill="none"
+   290→          stroke="#92400e"
+   291→          strokeWidth={1.8}
+   292→          style={estiloCorte}
+   293→        />
+   294→      </>
+   295→    );
+   296→  } else if (objeto === "barra de jabón de lavar") {
+   297→    const stripW = 160 / total;
+   298→    const x = 20 + indice * stripW;
+   299→    const yTop = 60;
+   300→    const alto = 80;
+   301→    contenido = (
+   302→      <>
+   303→        {/* Cuerpo del jabón (amarillo crema, jabón de lavar nicaragüense) */}
+   304→        <rect x={x} y={yTop} width={stripW} height={alto} fill="#fef08a" rx={6} />
+   305→        {/* Brillo superior */}
+   306→        <rect x={x} y={yTop} width={stripW} height={alto * 0.3} fill="#fef9c3" rx={6} />
+   307→        {/* Banda de etiqueta */}
+   308→        <rect x={x} y={yTop + alto * 0.4} width={stripW} height={alto * 0.2} fill="#b45309" opacity={0.75} />
+   309→        {stripW > 18 && (
+   310→          <text
+   311→            x={x + stripW / 2}
+   312→            y={yTop + alto * 0.55}
+   313→            textAnchor="middle"
+   314→            fontSize={7}
+   315→            fontWeight="bold"
+   316→            fill="#fff7ed"
+   317→            fontFamily="Fredoka, sans-serif"
+   318→          >
+   319→            JABÓN
+   320→          </text>
+   321→        )}
+   322→        {/* Borde de corte */}
+   323→        <rect
+   324→          x={x}
+   325→          y={yTop}
+   326→          width={stripW}
+   327→          height={alto}
+   328→          fill="none"
+   329→          stroke="#92400e"
+   330→          strokeWidth={1.8}
+   331→          style={estiloCorte}
+   332→        />
+   333→      </>
+   334→    );
+   335→  }
+   336→
+   337→  return (
+   338→    <g
+   339→      style={estiloGrupo}
+   340→      onClick={() => {
+   341→        if (draggable && !oculta) onClick();
+   342→      }}
+   343→      onDragStart={(e) => {
+   344→        if (!draggable || oculta) {
+   345→          e.preventDefault();
+   346→          return;
+   347→        }
+   348→        e.dataTransfer.setData("text/plain", String(indice));
+   349→        e.dataTransfer.effectAllowed = "move";
+   350→        onDragStart();
+   351→      }}
+   352→      {...(draggable && !oculta ? ({ draggable: true } as Record<string, unknown>) : {})}
+   353→    >
+   354→      {contenido}
+   355→    </g>
+   356→  );
+   357→}
+   358→
+   359→/** Semillas de sandía distribuidas dentro de la pulpa de una rebanada. */
+   360→function semillasSandia(indice: number, total: number, a1: number, a2: number) {
+   361→  const cx = 100;
+   362→  const cy = 100;
+   363→  const midAngle = (a1 + a2) / 2;
+   364→  const sliceAngle = a2 - a1;
+   365→  const numSemillas = total <= 3 ? 3 : total <= 6 ? 2 : 1;
+   366→  return Array.from({ length: numSemillas }).map((_, s) => {
+   367→    const offset = (s - (numSemillas - 1) / 2) * (sliceAngle / (numSemillas + 1));
+   368→    const angle = midAngle + offset;
+   369→    const r = 52;
+   370→    const pos = polar(cx, cy, r, angle);
+   371→    return (
+   372→      <ellipse
+   373→        key={s}
+   374→        cx={pos.x}
+   375→        cy={pos.y}
+   376→        rx={2.4}
+   377→        ry={4}
+   378→        fill="#1f2937"
+   379→        transform={`rotate(${angle} ${pos.x} ${pos.y})`}
+   380→      />
+   381→    );
+   382→  });
+   383→}
+   384→
+   385→/** Icono pequeño de una pieza para mostrar dentro de la canasta. */
+   386→function PiezaIcon({ objeto, indice, total }: { objeto: ObjetoVisual; indice: number; total: number }) {
+   387→  return (
+   388→    <svg viewBox="0 0 200 200" className="h-12 w-12 sm:h-14 sm:w-14 drop-shadow">
+   389→      <PiezaProducto
+   390→        objeto={objeto}
+   391→        indice={indice}
+   392→        total={total}
+   393→        cortesHechos
+   394→        oculta={false}
+   395→        draggable={false}
+   396→        onClick={() => {}}
+   397→        onDragStart={() => {}}
+   398→      />
+   399→    </svg>
+   400→  );
+   401→}
+   402→
+   403→/* ----------------------- Componente principal ----------------------- */
+   404→
+   405→export function PulperiaFracciones() {
+   406→  const [nivelIdx, setNivelIdx] = useState(0);
+   407→  const [estado, setEstado] = useState<Estado>("presentacion");
+   408→  const [cortesHechos, setCortesHechos] = useState(false);
+   409→  const [piezasEnCanasta, setPiezasEnCanasta] = useState<number[]>([]);
+   410→  const [ventasExitosas, setVentasExitosas] = useState(0);
+   411→  const [feedback, setFeedback] = useState<string | null>(null);
+   412→  const [dragOverCanasta, setDragOverCanasta] = useState(false);
+   413→  const [cortandoAnim, setCortandoAnim] = useState(false);
+   414→
+   415→  // Ref para timeouts internos (limpieza segura al desmontar)
+   416→  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+   417→  const programar = useCallback((fn: () => void, ms: number) => {
+   418→    const t = setTimeout(() => {
+   419→      timeoutsRef.current.delete(t);
+   420→      fn();
+   421→    }, ms);
+   422→    timeoutsRef.current.add(t);
+   423→  }, []);
+   424→
+   425→  // Limpieza de todos los timeouts pendientes al desmontar
+   426→  useEffect(() => {
+   427→    const set = timeoutsRef.current;
+   428→    return () => {
+   429→      set.forEach((t) => clearTimeout(t));
+   430→      set.clear();
+   431→    };
+   432→  }, []);
+   433→
+   434→  const nivel = nivelesPulperia[nivelIdx];
+   435→  const avatar = AVATARES_CLIENTES[nivelIdx % AVATARES_CLIENTES.length];
+   436→  const totalPiezas = nivel.denominador_cortes;
+   437→
+   438→  /* ---- Transición: celebrando → siguiente nivel o completado ---- */
+   439→  useEffect(() => {
+   440→    if (estado !== "celebrando") return;
+   441→    const t = setTimeout(() => {
+   442→      if (nivelIdx + 1 >= TOTAL_NIVELES) {
+   443→        setEstado("completado");
+   444→      } else {
+   445→        setNivelIdx((n) => n + 1);
+   446→        setPiezasEnCanasta([]);
+   447→        setCortesHechos(false);
+   448→        setFeedback(null);
+   449→        setCortandoAnim(false);
+   450→        setEstado("presentacion");
+   451→      }
+   452→    }, 2800);
+   453→    return () => clearTimeout(t);
+   454→  }, [estado, nivelIdx]);
+   455→
+   456→  /* ---- Acciones ---- */
+   457→
+   458→  const empezarNivel = useCallback(() => {
+   459→    setEstado("cortando");
+   460→    setFeedback(null);
+   461→  }, []);
+   462→
+   463→  const cortar = useCallback(() => {
+   464→    if (estado !== "cortando" || cortesHechos) return;
+   465→    setCortesHechos(true);
+   466→    setCortandoAnim(true);
+   467→    // Tras la animación de cortes, permitir arrastrar
+   468→    programar(() => {
+   469→      setEstado("arrastrando");
+   470→      setCortandoAnim(false);
+   471→    }, 1300);
+   472→  }, [estado, cortesHechos, programar]);
+   473→
+   474→  const agregarACanasta = useCallback(
+   475→    (i: number) => {
+   476→      if (piezasEnCanasta.includes(i)) return;
+   477→      setPiezasEnCanasta((p) => [...p, i]);
+   478→      setFeedback(null);
+   479→    },
+   480→    [piezasEnCanasta],
+   481→  );
+   482→
+   483→  const quitarDeCanasta = useCallback((i: number) => {
+   484→    setPiezasEnCanasta((p) => p.filter((x) => x !== i));
+   485→    setFeedback(null);
+   486→  }, []);
+   487→
+   488→  const vaciarCanasta = useCallback(() => {
+   489→    setPiezasEnCanasta([]);
+   490→    setFeedback(null);
+   491→  }, []);
+   492→
+   493→  const entregar = useCallback(() => {
+   494→    if (estado !== "arrastrando") return;
+   495→    setEstado("verificando");
+   496→    const correcto = piezasEnCanasta.length === nivel.numerador_pedido;
+   497→    // Pequeña pausa dramática
+   498→    programar(() => {
+   499→      if (correcto) {
+   500→        setVentasExitosas((v) => v + 1);
+   501→        setEstado("celebrando");
+   502→      } else {
+   503→        setFeedback(nivel.feedback_error);
+   504→        setEstado("arrastrando");
+   505→      }
+   506→    }, 450);
+   507→  }, [estado, piezasEnCanasta.length, nivel.numerador_pedido, nivel.feedback_error, programar]);
+   508→
+   509→  const reiniciarJuego = useCallback(() => {
+   510→    setNivelIdx(0);
+   511→    setEstado("presentacion");
+   512→    setCortesHechos(false);
+   513→    setPiezasEnCanasta([]);
+   514→    setVentasExitosas(0);
+   515→    setFeedback(null);
+   516→    setCortandoAnim(false);
+   517→  }, []);
+   518→
+   519→  /* ---- Drag handlers para la canasta ---- */
+   520→  const onDropCanasta = useCallback(
+   521→    (e: React.DragEvent) => {
+   522→      e.preventDefault();
+   523→      setDragOverCanasta(false);
+   524→      const idx = Number(e.dataTransfer.getData("text/plain"));
+   525→      if (!Number.isNaN(idx)) agregarACanasta(idx);
+   526→    },
+   527→    [agregarACanasta],
+   528→  );
+   529→
+   530→  /* ---- Derivados ---- */
+   531→  const progresoNivel = useMemo(
+   532→    () => ((nivelIdx + (estado === "celebrando" ? 1 : 0)) / TOTAL_NIVELES) * 100,
+   533→    [nivelIdx, estado],
+   534→  );
+   535→  const necesitaCortar = estado === "cortando" && !cortesHechos;
+   536→  const esPresentacion = estado === "presentacion";
+   537→  const esArrastrando = estado === "arrastrando";
+   538→  const esVerificando = estado === "verificando";
+   539→  const esCelebrando = estado === "celebrando";
+   540→  const puedeEntregar = esArrastrando && piezasEnCanasta.length > 0;
+   541→  const esCorrecto = esCelebrando;
+   542→
+   543→  /* ===================== RENDER ===================== */
+   544→
+   545→  return (
+   546→    <div className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-gradient-to-br from-amber-50 via-orange-100 to-rose-100 font-display">
+   547→      {/* Decoración de fondo: estantes de pulpería */}
+   548→      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.07]">
+   549→        <div className="absolute left-4 top-20 text-7xl">🥫</div>
+   550→        <div className="absolute right-8 top-32 text-7xl">🧴</div>
+   551→        <div className="absolute left-10 bottom-24 text-7xl">🌽</div>
+   552→        <div className="absolute right-12 bottom-32 text-7xl">🥖</div>
+   553→        <div className="absolute left-1/3 top-10 text-6xl">🪅</div>
+   554→        <div className="absolute right-1/3 bottom-16 text-6xl">🍯</div>
+   555→      </div>
+   556→
+   557→      <div className="relative z-10 mx-auto max-w-5xl px-3 py-4 sm:px-5 sm:py-6">
+   558→        {/* ===================== HUD superior ===================== */}
+   559→        <div className="mb-4 rounded-2xl border-2 border-orange-200 bg-white/70 p-3 shadow-md backdrop-blur sm:p-4">
+   560→          <div className="flex items-center justify-between gap-3">
+   561→            <div className="flex items-center gap-2">
+   562→              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-rose-400 text-white shadow sm:h-11 sm:w-11">
+   563→                <Store size={20} strokeWidth={2.5} />
+   564→              </div>
+   565→              <div>
+   566→                <p className="text-xs font-bold uppercase tracking-wide text-orange-700/70">
+   567→                  La Pulpería
+   568→                </p>
+   569→                <p className="text-base font-bold text-orange-950 sm:text-lg">
+   570→                  Nivel {nivel.nivel} <span className="text-orange-600/60">de {TOTAL_NIVELES}</span>
+   571→                </p>
+   572→              </div>
+   573→            </div>
+   574→            <div className="flex items-center gap-2">
+   575→              <div className="flex items-center gap-1.5 rounded-full border-2 border-emerald-300 bg-emerald-50 px-3 py-1.5">
+   576→                <ShoppingCart size={15} className="text-emerald-600" strokeWidth={2.5} />
+   577→                <span className="text-sm font-bold text-emerald-800">
+   578→                  {ventasExitosas} <span className="hidden sm:inline">ventas</span>
+   579→                </span>
+   580→              </div>
+   581→            </div>
+   582→          </div>
+   583→          {/* Barra de progreso */}
+   584→          <div className="mt-2.5 h-2.5 w-full overflow-hidden rounded-full bg-orange-200/70">
+   585→            <div
+   586→              className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 transition-all duration-700 ease-out"
+   587→              style={{ width: `${progresoNivel}%` }}
+   588→            />
+   589→          </div>
+   590→        </div>
+   591→
+   592→        {/* ===================== Pantalla: completado ===================== */}
+   593→        {estado === "completado" ? (
+   594→          <PantallaCompletado onReiniciar={reiniciarJuego} ventas={ventasExitosas} />
+   595→        ) : (
+   596→          <div className="grid gap-4 lg:grid-cols-2">
+   597→            {/* ============ Columna izquierda: producto + corte ============ */}
+   598→            <div className="rounded-3xl border-2 border-orange-200 bg-white/80 p-4 shadow-lg backdrop-blur sm:p-5">
+   599→              <div className="mb-3 flex items-center justify-between">
+   600→                <h2 className="flex items-center gap-2 text-lg font-bold text-orange-950 sm:text-xl">
+   601→                  <span className="text-2xl">{OBJETO_EMOJI[nivel.objeto_visual]}</span>
+   602→                  {OBJETO_NOMBRE[nivel.objeto_visual]}
+   603→                </h2>
+   604→                <span className="rounded-full border-2 border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+   605→                  {totalPiezas} pedazos
+   606→                </span>
+   607→              </div>
+   608→
+   609→              {/* Zona del producto (SVG) */}
+   610→              <div className="relative mx-auto aspect-square w-full max-w-sm rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50 p-2 shadow-inner">
+   611→                {/* Tabla de cortar */}
+   612→                <div className="absolute inset-2 rounded-xl border-2 border-amber-200/60" aria-hidden />
+   613→                <svg
+   614→                  viewBox="0 0 200 200"
+   615→                  className="relative h-full w-full"
+   616→                  onClick={necesitaCortar ? cortar : undefined}
+   617→                  role={necesitaCortar ? "button" : undefined}
+   618→                  aria-label={
+   619→                    necesitaCortar
+   620→                      ? `Cortar ${OBJETO_NOMBRE[nivel.objeto_visual]} en ${totalPiezas} partes`
+   621→                      : undefined
+   622→                  }
+   623→                >
+   624→                  {/* Plato sombra */}
+   625→                  <ellipse cx="100" cy="180" rx="80" ry="8" fill="#000000" opacity={0.08} />
+   626→                  {Array.from({ length: totalPiezas }).map((_, i) => (
+   627→                    <PiezaProducto
+   628→                      key={i}
+   629→                      objeto={nivel.objeto_visual}
+   630→                      indice={i}
+   631→                      total={totalPiezas}
+   632→                      cortesHechos={cortesHechos}
+   633→                      oculta={piezasEnCanasta.includes(i)}
+   634→                      draggable={esArrastrando}
+   635→                      onClick={() => agregarACanasta(i)}
+   636→                      onDragStart={() => {}}
+   637→                    />
+   638→                  ))}
+   639→                </svg>
+   640→
+   641→                {/* Hint de cortar */}
+   642→                {necesitaCortar && (
+   643→                  <div className="pointer-events-none absolute inset-x-0 -bottom-1 flex justify-center">
+   644→                    <div className="animate-bounce rounded-full border-2 border-orange-300 bg-white px-3 py-1.5 text-xs font-bold text-orange-700 shadow sm:text-sm">
+   645→                      <Scissors size={13} className="mr-1 inline" strokeWidth={2.5} />
+   646→                      ¡Toca el {OBJETO_NOMBRE[nivel.objeto_visual].toLowerCase()} para cortarlo!
+   647→                    </div>
+   648→                  </div>
+   649→                )}
+   650→                {cortandoAnim && (
+   651→                  <div className="pointer-events-none absolute inset-x-0 top-2 flex justify-center">
+   652→                    <div className="rounded-full bg-orange-500/90 px-3 py-1 text-xs font-bold text-white shadow sm:text-sm">
+   653→                      ✂️ Cortando en {totalPiezas}…
+   654→                    </div>
+   655→                  </div>
+   656→                )}
+   657→              </div>
+   658→
+   659→              {/* Instrucción dinámica */}
+   660→              <div className="mt-3 rounded-xl border-2 border-orange-200 bg-orange-50/70 px-3 py-2 text-center">
+   661→                {estado === "presentacion" && (
+   662→                  <p className="text-sm font-semibold text-orange-800">
+   663→                    Presiona <span className="font-bold">¡Atender!</span> para recibir al cliente.
+   664→                  </p>
+   665→                )}
+   666→                {estado === "cortando" && !cortesHechos && (
+   667→                  <p className="text-sm font-semibold text-orange-800">
+   668→                    Corta el producto en <b>{totalPiezas}</b> partes iguales.
+   669→                  </p>
+   670→                )}
+   671→                {cortesHechos && estado !== "celebrando" && (
+   672→                  <p className="text-sm font-semibold text-orange-800">
+   673→                    <Hand size={14} className="mr-1 inline" strokeWidth={2.5} />
+   674→                    Toca o arrastra <b>{nivel.numerador_pedido}</b> pedazo
+   675→                    {nivel.numerador_pedido === 1 ? "" : "s"} a la canasta del cliente.
+   676→                  </p>
+   677→                )}
+   678→                {estado === "celebrando" && (
+   679→                  <p className="text-sm font-bold text-emerald-700">
+   680→                    ¡Pedido entregado correctamente! 🎉
+   681→                  </p>
+   682→                )}
+   683→              </div>
+   684→
+   685→              {/* Botón vaciar canasta */}
+   686→              {piezasEnCanasta.length > 0 && estado === "arrastrando" && (
+   687→                <button
+   688→                  onClick={vaciarCanasta}
+   689→                  className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-orange-300 bg-white py-2 text-sm font-bold text-orange-700 transition hover:bg-orange-50"
+   690→                >
+   691→                  <Undo2 size={14} strokeWidth={2.5} /> Vaciar canasta
+   692→                </button>
+   693→              )}
+   694→            </div>
+   695→
+   696→            {/* ============ Columna derecha: cliente + canasta ============ */}
+   697→            <div className="flex flex-col gap-4">
+   698→              {/* Cliente con bocadillo */}
+   699→              <div className="rounded-3xl border-2 border-rose-200 bg-white/80 p-4 shadow-lg backdrop-blur sm:p-5">
+   700→                <div className="flex items-start gap-3">
+   701→                  {/* Avatar */}
+   702→                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-100 to-amber-100 text-4xl shadow-inner sm:h-20 sm:w-20 sm:text-5xl">
+   703→                    {avatar}
+   704→                  </div>
+   705→                  {/* Bocadillo de cómic */}
+   706→                  <div className="relative flex-1 rounded-2xl border-2 border-orange-300 bg-amber-50 px-4 py-3 shadow-sm">
+   707→                    {/* Cola del bocadillo */}
+   708→                    <div className="absolute -left-2 top-5 h-4 w-4 rotate-45 border-b-2 border-l-2 border-orange-300 bg-amber-50" />
+   709→                    <p className="text-base font-semibold leading-snug text-orange-950 sm:text-lg">
+   710→                      {renderFrase(nivel.frase_del_cliente)}
+   711→                    </p>
+   712→                  </div>
+   713→                </div>
+   714→
+   715→                {/* Fracción pedida (grande, para reforzar) */}
+   716→                <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-orange-100/60 py-2">
+   717→                  <span className="text-sm font-semibold text-orange-800">El cliente quiere:</span>
+   718→                  <span className="inline-flex items-center text-orange-900">
+   719→                    <Fraccion num={nivel.numerador_pedido} den={nivel.denominador_cortes} className="text-orange-700" />
+   720→                  </span>
+   721→                </div>
+   722→
+   723→                {nivel.es_equivalente_de && (
+   724→                  <p className="mt-2 text-center text-xs font-semibold text-emerald-700">
+   725→                    💡 Pista: {nivel.fraccion_plana} es lo mismo que {nivel.es_equivalente_de}
+   726→                  </p>
+   727→                )}
+   728→              </div>
+   729→
+   730→              {/* Canasta del cliente (drop zone) */}
+   731→              <div
+   732→                onDragOver={(e) => {
+   733→                  if (estado === "arrastrando") {
+   734→                    e.preventDefault();
+   735→                    setDragOverCanasta(true);
+   736→                  }
+   737→                }}
+   738→                onDragLeave={() => setDragOverCanasta(false)}
+   739→                onDrop={onDropCanasta}
+   740→                className={`flex-1 rounded-3xl border-[3px] p-4 shadow-lg backdrop-blur transition-all sm:p-5 ${
+   741→                  dragOverCanasta
+   742→                    ? "border-emerald-400 bg-emerald-50/90 scale-[1.02]"
+   743→                    : estado === "arrastrando"
+   744→                    ? "border-dashed border-orange-400 bg-white/80"
+   745→                    : "border-orange-200 bg-white/70"
+   746→                }`}
+   747→              >
+   748→                <div className="mb-2 flex items-center justify-between">
+   749→                  <h3 className="flex items-center gap-1.5 text-sm font-bold text-orange-950 sm:text-base">
+   750→                    <ShoppingCart size={16} className="text-orange-600" strokeWidth={2.5} />
+   751→                    Canasta del cliente
+   752→                  </h3>
+   753→                  <span
+   754→                    className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+   755→                      piezasEnCanasta.length === nivel.numerador_pedido
+   756→                        ? "bg-emerald-100 text-emerald-800"
+   757→                        : "bg-orange-100 text-orange-800"
+   758→                    }`}
+   759→                  >
+   760→                    {piezasEnCanasta.length} / {nivel.numerador_pedido}
+   761→                  </span>
+   762→                </div>
+   763→
+   764→                {piezasEnCanasta.length === 0 ? (
+   765→                  <div className="flex h-32 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/40 text-center">
+   766→                    <span className="text-3xl opacity-50">🧺</span>
+   767→                    <p className="text-xs font-semibold text-orange-600/70 sm:text-sm">
+   768→                      Arrastra aquí los pedazos
+   769→                    </p>
+   770→                  </div>
+   771→                ) : (
+   772→                  <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl bg-orange-50/50 p-3">
+   773→                    {piezasEnCanasta.map((i) => (
+   774→                      <button
+   775→                        key={i}
+   776→                        onClick={() => quitarDeCanasta(i)}
+   777→                        className="group relative rounded-xl bg-white p-1 shadow transition hover:scale-105 hover:bg-rose-50"
+   778→                        title="Quitar de la canasta"
+   779→                        aria-label={`Quitar pedazo ${i + 1} de la canasta`}
+   780→                      >
+   781→                        <PiezaIcon objeto={nivel.objeto_visual} indice={i} total={totalPiezas} />
+   782→                        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white opacity-0 shadow transition group-hover:opacity-100">
+   783→                          ✕
+   784→                        </span>
+   785→                      </button>
+   786→                    ))}
+   787→                  </div>
+   788→                )}
+   789→
+   790→                {piezasEnCanasta.length > 0 && (
+   791→                  <p className="mt-2 text-center text-xs font-semibold text-orange-600/70">
+   792→                    Toca un pedazo para regresarlo al producto
+   793→                  </p>
+   794→                )}
+   795→              </div>
+   796→
+   797→              {/* Feedback de error */}
+   798→              {feedback && esArrastrando && (
+   799→                <div className="animate-bounce-in rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 shadow">
+   800→                  <p className="flex items-start gap-2 text-sm font-semibold text-amber-900">
+   801→                    <span className="text-lg">💡</span>
+   802→                    <span>{feedback}</span>
+   803→                  </p>
+   804→                </div>
+   805→              )}
+   806→
+   807→              {/* Botones de acción */}
+   808→              <div className="flex gap-2">
+   809→                {esPresentacion && (
+   810→                  <button
+   811→                    onClick={empezarNivel}
+   812→                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-400 to-rose-400 py-3.5 text-base font-bold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-95"
+   813→                  >
+   814→                    <Sparkles size={18} strokeWidth={2.5} /> ¡Atender al cliente!
+   815→                  </button>
+   816→                )}
+   817→                {(esArrastrando || esVerificando) && (
+   818→                  <button
+   819→                    onClick={entregar}
+   820→                    disabled={!puedeEntregar || esVerificando}
+   821→                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-base font-bold shadow-md transition active:scale-95 ${
+   822→                      puedeEntregar
+   823→                        ? "bg-gradient-to-r from-emerald-400 to-lime-400 text-white hover:scale-[1.02] hover:shadow-lg"
+   824→                        : "cursor-not-allowed bg-orange-200 text-orange-500/70"
+   825→                    }`}
+   826→                  >
+   827→                    {esVerificando ? (
+   828→                      <>
+   829→                        <RefreshCw size={18} className="animate-spin" strokeWidth={2.5} /> Revisando…
+   830→                      </>
+   831→                    ) : (
+   832→                      <>
+   833→                        <Check size={18} strokeWidth={2.5} /> Entregar pedido
+   834→                      </>
+   835→                    )}
+   836→                  </button>
+   837→                )}
+   838→                {esCelebrando && (
+   839→                  <button
+   840→                    disabled
+   841→                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-lime-400 py-3.5 text-base font-bold text-white shadow-md"
+   842→                  >
+   843→                    <PartyPopper size={18} strokeWidth={2.5} /> ¡Bien hecho!
+   844→                  </button>
+   845→                )}
+   846→              </div>
+   847→            </div>
+   848→          </div>
+   849→        )}
+   850→      </div>
+   851→
+   852→      {/* Confeti al celebrar */}
+   853→      {esCorrecto && <Confetti duracionMs={2800} cantidad={48} />}
+   854→    </div>
+   855→  );
+   856→}
+   857→
+   858→/* ----------------------- Pantalla final ----------------------- */
+   859→
+   860→function PantallaCompletado({
+   861→  onReiniciar,
+   862→  ventas,
+   863→}: {
+   864→  onReiniciar: () => void;
+   865→  ventas: number;
+   866→}) {
+   867→  return (
+   868→    <div className="mx-auto max-w-2xl">
+   869→      <div className="animate-bounce-in rounded-3xl border-2 border-amber-300 bg-white/90 p-8 text-center shadow-2xl backdrop-blur">
+   870→        <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-orange-400 shadow-lg">
+   871→          <Trophy size={52} className="text-white animate-trophy-float" strokeWidth={2.5} />
+   872→        </div>
+   873→        <h2 className="text-3xl font-bold text-orange-950 sm:text-4xl">¡Pulpero Experto!</h2>
+   874→        <p className="mt-2 text-base font-semibold text-orange-700 sm:text-lg">
+   875→          Atendiste <span className="text-emerald-600">{ventas}</span> clientes con éxito en la
+   876→          pulpería de fracciones. 🎉
+   877→        </p>
+   878→        <p className="mt-1 text-sm font-medium text-orange-600/80">
+   879→          Aprendiste a partir sandías, pasteles, piñas, cuajadas y jabón en fracciones iguales.
+   880→        </p>
+   881→
+   882→        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-3xl">
+   883→          <span>🍉</span>
+   884→          <span>🍰</span>
+   885→          <span>🍍</span>
+   886→          <span>🧀</span>
+   887→          <span>🧼</span>
+   888→          <span>🏆</span>
+   889→        </div>
+   890→
+   891→        <button
+   892→          onClick={onReiniciar}
+   893→          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-400 to-rose-400 py-3.5 text-base font-bold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-95 sm:w-auto sm:px-8"
+   894→        >
+   895→          <RefreshCw size={18} strokeWidth={2.5} /> Jugar de nuevo
+   896→          <ArrowRight size={18} strokeWidth={2.5} />
+   897→        </button>
+   898→      </div>
+   899→    </div>
+   900→  );
+   901→}
+   902→

@@ -1,0 +1,779 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+     4→import {
+     5→  ArrowRight,
+     6→  Check,
+     7→  Hand,
+     8→  PartyPopper,
+     9→  RefreshCw,
+    10→  Sparkles,
+    11→  Truck as TruckIcon,
+    12→  Trophy,
+    13→  Undo2,
+    14→  Package,
+    15→} from "lucide-react";
+    16→import { nivelesCamion, type NivelCamion } from "@/data/camionMultiplicaciones";
+    17→import { Confetti } from "@/components/Toasts";
+    18→
+    19→/* ============================================================
+    20→   El Camión de las Multiplicaciones — Minijuego educativo
+    21→   ------------------------------------------------------------
+    22→   Mecánica:
+    23→   1. Un cliente del mercado pide N cajitas con M ítems cada una.
+    24→   2. El niño arrastra (o toca) N cajitas desde la pila al camión.
+    25→   3. Cada cajita muestra visualmente M ítems (emoji) en su interior.
+    26→   4. Al presionar "¡Despachar camión!" se valida:
+    27→      - Si cargó exactamente N cajitas → celebración + operación formal.
+    28→      - Si cargó de más o de menos → feedback pedagógico.
+    29→   5. Avance por 10 niveles hasta "¡Transportista Experto!" 🏆.
+    30→   ============================================================ */
+    31→
+    32→type Estado =
+    33→  | "presentacion"
+    34→  | "cargando"
+    35→  | "verificando"
+    36→  | "celebrando"
+    37→  | "completado";
+    38→
+    39→type ProductoVisual = NivelCamion["producto_visual"];
+    40→
+    41→const AVATARES_CLIENTES = [
+    42→  "👵", "👨‍🦱", "🧒", "👩‍🦰", "🧑‍🦱", "👴", "👧", "🧔", "🧓", "👨",
+    43→];
+    44→
+    45→const PRODUCTO_EMOJI: Record<ProductoVisual, string> = {
+    46→  "cajas de nancites": "🫐",
+    47→  "sacos de café": "☕",
+    48→  "pacas de rosquillas": "🍩",
+    49→  "cajas de pitahayas": "🍈",
+    50→  "sacos de frijoles": "🫘",
+    51→  "cajas de cuajadas": "🧀",
+    52→  "sacos de cacao": "🍫",
+    53→  "cajas de pan de leche": "🥖",
+    54→};
+    55→
+    56→const PRODUCTO_NOMBRE: Record<ProductoVisual, string> = {
+    57→  "cajas de nancites": "nancites",
+    58→  "sacos de café": "café",
+    59→  "pacas de rosquillas": "rosquillas",
+    60→  "cajas de pitahayas": "pitahayas",
+    61→  "sacos de frijoles": "frijoles",
+    62→  "cajas de cuajadas": "cuajadas",
+    63→  "sacos de cacao": "cacao",
+    64→  "cajas de pan de leche": "pan de leche",
+    65→};
+    66→
+    67→const TOTAL_NIVELES = nivelesCamion.length;
+    68→
+    69→// Cuántas cajitas extra hay en la pila (para permitir "pasarse" o quedarse corto)
+    70→const EXTRAS_PILA = 4;
+    71→
+    72→/* ----------------------- Cajita ----------------------- */
+    73→
+    74→type CajitaSize = "sm" | "md" | "lg";
+    75→
+    76→const SIZE_MAP: Record<CajitaSize, { box: string; emoji: string }> = {
+    77→  lg: { box: "w-16 h-16 sm:w-20 sm:h-20 p-1 gap-0.5", emoji: "text-sm sm:text-base" },
+    78→  md: { box: "w-12 h-12 sm:w-14 sm:h-14 p-0.5 gap-0.5", emoji: "text-[10px] sm:text-xs" },
+    79→  sm: { box: "w-9 h-9 p-0.5 gap-0", emoji: "text-[8px]" },
+    80→};
+    81→
+    82→function Cajita({
+    83→  producto,
+    84→  cantidad,
+    85→  cargada,
+    86→  draggable,
+    87→  onClick,
+    88→  onDragStart,
+    89→  size = "md",
+    90→  index,
+    91→}: {
+    92→  producto: ProductoVisual;
+    93→  cantidad: number;
+    94→  cargada?: boolean;
+    95→  draggable?: boolean;
+    96→  onClick?: () => void;
+    97→  onDragStart?: () => void;
+    98→  size?: CajitaSize;
+    99→  index: number;
+   100→}) {
+   101→  const emoji = PRODUCTO_EMOJI[producto];
+   102→  const cols = cantidad <= 3 ? cantidad : cantidad <= 6 ? 3 : 4;
+   103→  const sz = SIZE_MAP[size];
+   104→
+   105→  return (
+   106→    <div
+   107→      role={draggable ? "button" : undefined}
+   108→      tabIndex={draggable ? 0 : undefined}
+   109→      onClick={draggable ? onClick : undefined}
+   110→      onKeyDown={(e) => {
+   111→        if (!draggable) return;
+   112→        if (e.key === "Enter" || e.key === " ") {
+   113→          e.preventDefault();
+   114→          onClick?.();
+   115→        }
+   116→      }}
+   117→      onDragStart={(e) => {
+   118→        if (!draggable) {
+   119→          e.preventDefault();
+   120→          return;
+   121→        }
+   122→        e.dataTransfer.setData("text/plain", String(index));
+   123→        e.dataTransfer.effectAllowed = "move";
+   124→        onDragStart?.();
+   125→      }}
+   126→      {...(draggable ? ({ draggable: true } as Record<string, unknown>) : {})}
+   127→      className={`relative grid shrink-0 select-none place-items-center rounded-lg border-2 shadow-sm transition ${sz.box} ${
+   128→        cargada
+   129→          ? "border-emerald-500 bg-emerald-50"
+   130→          : "border-amber-700 bg-amber-100 hover:border-orange-500 hover:bg-amber-200"
+   131→      } ${draggable ? "cursor-grab active:cursor-grabbing hover:scale-105" : ""}`}
+   132→      style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+   133→      aria-label={`Cajita ${index + 1} con ${cantidad} ${PRODUCTO_NOMBRE[producto]}`}
+   134→      title={`Cajita con ${cantidad} ${PRODUCTO_NOMBRE[producto]}`}
+   135→    >
+   136→      {Array.from({ length: cantidad }).map((_, i) => (
+   137→        <span key={i} className={`${sz.emoji} leading-none flex items-center justify-center`}>
+   138→          {emoji}
+   139→        </span>
+   140→      ))}
+   141→    </div>
+   142→  );
+   143→}
+   144→
+   145→/* ----------------------- Camión SVG ----------------------- */
+   146→
+   147→function CamionSVG({
+   148→  dragOver,
+   149→  cajitasCargadas,
+   150→  gruposObjetivo,
+   151→}: {
+   152→  dragOver: boolean;
+   153→  cajitasCargadas: number;
+   154→  gruposObjetivo: number;
+   155→}) {
+   156→  const completo = cajitasCargadas === gruposObjetivo && gruposObjetivo > 0;
+   157→  const sePaso = cajitasCargadas > gruposObjetivo;
+   158→  const colorBorde = sePaso
+   159→    ? "#f43f5e"
+   160→    : dragOver
+   161→    ? "#10b981"
+   162→    : completo
+   163→    ? "#10b981"
+   164→    : "#92400e";
+   165→  const colorRelleno = dragOver ? "#fef3c7" : "#fde68a";
+   166→
+   167→  return (
+   168→    <svg viewBox="0 0 320 210" className="w-full drop-shadow-lg" aria-hidden>
+   169→      {/* Sombra */}
+   170→      <ellipse cx="160" cy="190" rx="140" ry="7" fill="#000000" opacity="0.12" />
+   171→
+   172→      {/* Caja de carga (atrás) */}
+   173→      <rect
+   174→        x="20"
+   175→        y="55"
+   176→        width="200"
+   177→        height="100"
+   178→        rx="10"
+   179→        fill={colorRelleno}
+   180→        stroke={colorBorde}
+   181→        strokeWidth="3"
+   182→        style={{ transition: "fill 0.2s, stroke 0.2s" }}
+   183→      />
+   184→      {/* Techo de la caja (más oscuro) */}
+   185→      <rect x="20" y="55" width="200" height="14" rx="6" fill="#92400e" opacity="0.4" />
+   186→      {/* Divisiones decorativas verticales */}
+   187→      <line x1="80" y1="69" x2="80" y2="155" stroke="#92400e" strokeWidth="1" opacity="0.2" />
+   188→      <line x1="160" y1="69" x2="160" y2="155" stroke="#92400e" strokeWidth="1" opacity="0.2" />
+   189→
+   190→      {/* Cabina (teal-600) */}
+   191→      <path
+   192→        d="M 220 80 L 220 155 L 305 155 L 305 115 Q 305 80 270 80 Z"
+   193→        fill="#0d9488"
+   194→        stroke="#0f766e"
+   195→        strokeWidth="3"
+   196→      />
+   197→      {/* Ventana */}
+   198→      <rect x="232" y="92" width="62" height="28" rx="4" fill="#99f6e4" />
+   199→      {/* Brillo de la ventana */}
+   200→      <rect x="234" y="94" width="20" height="10" rx="2" fill="#ccfbf1" opacity="0.7" />
+   201→      {/* Detalle de la puerta */}
+   202→      <line x1="265" y1="125" x2="265" y2="155" stroke="#0f766e" strokeWidth="1.5" opacity="0.6" />
+   203→      <circle cx="275" cy="135" r="2.5" fill="#0f766e" />
+   204→      {/* Faro delantero */}
+   205→      <circle cx="298" cy="145" r="4" fill="#fde047" />
+   206→
+   207→      {/* Ruedas */}
+   208→      <circle cx="75" cy="160" r="18" fill="#1f2937" />
+   209→      <circle cx="75" cy="160" r="7" fill="#9ca3af" />
+   210→      <circle cx="245" cy="160" r="18" fill="#1f2937" />
+   211→      <circle cx="245" cy="160" r="7" fill="#9ca3af" />
+   212→
+   213→      {/* Contador flotante sobre la caja de carga */}
+   214→      <g>
+   215→        <rect
+   216→          x="85"
+   217→          y="33"
+   218→          width="70"
+   219→          height="26"
+   220→          rx="13"
+   221→          fill={completo ? "#10b981" : sePaso ? "#f43f5e" : "#fff7ed"}
+   222→          stroke={completo ? "#047857" : sePaso ? "#be123c" : "#92400e"}
+   223→          strokeWidth="2"
+   224→          style={{ transition: "fill 0.2s" }}
+   225→        />
+   226→        <text
+   227→          x="120"
+   228→          y="51"
+   229→          textAnchor="middle"
+   230→          fontSize="14"
+   231→          fontWeight="bold"
+   232→          fill={completo || sePaso ? "#ffffff" : "#92400e"}
+   233→          fontFamily="Fredoka, sans-serif"
+   234→        >
+   235→          {cajitasCargadas} / {gruposObjetivo}
+   236→        </text>
+   237→      </g>
+   238→
+   239→      {/* Línea que "conecta" el contador con la caja */}
+   240→      <line x1="120" y1="59" x2="120" y2="55" stroke="#92400e" strokeWidth="1.5" opacity="0.4" />
+   241→    </svg>
+   242→  );
+   243→}
+   244→
+   245→/* ----------------------- Toldos de mercado ----------------------- */
+   246→
+   247→function ToldosMercado() {
+   248→  const colores = [
+   249→    "#f97316", // orange
+   250→    "#f43f5e", // rose
+   251→    "#fbbf24", // amber
+   252→    "#10b981", // emerald
+   253→    "#14b8a6", // teal
+   254→    "#f59e0b", // amber-dark
+   255→    "#ef4444", // red
+   256→    "#84cc16", // lime
+   257→  ];
+   258→  return (
+   259→    <div
+   260→      aria-hidden
+   261→      className="pointer-events-none absolute inset-x-0 top-0 z-10 h-10 overflow-hidden sm:h-12"
+   262→    >
+   263→      <div className="flex h-full w-full">
+   264→        {colores.map((c, i) => (
+   265→          <div key={i} className="relative flex-1" style={{ backgroundColor: c }}>
+   266→            {/* Onda inferior (triángulos) */}
+   267→            <svg
+   268→              viewBox="0 0 100 30"
+   269→              preserveAspectRatio="none"
+   270→              className="absolute -bottom-px left-0 h-6 w-full sm:h-8"
+   271→            >
+   272→              <polygon points="0,0 50,30 100,0" fill={c} />
+   273→            </svg>
+   274→          </div>
+   275→        ))}
+   276→      </div>
+   277→    </div>
+   278→  );
+   279→}
+   280→
+   281→/* ----------------------- Componente principal ----------------------- */
+   282→
+   283→export function CamionMultiplicaciones() {
+   284→  const [nivelIdx, setNivelIdx] = useState(0);
+   285→  const [estado, setEstado] = useState<Estado>("presentacion");
+   286→  const [cajitasCargadas, setCajitasCargadas] = useState<number[]>([]);
+   287→  const [camionesDespachados, setCamionesDespachados] = useState(0);
+   288→  const [feedback, setFeedback] = useState<string | null>(null);
+   289→  const [dragOverCamion, setDragOverCamion] = useState(false);
+   290→
+   291→  // Ref para timeouts internos (limpieza segura al desmontar)
+   292→  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+   293→  const programar = useCallback((fn: () => void, ms: number) => {
+   294→    const t = setTimeout(() => {
+   295→      timeoutsRef.current.delete(t);
+   296→      fn();
+   297→    }, ms);
+   298→    timeoutsRef.current.add(t);
+   299→  }, []);
+   300→
+   301→  useEffect(() => {
+   302→    const set = timeoutsRef.current;
+   303→    return () => {
+   304→      set.forEach((t) => clearTimeout(t));
+   305→      set.clear();
+   306→    };
+   307→  }, []);
+   308→
+   309→  const nivel = nivelesCamion[nivelIdx];
+   310→  const avatar = AVATARES_CLIENTES[nivelIdx % AVATARES_CLIENTES.length];
+   311→  const totalPila = nivel.grupos + EXTRAS_PILA;
+   312→  const indicesPila = useMemo(
+   313→    () => Array.from({ length: totalPila }, (_, i) => i),
+   314→    [totalPila],
+   315→  );
+   316→  const cajitasEnPila = indicesPila.filter((i) => !cajitasCargadas.includes(i));
+   317→
+   318→  /* ---- Transición: celebrando → siguiente nivel o completado ---- */
+   319→  useEffect(() => {
+   320→    if (estado !== "celebrando") return;
+   321→    const t = setTimeout(() => {
+   322→      if (nivelIdx + 1 >= TOTAL_NIVELES) {
+   323→        setEstado("completado");
+   324→      } else {
+   325→        setNivelIdx((n) => n + 1);
+   326→        setCajitasCargadas([]);
+   327→        setFeedback(null);
+   328→        setEstado("presentacion");
+   329→      }
+   330→    }, 2800);
+   331→    return () => clearTimeout(t);
+   332→  }, [estado, nivelIdx]);
+   333→
+   334→  /* ---- Acciones ---- */
+   335→
+   336→  const empezarCarga = useCallback(() => {
+   337→    setEstado("cargando");
+   338→    setFeedback(null);
+   339→  }, []);
+   340→
+   341→  const cargarCajita = useCallback(
+   342→    (i: number) => {
+   343→      if (cajitasCargadas.includes(i)) return;
+   344→      setCajitasCargadas((p) => [...p, i]);
+   345→      setFeedback(null);
+   346→    },
+   347→    [cajitasCargadas],
+   348→  );
+   349→
+   350→  const quitarCajita = useCallback((i: number) => {
+   351→    setCajitasCargadas((p) => p.filter((x) => x !== i));
+   352→    setFeedback(null);
+   353→  }, []);
+   354→
+   355→  const vaciarCamion = useCallback(() => {
+   356→    setCajitasCargadas([]);
+   357→    setFeedback(null);
+   358→  }, []);
+   359→
+   360→  const despachar = useCallback(() => {
+   361→    if (estado !== "cargando") return;
+   362→    setEstado("verificando");
+   363→    const correcto = cajitasCargadas.length === nivel.grupos;
+   364→    programar(() => {
+   365→      if (correcto) {
+   366→        setCamionesDespachados((v) => v + 1);
+   367→        setEstado("celebrando");
+   368→      } else {
+   369→        setFeedback(nivel.feedback_error);
+   370→        setEstado("cargando");
+   371→      }
+   372→    }, 450);
+   373→  }, [estado, cajitasCargadas.length, nivel.grupos, nivel.feedback_error, programar]);
+   374→
+   375→  const reiniciarJuego = useCallback(() => {
+   376→    setNivelIdx(0);
+   377→    setEstado("presentacion");
+   378→    setCajitasCargadas([]);
+   379→    setCamionesDespachados(0);
+   380→    setFeedback(null);
+   381→  }, []);
+   382→
+   383→  /* ---- Drag handlers para el camión ---- */
+   384→  const onDropCamion = useCallback(
+   385→    (e: React.DragEvent) => {
+   386→      e.preventDefault();
+   387→      setDragOverCamion(false);
+   388→      const idx = Number(e.dataTransfer.getData("text/plain"));
+   389→      if (!Number.isNaN(idx)) cargarCajita(idx);
+   390→    },
+   391→    [cargarCajita],
+   392→  );
+   393→
+   394→  /* ---- Derivados ---- */
+   395→  const progresoNivel = useMemo(
+   396→    () => ((nivelIdx + (estado === "celebrando" ? 1 : 0)) / TOTAL_NIVELES) * 100,
+   397→    [nivelIdx, estado],
+   398→  );
+   399→  const esPresentacion = estado === "presentacion";
+   400→  const esCargando = estado === "cargando";
+   401→  const esVerificando = estado === "verificando";
+   402→  const esCelebrando = estado === "celebrando";
+   403→  const puedeDespachar = esCargando && cajitasCargadas.length > 0;
+   404→
+   405→  /* ---- Tamaños de cajitas según cantidad de grupos ---- */
+   406→  const sizePila: CajitaSize =
+   407→    nivel.grupos > 12 ? "sm" : nivel.grupos > 6 ? "md" : "lg";
+   408→  const sizeCamion: CajitaSize = nivel.grupos > 6 ? "sm" : "md";
+   409→
+   410→  /* ===================== RENDER ===================== */
+   411→
+   412→  return (
+   413→    <div className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-gradient-to-br from-amber-100 via-orange-200 to-rose-200 font-display">
+   414→      {/* Toldos de mercado arriba */}
+   415→      <ToldosMercado />
+   416→
+   417→      {/* Decoración de fondo: mercado nicaragüense */}
+   418→      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.07]">
+   419→        <div className="absolute left-4 top-24 text-7xl">🥭</div>
+   420→        <div className="absolute right-8 top-32 text-7xl">🌽</div>
+   421→        <div className="absolute left-10 bottom-24 text-7xl">🪅</div>
+   422→        <div className="absolute right-12 bottom-32 text-7xl">🥖</div>
+   423→        <div className="absolute left-1/3 top-12 text-6xl">☕</div>
+   424→        <div className="absolute right-1/3 bottom-16 text-6xl">🍫</div>
+   425→      </div>
+   426→
+   427→      <div className="relative z-10 mx-auto max-w-5xl px-3 pb-6 pt-14 sm:px-5 sm:pt-16">
+   428→        {/* ===================== HUD superior ===================== */}
+   429→        <div className="mb-4 rounded-2xl border-2 border-teal-200 bg-white/70 p-3 shadow-md backdrop-blur sm:p-4">
+   430→          <div className="flex items-center justify-between gap-3">
+   431→            <div className="flex items-center gap-2">
+   432→              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow sm:h-11 sm:w-11">
+   433→                <TruckIcon size={20} strokeWidth={2.5} />
+   434→              </div>
+   435→              <div>
+   436→                <p className="text-xs font-bold uppercase tracking-wide text-teal-700/70">
+   437→                  El Camión
+   438→                </p>
+   439→                <p className="text-base font-bold text-teal-950 sm:text-lg">
+   440→                  Nivel {nivel.nivel} <span className="text-teal-600/60">de {TOTAL_NIVELES}</span>
+   441→                </p>
+   442→              </div>
+   443→            </div>
+   444→            <div className="flex items-center gap-2">
+   445→              <div className="flex items-center gap-1.5 rounded-full border-2 border-lime-300 bg-lime-50 px-3 py-1.5">
+   446→                <Package size={15} className="text-lime-700" strokeWidth={2.5} />
+   447→                <span className="text-sm font-bold text-lime-800">
+   448→                  {camionesDespachados} <span className="hidden sm:inline">despachados</span>
+   449→                </span>
+   450→              </div>
+   451→            </div>
+   452→          </div>
+   453→          {/* Barra de progreso */}
+   454→          <div className="mt-2.5 h-2.5 w-full overflow-hidden rounded-full bg-teal-200/70">
+   455→            <div
+   456→              className="h-full rounded-full bg-gradient-to-r from-teal-400 via-emerald-400 to-lime-400 transition-all duration-700 ease-out"
+   457→              style={{ width: `${progresoNivel}%` }}
+   458→            />
+   459→          </div>
+   460→        </div>
+   461→
+   462→        {/* ===================== Pantalla: completado ===================== */}
+   463→        {estado === "completado" ? (
+   464→          <PantallaCompletado onReiniciar={reiniciarJuego} camiones={camionesDespachados} />
+   465→        ) : (
+   466→          <div className="grid gap-4 lg:grid-cols-2">
+   467→            {/* ============ Columna izquierda: cliente + camión ============ */}
+   468→            <div className="flex flex-col gap-4">
+   469→              {/* Cliente con bocadillo */}
+   470→              <div className="rounded-3xl border-2 border-rose-200 bg-white/80 p-4 shadow-lg backdrop-blur sm:p-5">
+   471→                <div className="flex items-start gap-3">
+   472→                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-rose-100 text-4xl shadow-inner sm:h-20 sm:w-20 sm:text-5xl">
+   473→                    {avatar}
+   474→                  </div>
+   475→                  <div className="relative flex-1 rounded-2xl border-2 border-teal-300 bg-amber-50 px-4 py-3 shadow-sm">
+   476→                    <div className="absolute -left-2 top-5 h-4 w-4 rotate-45 border-b-2 border-l-2 border-teal-300 bg-amber-50" />
+   477→                    <p className="text-base font-semibold leading-snug text-teal-950 sm:text-lg">
+   478→                      {nivel.frase_del_cliente}
+   479→                    </p>
+   480→                  </div>
+   481→                </div>
+   482→
+   483→                {/* Encargo visual (sin revelar la respuesta) */}
+   484→                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 rounded-xl bg-teal-100/60 py-2">
+   485→                  <span className="text-sm font-semibold text-teal-800">Encargo:</span>
+   486→                  <span className="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-base font-bold text-teal-900 shadow-sm">
+   487→                    {nivel.grupos} cajitas
+   488→                  </span>
+   489→                  <span className="text-sm font-bold text-teal-500">×</span>
+   490→                  <span className="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-base font-bold text-teal-900 shadow-sm">
+   491→                    {nivel.elementos_por_grupo} {PRODUCTO_EMOJI[nivel.producto_visual]}
+   492→                  </span>
+   493→                </div>
+   494→
+   495→                <p className="mt-2 text-center text-xs font-medium text-teal-700/70">
+   496→                  📍 {nivel.contexto_nicaraguense}
+   497→                </p>
+   498→              </div>
+   499→
+   500→              {/* Camión + drop zone + cajitas cargadas */}
+   501→              <div
+   502→                onDragOver={(e) => {
+   503→                  if (esCargando) {
+   504→                    e.preventDefault();
+   505→                    setDragOverCamion(true);
+   506→                  }
+   507→                }}
+   508→                onDragLeave={() => setDragOverCamion(false)}
+   509→                onDrop={onDropCamion}
+   510→                className={`rounded-3xl border-[3px] p-4 shadow-lg backdrop-blur transition-all sm:p-5 ${
+   511→                  dragOverCamion
+   512→                    ? "border-emerald-400 bg-emerald-50/90 scale-[1.02]"
+   513→                    : esCargando
+   514→                    ? "border-dashed border-teal-400 bg-white/80"
+   515→                    : "border-teal-200 bg-white/70"
+   516→                }`}
+   517→              >
+   518→                <div className="mb-2 flex items-center justify-between">
+   519→                  <h3 className="flex items-center gap-1.5 text-sm font-bold text-teal-950 sm:text-base">
+   520→                    <TruckIcon size={16} className="text-teal-600" strokeWidth={2.5} />
+   521→                    Camión de carga
+   522→                  </h3>
+   523→                  <span
+   524→                    className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+   525→                      cajitasCargadas.length === nivel.grupos && nivel.grupos > 0
+   526→                        ? "bg-emerald-100 text-emerald-800"
+   527→                        : cajitasCargadas.length > nivel.grupos
+   528→                        ? "bg-rose-100 text-rose-800"
+   529→                        : "bg-teal-100 text-teal-800"
+   530→                    }`}
+   531→                  >
+   532→                    {cajitasCargadas.length} / {nivel.grupos} cajitas
+   533→                  </span>
+   534→                </div>
+   535→
+   536→                {/* SVG del camión */}
+   537→                <div className="mx-auto w-full max-w-md">
+   538→                  <CamionSVG
+   539→                    dragOver={dragOverCamion}
+   540→                    cajitasCargadas={cajitasCargadas.length}
+   541→                    gruposObjetivo={nivel.grupos}
+   542→                  />
+   543→                </div>
+   544→
+   545→                {/* Cajitas cargadas (dentro del camión) — scrollable si son muchas */}
+   546→                {cajitasCargadas.length === 0 ? (
+   547→                  <div className="mt-2 flex h-20 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-teal-200 bg-teal-50/40 text-center">
+   548→                    <span className="text-2xl opacity-50">📦</span>
+   549→                    <p className="text-xs font-semibold text-teal-600/70 sm:text-sm">
+   550→                      {esCargando
+   551→                        ? "Arrastrá (o tocá) las cajitas aquí"
+   552→                        : "Presioná ¡Empezar a cargar! para recibir el encargo"}
+   553→                    </p>
+   554→                  </div>
+   555→                ) : (
+   556→                  <div className="mt-2 max-h-44 overflow-y-auto rounded-2xl bg-teal-50/60 p-2 sm:max-h-52">
+   557→                    <div className="flex flex-wrap items-center justify-center gap-1.5">
+   558→                      {cajitasCargadas.map((i) => (
+   559→                        <button
+   560→                          key={i}
+   561→                          onClick={() => quitarCajita(i)}
+   562→                          className="group relative rounded-lg bg-white p-0.5 shadow-sm transition hover:scale-105 hover:bg-rose-50"
+   563→                          title="Quitar del camión"
+   564→                          aria-label={`Quitar cajita ${i + 1} del camión`}
+   565→                        >
+   566→                          <Cajita
+   567→                            producto={nivel.producto_visual}
+   568→                            cantidad={nivel.elementos_por_grupo}
+   569→                            cargada
+   570→                            draggable={false}
+   571→                            index={i}
+   572→                            size={sizeCamion}
+   573→                          />
+   574→                          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white opacity-0 shadow transition group-hover:opacity-100">
+   575→                            ✕
+   576→                          </span>
+   577→                        </button>
+   578→                      ))}
+   579→                    </div>
+   580→                  </div>
+   581→                )}
+   582→
+   583→                {cajitasCargadas.length > 0 && esCargando && (
+   584→                  <p className="mt-1.5 text-center text-xs font-semibold text-teal-600/70">
+   585→                    Toca una cajita para regresarla a la pila
+   586→                  </p>
+   587→                )}
+   588→              </div>
+   589→            </div>
+   590→
+   591→            {/* ============ Columna derecha: pila + feedback + botones ============ */}
+   592→            <div className="flex flex-col gap-4">
+   593→              {/* Pila de cajitas disponibles */}
+   594→              <div className="rounded-3xl border-2 border-amber-300 bg-white/80 p-4 shadow-lg backdrop-blur sm:p-5">
+   595→                <div className="mb-3 flex items-center justify-between">
+   596→                  <h3 className="flex items-center gap-1.5 text-sm font-bold text-amber-950 sm:text-base">
+   597→                    <Package size={16} className="text-amber-700" strokeWidth={2.5} />
+   598→                    Pila de cajitas
+   599→                  </h3>
+   600→                  <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+   601→                    {cajitasEnPila.length} disponibles
+   602→                  </span>
+   603→                </div>
+   604→
+   605→                <div className="mb-3 rounded-xl bg-amber-50/70 px-3 py-2 text-center text-xs font-semibold text-amber-800 sm:text-sm">
+   606→                  <Hand size={13} className="mr-1 inline" strokeWidth={2.5} />
+   607→                  Arrastrá (o tocá) <b>{nivel.grupos}</b> cajitas al camión. ¡Cada una trae{" "}
+   608→                  <b>{nivel.elementos_por_grupo}</b>{" "}
+   609→                  {PRODUCTO_NOMBRE[nivel.producto_visual]}!
+   610→                </div>
+   611→
+   612→                <div
+   613→                  className="max-h-80 overflow-y-auto rounded-2xl bg-amber-50/50 p-2"
+   614→                  style={{
+   615→                    scrollbarWidth: "thin",
+   616→                  }}
+   617→                >
+   618→                  <div className="flex flex-wrap items-center justify-center gap-2">
+   619→                    {cajitasEnPila.length === 0 ? (
+   620→                      <p className="py-4 text-center text-sm font-semibold text-amber-700/70">
+   621→                        Todas las cajitas están en el camión
+   622→                      </p>
+   623→                    ) : (
+   624→                      cajitasEnPila.map((i) => (
+   625→                        <Cajita
+   626→                          key={i}
+   627→                          producto={nivel.producto_visual}
+   628→                          cantidad={nivel.elementos_por_grupo}
+   629→                          draggable={esCargando}
+   630→                          onClick={() => cargarCajita(i)}
+   631→                          onDragStart={() => {}}
+   632→                          index={i}
+   633→                          size={sizePila}
+   634→                        />
+   635→                      ))
+   636→                    )}
+   637→                  </div>
+   638→                </div>
+   639→
+   640→                {cajitasCargadas.length > 0 && esCargando && (
+   641→                  <button
+   642→                    onClick={vaciarCamion}
+   643→                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-amber-300 bg-white py-2 text-sm font-bold text-amber-700 transition hover:bg-amber-50"
+   644→                  >
+   645→                    <Undo2 size={14} strokeWidth={2.5} /> Vaciar camión
+   646→                  </button>
+   647→                )}
+   648→              </div>
+   649→
+   650→              {/* Feedback de error */}
+   651→              {feedback && esCargando && (
+   652→                <div className="animate-bounce-in rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 shadow">
+   653→                  <p className="flex items-start gap-2 text-sm font-semibold text-amber-900">
+   654→                    <span className="text-lg">💡</span>
+   655→                    <span>{feedback}</span>
+   656→                  </p>
+   657→                </div>
+   658→              )}
+   659→
+   660→              {/* Botones de acción */}
+   661→              <div className="flex gap-2">
+   662→                {esPresentacion && (
+   663→                  <button
+   664→                    onClick={empezarCarga}
+   665→                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 py-3.5 text-base font-bold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-95"
+   666→                  >
+   667→                    <Sparkles size={18} strokeWidth={2.5} /> ¡Empezar a cargar!
+   668→                  </button>
+   669→                )}
+   670→                {(esCargando || esVerificando) && (
+   671→                  <button
+   672→                    onClick={despachar}
+   673→                    disabled={!puedeDespachar || esVerificando}
+   674→                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl py-3.5 text-base font-bold shadow-md transition active:scale-95 ${
+   675→                      puedeDespachar
+   676→                        ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-white hover:scale-[1.02] hover:shadow-lg"
+   677→                        : "cursor-not-allowed bg-teal-200 text-teal-500/70"
+   678→                    }`}
+   679→                  >
+   680→                    {esVerificando ? (
+   681→                      <>
+   682→                        <RefreshCw size={18} className="animate-spin" strokeWidth={2.5} /> Revisando…
+   683→                      </>
+   684→                    ) : (
+   685→                      <>
+   686→                        <Check size={18} strokeWidth={2.5} /> ¡Despachar camión!
+   687→                      </>
+   688→                    )}
+   689→                  </button>
+   690→                )}
+   691→                {esCelebrando && (
+   692→                  <button
+   693→                    disabled
+   694→                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-lime-400 to-emerald-500 py-3.5 text-base font-bold text-white shadow-md"
+   695→                  >
+   696→                    <PartyPopper size={18} strokeWidth={2.5} /> ¡Bien hecho!
+   697→                  </button>
+   698→                )}
+   699→              </div>
+   700→            </div>
+   701→          </div>
+   702→        )}
+   703→
+   704→        {/* Overlay de celebración con operación formal */}
+   705→        {esCelebrando && (
+   706→          <div className="pointer-events-none absolute inset-0 z-20 flex items-start justify-center pt-24 sm:pt-32">
+   707→            <div className="animate-bounce-in rounded-3xl border-2 border-emerald-300 bg-white/95 px-6 py-4 shadow-2xl">
+   708→              <p className="text-center text-sm font-bold uppercase tracking-wide text-emerald-700">
+   709→                ¡Camión despachado!
+   710→              </p>
+   711→              <p className="mt-1 text-center text-3xl font-bold text-emerald-900 sm:text-4xl">
+   712→                {nivel.operacion_formal}
+   713→              </p>
+   714→              <p className="mt-1 text-center text-xs font-semibold text-emerald-700 sm:text-sm">
+   715→                {nivel.grupos} cajitas × {nivel.elementos_por_grupo}{" "}
+   716→                {PRODUCTO_NOMBRE[nivel.producto_visual]} cada una
+   717→              </p>
+   718→            </div>
+   719→          </div>
+   720→        )}
+   721→      </div>
+   722→
+   723→      {/* Confeti al celebrar */}
+   724→      {esCelebrando && <Confetti duracionMs={2800} cantidad={48} />}
+   725→    </div>
+   726→  );
+   727→}
+   728→
+   729→/* ----------------------- Pantalla final ----------------------- */
+   730→
+   731→function PantallaCompletado({
+   732→  onReiniciar,
+   733→  camiones,
+   734→}: {
+   735→  onReiniciar: () => void;
+   736→  camiones: number;
+   737→}) {
+   738→  return (
+   739→    <div className="mx-auto max-w-2xl">
+   740→      <div className="animate-bounce-in rounded-3xl border-2 border-teal-300 bg-white/90 p-8 text-center shadow-2xl backdrop-blur">
+   741→        <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-teal-300 to-emerald-400 shadow-lg">
+   742→          <Trophy size={52} className="animate-trophy-float text-white" strokeWidth={2.5} />
+   743→        </div>
+   744→        <h2 className="text-3xl font-bold text-teal-950 sm:text-4xl">
+   745→          ¡Transportista Experto!
+   746→        </h2>
+   747→        <p className="mt-2 text-base font-semibold text-teal-700 sm:text-lg">
+   748→          Despachaste <span className="text-emerald-600">{camiones}</span> camiones con éxito en el
+   749→          mercado nicaragüense. 🎉
+   750→        </p>
+   751→        <p className="mt-1 text-sm font-medium text-teal-600/80">
+   752→          Aprendiste a multiplicar cargando cajitas de nancites, café, rosquillas, pitahayas,
+   753→          frijoles, cuajadas, cacao y pan de leche.
+   754→        </p>
+   755→
+   756→        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-3xl">
+   757→          <span>🫐</span>
+   758→          <span>☕</span>
+   759→          <span>🍩</span>
+   760→          <span>🍈</span>
+   761→          <span>🫘</span>
+   762→          <span>🧀</span>
+   763→          <span>🍫</span>
+   764→          <span>🥖</span>
+   765→          <span>🏆</span>
+   766→        </div>
+   767→
+   768→        <button
+   769→          onClick={onReiniciar}
+   770→          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 py-3.5 text-base font-bold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-95 sm:w-auto sm:px-8"
+   771→        >
+   772→          <RefreshCw size={18} strokeWidth={2.5} /> Jugar de nuevo
+   773→          <ArrowRight size={18} strokeWidth={2.5} />
+   774→        </button>
+   775→      </div>
+   776→    </div>
+   777→  );
+   778→}
+   779→

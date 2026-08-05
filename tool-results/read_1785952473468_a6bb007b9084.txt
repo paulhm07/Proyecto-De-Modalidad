@@ -1,0 +1,1049 @@
+     1→"use client";
+     2→
+     3→import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+     4→import {
+     5→  ArrowRight,
+     6→  BookOpen,
+     7→  Flame,
+     8→  RefreshCw,
+     9→  Sparkles,
+    10→  Target,
+    11→  Timer,
+    12→  Trophy,
+    13→  Volume2,
+    14→  Zap,
+    15→} from "lucide-react";
+    16→import { desafiosAtrapa, type DesafioAtrapa } from "@/data/atrapaAcento";
+    17→import { Confetti } from "@/components/Toasts";
+    18→
+    19→/* ============================================================
+    20→   Atrapa el Acento — Minijuego educativo de ritmo ortográfico
+    21→   ------------------------------------------------------------
+    22→   Mecánica:
+    23→   1. Aparece una palabra incompleta (silabeada, sin tilde) en
+    24→      el centro de la pantalla. La sílaba tónica está resaltada
+    25→      con bg-rose-200 + una flecha ↓ que indica "aquí va la tilde".
+    26→   2. Tres "burbujas" redondas con vocales con tilde flotan por
+    27→      la pantalla rebotando en los bordes (animación rAF tipo
+    28→      Pong). Una es la correcta; dos son distractores.
+    29→   3. El niño debe tocar la burbuja correcta antes de que se
+    30→      acabe el tiempo (5 s por palabra).
+    31→   4. Acierto → la burbuja "explota" + 10 puntos, "¡Atrapada! 🎉",
+    32→      auto-avance en 1.2 s.
+    33→   5. Error → la burbuja tocada tiembla, -3 puntos, se muestra
+    34→      la regla ortográfica en un callout ámbar; se permite
+    35→      reintentar (no avanza).
+    36→   6. Tiempo agotado → se muestra la palabra completa con la
+    37→      tilde resaltada en verde, +0 puntos, auto-avance en 1.5 s.
+    38→   7. Al completar los 20 desafíos → "¡Atrapa-Tilde Maestro!" 🏆.
+    39→   ============================================================ */
+    40→
+    41→type Estado =
+    42→  | "presentacion"
+    43→  | "jugando"
+    44→  | "acertando"
+    45→  | "fallando"
+    46→  | "tiempo_agotado"
+    47→  | "completado";
+    48→
+    49→interface Burbuja {
+    50→  id: number;
+    51→  vocal: string;
+    52→  esCorrecta: boolean;
+    53→  x: number;
+    54→  y: number;
+    55→  vx: number;
+    56→  vy: number;
+    57→  temblando: boolean;
+    58→}
+    59→
+    60→const TOTAL_DESAFIOS = desafiosAtrapa.length; // 20
+    61→const TIEMPO_POR_PALABRA = 5; // segundos
+    62→const DURACION_ACERTAR_MS = 1200;
+    63→const DURACION_FALLAR_MS = 1500;
+    64→const DURACION_TIEMPO_AGOTADO_MS = 1500;
+    65→
+    66→// Paleta cálida para las burbujas (todas las de un mismo desafío
+    67→// usan el MISMO color → no hay pista visual de cuál es la correcta).
+    68→const PALETA_BURBUJAS = [
+    69→  "from-amber-300 to-orange-400",
+    70→  "from-rose-300 to-fuchsia-400",
+    71→  "from-orange-300 to-rose-400",
+    72→  "from-fuchsia-300 to-amber-300",
+    73→  "from-violet-300 to-fuchsia-400",
+    74→];
+    75→
+    76→// Partículas de la explosión al atrapar la burbuja correcta.
+    77→const PARTICULAS_DIRS = [
+    78→  { dx: 0, dy: -1 },
+    79→  { dx: 0.7, dy: -0.7 },
+    80→  { dx: 1, dy: 0 },
+    81→  { dx: 0.7, dy: 0.7 },
+    82→  { dx: 0, dy: 1 },
+    83→  { dx: -0.7, dy: 0.7 },
+    84→  { dx: -1, dy: 0 },
+    85→  { dx: -0.7, dy: -0.7 },
+    86→];
+    87→
+    88→/* ----------------------- Helpers de audio ----------------------- */
+    89→
+    90→// Pasa a minúsculas antes de hablar: el campo audio_guia tiene la
+    91→// sílaba tónica en MAYÚSCULAS como anotación de diseño, pero
+    92→// SpeechSynthesis no interpreta mayúsculas como énfasis.
+    93→function normalizarAudioGuia(texto: string): string {
+    94→  return texto.toLowerCase();
+    95→}
+    96→
+    97→function hablar(texto: string) {
+    98→  if (typeof window === "undefined") return;
+    99→  if (!("speechSynthesis" in window)) return;
+   100→  try {
+   101→    window.speechSynthesis.cancel();
+   102→    const u = new SpeechSynthesisUtterance(normalizarAudioGuia(texto));
+   103→    u.lang = "es-ES";
+   104→    u.rate = 0.85;
+   105→    u.pitch = 1.1;
+   106→    window.speechSynthesis.speak(u);
+   107→  } catch {
+   108→    /* noop */
+   109→  }
+   110→}
+   111→
+   112→function silenciar() {
+   113→  if (typeof window === "undefined") return;
+   114→  if (!("speechSynthesis" in window)) return;
+   115→  try {
+   116→    window.speechSynthesis.cancel();
+   117→  } catch {
+   118→    /* noop */
+   119→  }
+   120→}
+   121→
+   122→/* ----------------------- Helpers de layout ----------------------- */
+   123→
+   124→function slotAX(
+   125→  slot: "izquierda" | "centro" | "derecha",
+   126→  ancho: number,
+   127→  size: number,
+   128→): number {
+   129→  if (slot === "izquierda") return Math.max(8, ancho * 0.12);
+   130→  if (slot === "centro") return Math.max(8, ancho * 0.5 - size / 2);
+   131→  return Math.max(8, ancho * 0.88 - size);
+   132→}
+   133→
+   134→function slotBY(slotIdx: number, alto: number, size: number): number {
+   135→  // Tres filas virtuales para espaciar las burbujas al iniciar.
+   136→  const filas = [alto * 0.18, alto * 0.45, alto * 0.72];
+   137→  const f = filas[slotIdx % filas.length];
+   138→  return Math.min(Math.max(8, f), Math.max(8, alto - size - 8));
+   139→}
+   140→
+   141→function elegir<T>(arr: T[], n: number): T[] {
+   142→  const copia = [...arr];
+   143→  for (let i = copia.length - 1; i > 0; i--) {
+   144→    const j = Math.floor(Math.random() * (i + 1));
+   145→    [copia[i], copia[j]] = [copia[j], copia[i]];
+   146→  }
+   147→  return copia.slice(0, n);
+   148→}
+   149→
+   150→function shuffleThree<T>(arr: [T, T, T]): [T, T, T] {
+   151→  const copia = [...arr];
+   152→  for (let i = copia.length - 1; i > 0; i--) {
+   153→    const j = Math.floor(Math.random() * (i + 1));
+   154→    [copia[i], copia[j]] = [copia[j], copia[i]];
+   155→  }
+   156→  return [copia[0], copia[1], copia[2]];
+   157→}
+   158→
+   159→function shuffleTwo<T>(arr: [T, T]): [T, T] {
+   160→  return Math.random() < 0.5 ? [arr[0], arr[1]] : [arr[1], arr[0]];
+   161→}
+   162→
+   163→/* ----------------------- Componente principal ----------------------- */
+   164→
+   165→export function AtrapaAcento() {
+   166→  // --- Estado del juego ---
+   167→  const [estado, setEstado] = useState<Estado>("presentacion");
+   168→  const [idxDesafio, setIdxDesafio] = useState(0);
+   169→  const [puntos, setPuntos] = useState(0);
+   170→  const [aciertos, setAciertos] = useState(0);
+   171→  const [errores, setErrores] = useState(0);
+   172→  const [streak, setStreak] = useState(0);
+   173→  const [streakMax, setStreakMax] = useState(0);
+   174→  const [tiempoRestante, setTiempoRestante] = useState(TIEMPO_POR_PALABRA);
+   175→  const [burbujas, setBurbujas] = useState<Burbuja[]>([]);
+   176→  const [colorBurbujas, setColorBurbujas] = useState(PALETA_BURBUJAS[0]);
+   177→  const [reglaVisible, setReglaVisible] = useState(false);
+   178→  const [idxBurbujaAtrapada, setIdxBurbujaAtrapada] = useState<number | null>(null);
+   179→  const [idxBurbujaFallida, setIdxBurbujaFallida] = useState<number | null>(null);
+   180→
+   181→  // Ref espejo de tiempoRestante para poder leer el valor actual dentro
+   182→  // del callback del interval sin reiniciar el effect.
+   183→  const tiempoRestanteRef = useRef(TIEMPO_POR_PALABRA);
+   184→
+   185→  const containerRef = useRef<HTMLDivElement>(null);
+   186→  const dimsRef = useRef({ w: 800, h: 420 });
+   187→  const [esDesktop, setEsDesktop] = useState(false);
+   188→  const bubbleSize = esDesktop ? 96 : 80;
+   189→
+   190→  // Set de timeouts para limpieza segura al desmontar.
+   191→  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+   192→  const programar = useCallback((fn: () => void, ms: number) => {
+   193→    const t = setTimeout(() => {
+   194→      timeoutsRef.current.delete(t);
+   195→      fn();
+   196→    }, ms);
+   197→    timeoutsRef.current.add(t);
+   198→  }, []);
+   199→
+   200→  useEffect(() => {
+   201→    const set = timeoutsRef.current;
+   202→    return () => {
+   203→      set.forEach((t) => clearTimeout(t));
+   204→      set.clear();
+   205→      silenciar();
+   206→    };
+   207→  }, []);
+   208→
+   209→  // Mantener dimsRef sincronizado con el tamaño real del contenedor
+   210→  // para que el rAF loop siempre lea el valor más reciente.
+   211→  useEffect(() => {
+   212→    const el = containerRef.current;
+   213→    if (!el) return;
+   214→    const ro = new ResizeObserver((entries) => {
+   215→      const e = entries[0];
+   216→      if (!e) return;
+   217→      const w = Math.max(200, Math.floor(e.contentRect.width));
+   218→      const h = Math.max(200, Math.floor(e.contentRect.height));
+   219→      dimsRef.current = { w, h };
+   220→    });
+   221→    ro.observe(el);
+   222→    return () => ro.disconnect();
+   223→  }, []);
+   224→
+   225→  // Detectar breakpoint sm (≥640px) para escoger tamaño de burbuja.
+   226→  useEffect(() => {
+   227→    if (typeof window === "undefined") return;
+   228→    const mq = window.matchMedia("(min-width: 640px)");
+   229→    const onChange = () => setEsDesktop(mq.matches);
+   230→    onChange();
+   231→    mq.addEventListener("change", onChange);
+   232→    return () => mq.removeEventListener("change", onChange);
+   233→  }, []);
+   234→
+   235→  const desafio: DesafioAtrapa | null = desafiosAtrapa[idxDesafio] ?? null;
+   236→
+   237→  /* ----------------------- Carga de un desafío ----------------------- */
+   238→
+   239→  const cargarDesafio = useCallback(
+   240→    (idx: number) => {
+   241→      const d = desafiosAtrapa[idx];
+   242→      if (!d) return;
+   243→      const { w, h } = dimsRef.current;
+   244→      const size = window.matchMedia("(min-width: 640px)").matches ? 96 : 80;
+   245→
+   246→      // Construir las 3 vocales (correcta + 2 distractores) en orden
+   247→      // aleatorio, y repartir las 3 slots horizontales (izq/centro/der)
+   248→      // entre ellas. La correcta arranca en el slot indicado por
+   249→      // d.posicion_x; las otras dos toman los slots restantes.
+   250→      const slotsRestantes = (
+   251→        ["izquierda", "centro", "derecha"] as const
+   252→      ).filter((s) => s !== d.posicion_x);
+   253→      const [s1, s2] = shuffleTwo([slotsRestantes[0], slotsRestantes[1]]);
+   254→      const vocalesSlots: { vocal: string; esCorrecta: boolean; slot: "izquierda" | "centro" | "derecha" }[] = [
+   255→        { vocal: d.letra_con_tilde_correcta, esCorrecta: true, slot: d.posicion_x },
+   256→        { vocal: d.distractores[0], esCorrecta: false, slot: s1 },
+   257→        { vocal: d.distractores[1], esCorrecta: false, slot: s2 },
+   258→      ];
+   259→      const orden = shuffleThree([0, 1, 2] as [0, 1, 2]);
+   260→      const nuevasBurbujas: Burbuja[] = orden.map((slotIdx, i) => {
+   261→        const v = vocalesSlots[slotIdx];
+   262→        // Velocidades aleatorias pero direcciones distintas.
+   263→        // Magnitud base ~110 px/s, modulada por la velocidad del nivel
+   264→        // (aumenta ligeramente cada 5 palabras).
+   265→        const boost = 1 + Math.floor(idx / 5) * 0.12;
+   266→        const speed = (95 + Math.random() * 45) * boost;
+   267→        // Ángulo distinto por índice para que no se muevan en grupo.
+   268→        const angulos = [
+   269→          (Math.PI / 4) + (Math.random() - 0.5) * 0.6, // ↘
+   270→          (3 * Math.PI / 4) + (Math.random() - 0.5) * 0.6, // ↙
+   271→          -Math.PI / 4 + (Math.random() - 0.5) * 0.6, // ↗
+   272→        ];
+   273→        const ang = angulos[i % angulos.length];
+   274→        return {
+   275→          id: i,
+   276→          vocal: v.vocal,
+   277→          esCorrecta: v.esCorrecta,
+   278→          x: slotAX(v.slot, w, size),
+   279→          y: slotBY(i, h, size),
+   280→          vx: Math.cos(ang) * speed,
+   281→          vy: Math.sin(ang) * speed,
+   282→          temblando: false,
+   283→        };
+   284→      });
+   285→
+   286→      setBurbujas(nuevasBurbujas);
+   287→      setColorBurbujas(elegir(PALETA_BURBUJAS, 1)[0]);
+   288→      tiempoRestanteRef.current = TIEMPO_POR_PALABRA;
+   289→      setTiempoRestante(TIEMPO_POR_PALABRA);
+   290→      setReglaVisible(false);
+   291→      setIdxBurbujaAtrapada(null);
+   292→      setIdxBurbujaFallida(null);
+   293→      setEstado("jugando");
+   294→
+   295→      // Reproducir automáticamente el audio guía al iniciar.
+   296→      hablar(d.audio_guia);
+   297→    },
+   298→    [],
+   299→  );
+   300→
+   301→  /* ----------------------- Loop de animación de burbujas (rAF) ----------------------- */
+   302→
+   303→  useEffect(() => {
+   304→    if (
+   305→      estado !== "jugando" &&
+   306→      estado !== "fallando" &&
+   307→      estado !== "acertando"
+   308→    ) {
+   309→      return;
+   310→    }
+   311→    let raf = 0;
+   312→    let last = performance.now();
+   313→    const loop = (now: number) => {
+   314→      const dt = Math.min(50, now - last) / 1000;
+   315→      last = now;
+   316→      const { w, h } = dimsRef.current;
+   317→      const size = window.matchMedia("(min-width: 640px)").matches ? 96 : 80;
+   318→      const maxX = Math.max(0, w - size);
+   319→      const maxY = Math.max(0, h - size);
+   320→      setBurbujas((prev) =>
+   321→        prev.map((b) => {
+   322→          if (estado === "acertando" && b.id === idxBurbujaAtrapada) {
+   323→            // La burbuja atrapada se queda quieta (luego "explota").
+   324→            return b;
+   325→          }
+   326→          let { x, y, vx, vy } = b;
+   327→          x += vx * dt;
+   328→          y += vy * dt;
+   329→          if (x < 0) {
+   330→            x = 0;
+   331→            vx = -vx;
+   332→          } else if (x > maxX) {
+   333→            x = maxX;
+   334→            vx = -vx;
+   335→          }
+   336→          if (y < 0) {
+   337→            y = 0;
+   338→            vy = -vy;
+   339→          } else if (y > maxY) {
+   340→            y = maxY;
+   341→            vy = -vy;
+   342→          }
+   343→          return { ...b, x, y, vx, vy };
+   344→        }),
+   345→      );
+   346→      raf = requestAnimationFrame(loop);
+   347→    };
+   348→    raf = requestAnimationFrame(loop);
+   349→    return () => cancelAnimationFrame(raf);
+   350→  }, [estado, idxBurbujaAtrapada]);
+   351→
+   352→  /* ----------------------- Timer (5s por palabra) ----------------------- */
+   353→  // Solo corre en 'jugando'. Se pausa durante 'fallando' y 'acertando'.
+   354→  // La transición a 'tiempo_agotado' se dispara DENTRO del callback del
+   355→  // interval (no en un effect body) para evitar renders en cascada.
+   356→
+   357→  useEffect(() => {
+   358→    if (estado !== "jugando") return;
+   359→    const id = setInterval(() => {
+   360→      const next = Math.max(0, tiempoRestanteRef.current - 0.1);
+   361→      tiempoRestanteRef.current = next;
+   362→      setTiempoRestante(next);
+   363→      if (next <= 0) {
+   364→        // Tiempo agotado: transición directa desde el callback.
+   365→        setStreak(0);
+   366→        setEstado("tiempo_agotado");
+   367→      }
+   368→    }, 100);
+   369→    return () => clearInterval(id);
+   370→  }, [estado]);
+   371→
+   372→  /* ----------------------- Transiciones de estado ----------------------- */
+   373→
+   374→  // acertando → siguiente desafío (o completado) tras 1.2s
+   375→  useEffect(() => {
+   376→    if (estado !== "acertando") return;
+   377→    const t = setTimeout(() => {
+   378→      if (idxDesafio + 1 >= TOTAL_DESAFIOS) {
+   379→        setEstado("completado");
+   380→        silenciar();
+   381→      } else {
+   382→        setIdxDesafio((i) => i + 1);
+   383→      }
+   384→    }, DURACION_ACERTAR_MS);
+   385→    return () => clearTimeout(t);
+   386→  }, [estado, idxDesafio]);
+   387→
+   388→  // tiempo_agotado → siguiente desafío (o completado) tras 1.5s
+   389→  useEffect(() => {
+   390→    if (estado !== "tiempo_agotado") return;
+   391→    const t = setTimeout(() => {
+   392→      if (idxDesafio + 1 >= TOTAL_DESAFIOS) {
+   393→        setEstado("completado");
+   394→        silenciar();
+   395→      } else {
+   396→        setIdxDesafio((i) => i + 1);
+   397→      }
+   398→    }, DURACION_TIEMPO_AGOTADO_MS);
+   399→    return () => clearTimeout(t);
+   400→  }, [estado, idxDesafio]);
+   401→
+   402→  // fallando → vuelve a jugando tras 1.5s (no avanza)
+   403→  useEffect(() => {
+   404→    if (estado !== "fallando") return;
+   405→    const t = setTimeout(() => {
+   406→      setIdxBurbujaFallida(null);
+   407→      setReglaVisible(false);
+   408→      setEstado("jugando");
+   409→    }, DURACION_FALLAR_MS);
+   410→    return () => clearTimeout(t);
+   411→  }, [estado]);
+   412→
+   413→  // Cuando idxDesafio cambia (excepto al iniciar en presentacion), cargar
+   414→  // automáticamente el siguiente desafío.
+   415→  // NOTA: NO incluir `estado` en las dependencias, porque eso dispararía
+   416→  // `cargarDesafio` en cada transición de estado (acertando→jugando,
+   417→  // fallando→jugando) y reiniciaría el desafío actual, impidiendo el avance.
+   418→  // Solo nos interesa reaccionar al cambio de `idxDesafio`.
+   419→  useEffect(() => {
+   420→    if (estado === "presentacion" || estado === "completado") return;
+   421→    cargarDesafio(idxDesafio);
+   422→    // eslint-disable-next-line react-hooks/exhaustive-deps
+   423→  }, [idxDesafio]);
+   424→
+   425→  /* ----------------------- Acciones ----------------------- */
+   426→
+   427→  const empezar = useCallback(() => {
+   428→    setIdxDesafio(0);
+   429→    setPuntos(0);
+   430→    setAciertos(0);
+   431→    setErrores(0);
+   432→    setStreak(0);
+   433→    setStreakMax(0);
+   434→    cargarDesafio(0);
+   435→  }, [cargarDesafio]);
+   436→
+   437→  const manejarToque = useCallback(
+   438→    (b: Burbuja) => {
+   439→      if (estado !== "jugando" && estado !== "fallando") return;
+   440→      if (b.esCorrecta) {
+   441→        // ¡Acierto!
+   442→        setIdxBurbujaAtrapada(b.id);
+   443→        setEstado("acertando");
+   444→        setPuntos((p) => p + 10);
+   445→        setAciertos((a) => a + 1);
+   446→        setStreak((s) => {
+   447→          const ns = s + 1;
+   448→          setStreakMax((m) => Math.max(m, ns));
+   449→          return ns;
+   450→        });
+   451→        setReglaVisible(false);
+   452→        setIdxBurbujaFallida(null);
+   453→      } else {
+   454→        // Error: la burbuja tocada tiembla.
+   455→        setIdxBurbujaFallida(b.id);
+   456→        setEstado("fallando");
+   457→        setPuntos((p) => Math.max(0, p - 3));
+   458→        setErrores((e) => e + 1);
+   459→        setStreak(0);
+   460→        setReglaVisible(true);
+   461→      }
+   462→    },
+   463→    [estado],
+   464→  );
+   465→
+   466→  const reiniciar = useCallback(() => {
+   467→    silenciar();
+   468→    setEstado("presentacion");
+   469→    setIdxDesafio(0);
+   470→    setBurbujas([]);
+   471→    setPuntos(0);
+   472→    setAciertos(0);
+   473→    setErrores(0);
+   474→    setStreak(0);
+   475→    setStreakMax(0);
+   476→    setReglaVisible(false);
+   477→    setIdxBurbujaAtrapada(null);
+   478→    setIdxBurbujaFallida(null);
+   479→    tiempoRestanteRef.current = TIEMPO_POR_PALABRA;
+   480→    setTiempoRestante(TIEMPO_POR_PALABRA);
+   481→  }, []);
+   482→
+   483→  const escuchar = useCallback(() => {
+   484→    if (desafio) hablar(desafio.audio_guia);
+   485→  }, [desafio]);
+   486→
+   487→  /* ----------------------- Derivados de render ----------------------- */
+   488→
+   489→  const porcentajeTiempo = (tiempoRestante / TIEMPO_POR_PALABRA) * 100;
+   490→  const colorBarraTiempo =
+   491→    porcentajeTiempo > 50
+   492→      ? "from-emerald-400 to-teal-400"
+   493→      : porcentajeTiempo > 25
+   494→        ? "from-amber-400 to-orange-400"
+   495→        : "from-rose-400 to-red-400";
+   496→
+   497→  const silabasPalabra = useMemo(() => {
+   498→    if (!desafio) return [] as { texto: string; tonica: boolean }[];
+   499→    return desafio.palabra_incompleta.split("-").map((s, i, arr) => {
+   500→      // silaba_tonica: 1=última, 2=penúltima, 3=antepenúltima.
+   501→      const tonicaIdxDesdeElFinal = desafio.silaba_tonica;
+   502→      const idxTonica = arr.length - tonicaIdxDesdeElFinal;
+   503→      return { texto: s, tonica: i === idxTonica };
+   504→    });
+   505→  }, [desafio]);
+   506→
+   507→  const silabasPalabraCompleta = useMemo(() => {
+   508→    if (!desafio) return null;
+   509→    // Mostrar la palabra completa con la tilde resaltada en verde.
+   510→    // Resaltamos el primer carácter acentuado que aparezca.
+   511→    const palabra = desafio.palabra_completa;
+   512→    const idxTilde = Array.from(palabra).findIndex((c) =>
+   513→      "áéíóúÁÉÍÓÚ".includes(c),
+   514→    );
+   515→    return { palabra, idxTilde };
+   516→  }, [desafio]);
+   517→
+   518→  /* ===================== RENDER ===================== */
+   519→
+   520→  return (
+   521→    <div className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-gradient-to-br from-amber-100 via-orange-200 to-rose-200 font-display">
+   522→      {/* ---------------- Fondos decorativos: "cielo de vocales" ---------------- */}
+   523→      <div aria-hidden className="pointer-events-none absolute inset-0">
+   524→        {/* Sol suave */}
+   525→        <div className="absolute right-4 top-4 h-16 w-16 rounded-full bg-amber-300 opacity-70 blur-sm sm:right-8 sm:top-8 sm:h-20 sm:w-20" />
+   526→        {/* Nubes difuminadas */}
+   527→        <div className="absolute left-[8%] top-[14%] h-20 w-44 rounded-full bg-white/55 blur-2xl" />
+   528→        <div className="absolute right-[10%] top-[28%] h-16 w-36 rounded-full bg-white/45 blur-2xl" />
+   529→        <div className="absolute left-[20%] bottom-[18%] h-20 w-48 rounded-full bg-white/40 blur-2xl" />
+   530→        <div className="absolute right-[18%] bottom-[10%] h-16 w-40 rounded-full bg-white/45 blur-2xl" />
+   531→        {/* Vocales gigantes decorativas flotando */}
+   532→        <span className="absolute left-[6%] top-[40%] select-none text-7xl font-bold text-rose-300/30 animate-float">á</span>
+   533→        <span className="absolute right-[8%] top-[55%] select-none text-6xl font-bold text-amber-300/30 animate-float" style={{ animationDelay: "1.2s" }}>é</span>
+   534→        <span className="absolute left-[40%] top-[8%] select-none text-5xl font-bold text-fuchsia-300/30 animate-float" style={{ animationDelay: "0.6s" }}>í</span>
+   535→        <span className="absolute right-[35%] bottom-[6%] select-none text-7xl font-bold text-orange-300/30 animate-float" style={{ animationDelay: "1.8s" }}>ó</span>
+   536→        <span className="absolute left-[55%] bottom-[30%] select-none text-6xl font-bold text-violet-300/30 animate-float" style={{ animationDelay: "2.4s" }}>ú</span>
+   537→      </div>
+   538→
+   539→      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-72px)] max-w-5xl flex-col px-3 pb-6 pt-4 sm:px-5 sm:pt-6">
+   540→        {/* ===================== HUD superior ===================== */}
+   541→        <div className="mb-4 rounded-2xl border-2 border-fuchsia-300 bg-white/80 p-3 shadow-md backdrop-blur sm:p-4">
+   542→          <div className="flex flex-wrap items-center justify-between gap-3">
+   543→            <div className="flex items-center gap-2">
+   544→              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 text-white shadow sm:h-11 sm:w-11">
+   545→                <Target size={20} strokeWidth={2.5} />
+   546→              </div>
+   547→              <div>
+   548→                <p className="text-xs font-bold uppercase tracking-wide text-fuchsia-700/80">
+   549→                  Atrapa el Acento
+   550→                </p>
+   551→                <p className="text-base font-bold text-fuchsia-950 sm:text-lg">
+   552→                  Palabra {Math.min(idxDesafio + 1, TOTAL_DESAFIOS)}{" "}
+   553→                  <span className="text-fuchsia-700/60">de {TOTAL_DESAFIOS}</span>
+   554→                </p>
+   555→              </div>
+   556→            </div>
+   557→            <div className="flex items-center gap-2">
+   558→              {/* Puntos */}
+   559→              <div className="flex items-center gap-1.5 rounded-full border-2 border-amber-300 bg-amber-50 px-3 py-1.5">
+   560→                <Sparkles size={15} className="text-amber-600" strokeWidth={2.5} />
+   561→                <span className="text-sm font-bold text-amber-900">{puntos}</span>
+   562→              </div>
+   563→              {/* Racha */}
+   564→              <div className="flex items-center gap-1.5 rounded-full border-2 border-orange-300 bg-orange-50 px-3 py-1.5">
+   565→                {streak >= 3 ? (
+   566→                  <Flame size={15} className="text-orange-500" strokeWidth={2.5} />
+   567→                ) : (
+   568→                  <Zap size={15} className="text-orange-400" strokeWidth={2.5} />
+   569→                )}
+   570→                <span className="text-sm font-bold text-orange-900">
+   571→                  {streak}
+   572→                  <span className="ml-1 hidden text-xs font-semibold text-orange-700/70 sm:inline">
+   573→                    racha
+   574→                  </span>
+   575→                </span>
+   576→              </div>
+   577→            </div>
+   578→          </div>
+   579→
+   580→          {/* Barra de tiempo (solo visible mientras se juega o se muestra feedback) */}
+   581→          {(estado === "jugando" ||
+   582→            estado === "fallando" ||
+   583→            estado === "acertando" ||
+   584→            estado === "tiempo_agotado") && (
+   585→            <div className="mt-3">
+   586→              <div className="mb-1 flex items-center justify-between text-xs font-bold text-fuchsia-900/80">
+   587→                <span className="flex items-center gap-1">
+   588→                  <Timer size={12} strokeWidth={2.5} /> Tiempo
+   589→                </span>
+   590→                <span>{Math.ceil(tiempoRestante)}s</span>
+   591→              </div>
+   592→              <div className="h-2.5 w-full overflow-hidden rounded-full bg-fuchsia-100">
+   593→                <div
+   594→                  className={`h-full rounded-full bg-gradient-to-r ${colorBarraTiempo} transition-all duration-100 ease-linear`}
+   595→                  style={{ width: `${porcentajeTiempo}%` }}
+   596→                />
+   597→              </div>
+   598→            </div>
+   599→          )}
+   600→        </div>
+   601→
+   602→        {/* ===================== Pantalla: presentación ===================== */}
+   603→        {estado === "presentacion" ? (
+   604→          <Presentacion onEmpezar={empezar} />
+   605→        ) : estado === "completado" ? (
+   606→          /* ===================== Pantalla: completado ===================== */
+   607→          <PantallaCompletado
+   608→            puntos={puntos}
+   609→            aciertos={aciertos}
+   610→            errores={errores}
+   611→            streakMax={streakMax}
+   612→            onReiniciar={reiniciar}
+   613→          />
+   614→        ) : (
+   615→          /* ===================== Pantalla: jugando / feedback ===================== */
+   616→          desafio && (
+   617→            <div className="flex flex-1 flex-col gap-4">
+   618→              {/* Palabra central */}
+   619→              <div className="rounded-3xl border-2 border-fuchsia-200 bg-white/85 p-4 text-center shadow-lg backdrop-blur sm:p-6">
+   620→                <p className="text-xs font-bold uppercase tracking-wider text-fuchsia-700">
+   621→                  {desafio.clasificacion} · ¿Dónde va la tilde?
+   622→                </p>
+   623→                <div className="mt-3 flex flex-wrap items-end justify-center gap-2 sm:gap-3">
+   624→                  {silabasPalabra.map((s, i) => (
+   625→                    <div key={i} className="flex flex-col items-center">
+   626→                      {s.tonica && (
+   627→                        <span className="mb-0.5 text-2xl font-bold text-rose-500 sm:text-3xl" aria-hidden>
+   628→                          ↓
+   629→                        </span>
+   630→                      )}
+   631→                      {!s.tonica && (
+   632→                        <span className="mb-0.5 h-7 sm:h-9" aria-hidden />
+   633→                      )}
+   634→                      <span
+   635→                        className={`rounded-xl px-3 py-1 text-5xl font-bold leading-none sm:text-6xl ${
+   636→                          s.tonica
+   637→                            ? "bg-rose-200 text-slate-800 shadow-inner"
+   638→                            : "text-slate-800"
+   639→                        }`}
+   640→                        style={
+   641→                          s.tonica
+   642→                            ? { borderBottom: "4px solid #f43f5e" }
+   643→                            : undefined
+   644→                        }
+   645→                      >
+   646→                        {s.texto}
+   647→                      </span>
+   648→                    </div>
+   649→                  ))}
+   650→                </div>
+   651→                <p className="mt-3 text-sm font-semibold text-fuchsia-900/80 sm:text-base">
+   652→                  <Target
+   653→                    size={14}
+   654→                    className="mr-1 inline"
+   655→                    strokeWidth={2.5}
+   656→                  />
+   657→                  Tocá la burbuja con la vocal que lleva tilde.
+   658→                </p>
+   659→              </div>
+   660→
+   661→              {/* Campo de juego con burbujas flotantes */}
+   662→              <div
+   663→                ref={containerRef}
+   664→                className="relative flex-1 overflow-hidden rounded-3xl border-2 border-fuchsia-200 bg-white/40 shadow-inner backdrop-blur-sm"
+   665→                style={{ minHeight: "320px" }}
+   666→              >
+   667→                {/* Burbujas */}
+   668→                {(estado === "jugando" ||
+   669→                  estado === "fallando" ||
+   670→                  estado === "acertando") &&
+   671→                  burbujas.map((b) => {
+   672→                    const esAtrapada =
+   673→                      estado === "acertando" && b.id === idxBurbujaAtrapada;
+   674→                    const esFallida =
+   675→                      estado === "fallando" && b.id === idxBurbujaFallida;
+   676→                    return (
+   677→                      <button
+   678→                        key={b.id}
+   679→                        onClick={() => manejarToque(b)}
+   680→                        disabled={
+   681→                          estado === "acertando" ||
+   682→                          esAtrapada
+   683→                        }
+   684→                        aria-label={ariaVocal(b.vocal)}
+   685→                        className={`absolute flex items-center justify-center rounded-full border-4 border-white bg-gradient-to-br ${colorBurbujas} font-bold text-white shadow-lg transition-transform duration-75 active:scale-95 ${esAtrapada ? "pointer-events-none animate-pop-burst" : ""} ${esFallida ? "animate-burbuja-tiembla" : ""} hover:scale-105`}
+   686→                        style={{
+   687→                          left: `${b.x}px`,
+   688→                          top: `${b.y}px`,
+   689→                          width: `${bubbleSize}px`,
+   690→                          height: `${bubbleSize}px`,
+   691→                          fontSize: esDesktop ? "3.25rem" : "2.5rem",
+   692→                          touchAction: "manipulation",
+   693→                          textShadow: "0 2px 4px rgba(0,0,0,0.25)",
+   694→                          boxShadow:
+   695→                            "0 6px 16px -4px rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.5)",
+   696→                        }}
+   697→                      >
+   698→                        {b.vocal}
+   699→                        {/* Partículas de explosión si fue atrapada */}
+   700→                        {esAtrapada && (
+   701→                          <>
+   702→                            {PARTICULAS_DIRS.map((p, i) => (
+   703→                              <span
+   704→                                key={i}
+   705→                                aria-hidden
+   706→                                className="pointer-events-none absolute h-2.5 w-2.5 rounded-full bg-white shadow"
+   707→                                style={{
+   708→                                  "--dx": `${p.dx * 60}px`,
+   709→                                  "--dy": `${p.dy * 60}px`,
+   710→                                  animation: `particulaVolar 0.6s ease-out forwards`,
+   711→                                  animationDelay: `${i * 0.02}s`,
+   712→                                } as React.CSSProperties}
+   713→                              />
+   714→                            ))}
+   715→                          </>
+   716→                        )}
+   717→                      </button>
+   718→                    );
+   719→                  })}
+   720→
+   721→                {/* Overlay: ¡Atrapada! 🎉 */}
+   722→                {estado === "acertando" && (
+   723→                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+   724→                    <div className="animate-bounce-in rounded-3xl border-2 border-emerald-300 bg-white/95 px-6 py-4 shadow-2xl">
+   725→                      <p className="text-center text-2xl font-bold text-emerald-700 sm:text-3xl">
+   726→                        ¡Atrapada! 🎉
+   727→                      </p>
+   728→                      <p className="mt-1 text-center text-sm font-semibold text-emerald-700/80 sm:text-base">
+   729→                        +10 puntos
+   730→                      </p>
+   731→                    </div>
+   732→                  </div>
+   733→                )}
+   734→
+   735→                {/* Overlay: tiempo agotado — muestra palabra completa */}
+   736→                {estado === "tiempo_agotado" && silabasPalabraCompleta && (
+   737→                  <div className="absolute inset-0 flex items-center justify-center">
+   738→                    <div className="animate-bounce-in rounded-3xl border-2 border-rose-300 bg-white/95 px-6 py-5 text-center shadow-2xl">
+   739→                      <p className="text-xs font-bold uppercase tracking-wide text-rose-700">
+   740→                        Se acabó el tiempo
+   741→                      </p>
+   742→                      <p className="mt-2 text-2xl font-bold text-slate-800 sm:text-3xl">
+   743→                        {Array.from(silabasPalabraCompleta.palabra).map((c, i) => (
+   744→                          <span
+   745→                            key={i}
+   746→                            className={
+   747→                              i === silabasPalabraCompleta.idxTilde
+   748→                                ? "rounded-md bg-emerald-200 px-1 text-emerald-800 shadow-inner"
+   749→                                : ""
+   750→                            }
+   751→                          >
+   752→                            {c}
+   753→                          </span>
+   754→                        ))}
+   755→                      </p>
+   756→                      <p className="mt-2 text-sm font-semibold text-rose-700/80">
+   757→                        Así se escribe con tilde. ¡A la próxima!
+   758→                      </p>
+   759→                    </div>
+   760→                  </div>
+   761→                )}
+   762→
+   763→                {/* Callout: regla ortográfica al fallar */}
+   764→                {estado === "fallando" && reglaVisible && (
+   765→                  <div className="absolute left-1/2 top-3 w-[92%] max-w-md -translate-x-1/2">
+   766→                    <div className="animate-bounce-in rounded-2xl border-2 border-amber-300 bg-amber-50/95 px-4 py-3 shadow-xl backdrop-blur">
+   767→                      <p className="flex items-start gap-2 text-sm font-semibold text-amber-900 sm:text-base">
+   768→                        <BookOpen
+   769→                          size={16}
+   770→                          className="mt-0.5 shrink-0 text-amber-600"
+   771→                          strokeWidth={2.5}
+   772→                        />
+   773→                        <span>
+   774→                          <span className="font-bold text-amber-700">
+   775→                            Regla:{" "}
+   776→                          </span>
+   777→                          {desafio.regla}
+   778→                        </span>
+   779→                      </p>
+   780→                      <p className="mt-1 text-xs font-bold text-rose-700">
+   781→                        -3 puntos · ¡Intentá de nuevo!
+   782→                      </p>
+   783→                    </div>
+   784→                  </div>
+   785→                )}
+   786→              </div>
+   787→
+   788→              {/* Botón escuchar (esquina inferior izquierda del área de juego) */}
+   789→              <div className="flex items-center justify-between gap-3">
+   790→                <button
+   791→                  onClick={escuchar}
+   792→                  className="flex items-center gap-2 rounded-2xl border-2 border-fuchsia-400 bg-white/90 px-4 py-3 text-base font-bold text-fuchsia-800 shadow-md transition hover:scale-[1.02] hover:bg-fuchsia-50 active:scale-95 sm:text-lg"
+   793→                  aria-label={`Escuchar cómo se pronuncia ${desafio.palabra_completa}`}
+   794→                >
+   795→                  <Volume2 size={20} strokeWidth={2.5} />
+   796→                  <span>🔊 Escuchar</span>
+   797→                </button>
+   798→                <div className="rounded-2xl border-2 border-fuchsia-200 bg-white/70 px-3 py-2 text-right text-xs font-bold text-fuchsia-900 sm:text-sm">
+   799→                  <p>
+   800→                    Aciertos:{" "}
+   801→                    <span className="text-emerald-700">{aciertos}</span>
+   802→                    {" · "}
+   803→                    <span className="text-rose-700">{errores} errores</span>
+   804→                  </p>
+   805→                  <p className="text-fuchsia-700/70">
+   806→                    Racha máxima: {streakMax} 🔥
+   807→                  </p>
+   808→                </div>
+   809→              </div>
+   810→            </div>
+   811→          )
+   812→        )}
+   813→      </div>
+   814→
+   815→      {/* Confeti al atrapar la última burbuja correcta (transición a completado) */}
+   816→      {estado === "completado" && <Confetti duracionMs={3000} cantidad={64} />}
+   817→
+   818→      {/* Estilos inline para keyframes de partículas y animaciones de burbuja */}
+   819→      <style>{`
+   820→        @keyframes particulaVolar {
+   821→          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+   822→          100% {
+   823→            transform: translate(var(--dx), var(--dy)) scale(0.3);
+   824→            opacity: 0;
+   825→          }
+   826→        }
+   827→        @keyframes popBurst {
+   828→          0% { transform: scale(1); opacity: 1; }
+   829→          40% { transform: scale(1.5); opacity: 0.9; }
+   830→          100% { transform: scale(0); opacity: 0; }
+   831→        }
+   832→        .animate-pop-burst {
+   833→          animation: popBurst 0.55s ease-out forwards;
+   834→        }
+   835→        @keyframes burbujaTiembla {
+   836→          0%, 100% { transform: translateX(0); }
+   837→          20% { transform: translateX(-6px) rotate(-3deg); }
+   838→          40% { transform: translateX(6px) rotate(3deg); }
+   839→          60% { transform: translateX(-5px) rotate(-2deg); }
+   840→          80% { transform: translateX(5px) rotate(2deg); }
+   841→        }
+   842→        .animate-burbuja-tiembla {
+   843→          animation: burbujaTiembla 0.45s ease-in-out;
+   844→        }
+   845→      `}</style>
+   846→    </div>
+   847→  );
+   848→}
+   849→
+   850→/* ----------------------- Aria helper ----------------------- */
+   851→
+   852→function ariaVocal(v: string): string {
+   853→  // Describe la vocal: "é con tilde" o "a sin tilde".
+   854→  const conTilde = "áéíóú".includes(v.toLowerCase());
+   855→  const base = v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+   856→  if (conTilde) return `Vocal ${v} con tilde`;
+   857→  return `Vocal ${v} sin tilde (base ${base})`;
+   858→}
+   859→
+   860→/* ----------------------- Pantalla de presentación ----------------------- */
+   861→
+   862→function Presentacion({ onEmpezar }: { onEmpezar: () => void }) {
+   863→  return (
+   864→    <div className="animate-bounce-in mx-auto max-w-2xl rounded-3xl border-2 border-fuchsia-300 bg-white/85 p-6 text-center shadow-lg backdrop-blur sm:p-8">
+   865→      <p className="text-xs font-bold uppercase tracking-wider text-fuchsia-700">
+   866→        Ritmo y velocidad ortográfica · 3er grado
+   867→      </p>
+   868→      <h2 className="mt-1 flex items-center justify-center gap-2 text-2xl font-bold text-fuchsia-950 sm:text-3xl">
+   869→        <Target size={24} className="text-fuchsia-600" strokeWidth={2.5} />
+   870→        ¡Atrapa el Acento!
+   871→      </h2>
+   872→
+   873→      <div className="mx-auto my-5 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-300 via-violet-400 to-amber-300 text-6xl shadow-inner sm:h-28 sm:w-28">
+   874→        🎯
+   875→      </div>
+   876→
+   877→      <p className="text-base font-bold text-fuchsia-900 sm:text-lg">
+   878→        Las vocales con tilde <span className="text-fuchsia-600">flotan</span> por
+   879→        la pantalla.
+   880→      </p>
+   881→      <div className="mx-auto mt-3 max-w-md rounded-2xl border-2 border-fuchsia-200 bg-fuchsia-50 px-4 py-3 text-left">
+   882→        <ul className="space-y-1.5 text-sm font-semibold text-fuchsia-900 sm:text-base">
+   883→          <li className="flex items-start gap-2">
+   884→            <span className="text-fuchsia-500">▸</span>
+   885→            <span>
+   886→              Mirá la palabra del centro: la sílaba con la flecha ↓ es la que
+   887→              lleva tilde.
+   888→            </span>
+   889→          </li>
+   890→          <li className="flex items-start gap-2">
+   891→            <span className="text-fuchsia-500">▸</span>
+   892→            <span>
+   893→              Tocá rápido la burbuja con la vocal correcta antes de que se
+   894→              acabe el tiempo.
+   895→            </span>
+   896→          </li>
+   897→          <li className="flex items-start gap-2">
+   898→            <span className="text-fuchsia-500">▸</span>
+   899→            <span>
+   900→              Si te equivocás, te mostramos la regla. ¡Seguí intentando!
+   901→            </span>
+   902→          </li>
+   903→          <li className="flex items-start gap-2">
+   904→            <span className="text-fuchsia-500">▸</span>
+   905→            <span>
+   906→              Poné el sonido 🔊 para escuchar la palabra bien despacio.
+   907→            </span>
+   908→          </li>
+   909→        </ul>
+   910→      </div>
+   911→
+   912→      <p className="mt-4 text-sm font-bold text-fuchsia-700/80">
+   913→        {TOTAL_DESAFIOS} palabras · Agudas, Graves y Esdrújulas
+   914→      </p>
+   915→
+   916→      <button
+   917→        onClick={onEmpezar}
+   918→        className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-amber-500 py-3.5 text-base font-bold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-95 sm:w-auto sm:px-10"
+   919→      >
+   920→        <Target size={18} strokeWidth={2.5} /> ¡Atrapar!
+   921→        <ArrowRight size={18} strokeWidth={2.5} />
+   922→      </button>
+   923→    </div>
+   924→  );
+   925→}
+   926→
+   927→/* ----------------------- Pantalla final ----------------------- */
+   928→
+   929→function PantallaCompletado({
+   930→  puntos,
+   931→  aciertos,
+   932→  errores,
+   933→  streakMax,
+   934→  onReiniciar,
+   935→}: {
+   936→  puntos: number;
+   937→  aciertos: number;
+   938→  errores: number;
+   939→  streakMax: number;
+   940→  onReiniciar: () => void;
+   941→}) {
+   942→  const porcentaje = Math.round((aciertos / TOTAL_DESAFIOS) * 100);
+   943→  return (
+   944→    <div className="mx-auto max-w-2xl">
+   945→      <div className="animate-bounce-in rounded-3xl border-2 border-fuchsia-300 bg-white/90 p-8 text-center shadow-2xl backdrop-blur">
+   946→        <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-300 via-violet-400 to-amber-300 shadow-lg">
+   947→          <Trophy
+   948→            size={52}
+   949→            className="animate-trophy-float text-white"
+   950→            strokeWidth={2.5}
+   951→          />
+   952→        </div>
+   953→        <h2 className="text-3xl font-bold text-fuchsia-950 sm:text-4xl">
+   954→          ¡Atrapa-Tilde Maestro!
+   955→        </h2>
+   956→        <p className="mt-2 text-base font-semibold text-fuchsia-700 sm:text-lg">
+   957→          Atrapaste <span className="text-fuchsia-600">{aciertos}</span> de{" "}
+   958→          {TOTAL_DESAFIOS} tildes. 🎉
+   959→        </p>
+   960→        <p className="mt-1 text-sm font-medium text-fuchsia-600/80">
+   961→          Aprendiste a reconocer <b>agudas</b>, <b>graves</b> y{" "}
+   962→          <b>esdrújulas</b> del español nicaragüense.
+   963→        </p>
+   964→
+   965→        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-3xl">
+   966→          <span>🎯</span>
+   967→          <span>á</span>
+   968→          <span>é</span>
+   969→          <span>í</span>
+   970→          <span>ó</span>
+   971→          <span>ú</span>
+   972→          <span>🏆</span>
+   973→        </div>
+   974→
+   975→        <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+   976→          <StatCard
+   977→            label="Puntos"
+   978→            value={puntos}
+   979→            icon={<Sparkles size={18} className="text-amber-600" strokeWidth={2.5} />}
+   980→            border="border-amber-200"
+   981→            bg="bg-amber-50"
+   982→            text="text-amber-900"
+   983→          />
+   984→          <StatCard
+   985→            label="Aciertos"
+   986→            value={`${aciertos}/${TOTAL_DESAFIOS}`}
+   987→            icon={<Target size={18} className="text-emerald-600" strokeWidth={2.5} />}
+   988→            border="border-emerald-200"
+   989→            bg="bg-emerald-50"
+   990→            text="text-emerald-900"
+   991→          />
+   992→          <StatCard
+   993→            label="Errores"
+   994→            value={errores}
+   995→            icon={<BookOpen size={18} className="text-rose-600" strokeWidth={2.5} />}
+   996→            border="border-rose-200"
+   997→            bg="bg-rose-50"
+   998→            text="text-rose-900"
+   999→          />
+  1000→          <StatCard
+  1001→            label="Racha máxima"
+  1002→            value={`${streakMax} 🔥`}
+  1003→            icon={<Flame size={18} className="text-orange-500" strokeWidth={2.5} />}
+  1004→            border="border-orange-200"
+  1005→            bg="bg-orange-50"
+  1006→            text="text-orange-900"
+  1007→          />
+  1008→        </div>
+  1009→
+  1010→        <p className="mt-4 text-sm font-bold text-fuchsia-700">
+  1011→          Precisión: {porcentaje}%
+  1012→        </p>
+  1013→
+  1014→        <button
+  1015→          onClick={onReiniciar}
+  1016→          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-violet-500 to-amber-500 py-3.5 text-base font-bold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-95 sm:w-auto sm:px-8"
+  1017→        >
+  1018→          <RefreshCw size={18} strokeWidth={2.5} /> Jugar de nuevo
+  1019→          <ArrowRight size={18} strokeWidth={2.5} />
+  1020→        </button>
+  1021→      </div>
+  1022→    </div>
+  1023→  );
+  1024→}
+  1025→
+  1026→function StatCard({
+  1027→  label,
+  1028→  value,
+  1029→  icon,
+  1030→  border,
+  1031→  bg,
+  1032→  text,
+  1033→}: {
+  1034→  label: string;
+  1035→  value: number | string;
+  1036→  icon: React.ReactNode;
+  1037→  border: string;
+  1038→  bg: string;
+  1039→  text: string;
+  1040→}) {
+  1041→  return (
+  1042→    <div className={`rounded-2xl border-2 ${border} ${bg} px-3 py-3`}>
+  1043→      <div className="flex items-center justify-center">{icon}</div>
+  1044→      <p className="mt-1 text-xs font-bold text-fuchsia-700/80">{label}</p>
+  1045→      <p className={`font-display text-lg font-bold ${text}`}>{value}</p>
+  1046→    </div>
+  1047→  );
+  1048→}
+  1049→

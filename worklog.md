@@ -1029,3 +1029,737 @@ Stage Summary:
 - Dashboard con los 7 mini-juegos operativo.
 - IMPORTANTE: el acceso debe ser vía gateway puerto 81 (no puerto 3000 directo) para que las llamadas API con XTransformPort funcionen.
 - App lista para usar desde el Preview Panel.
+
+---
+Task ID: AAA-2-CAMION
+Agent: main (Frontend Developer + Game Designer)
+Task: Rediseñar el mini-juego "El Camión de las Multiplicaciones" a calidad AAA usando la infraestructura `@/components/game` (GameShell, GameHUD, GameIntro, GameOverlay, useGameAudio, FloatingScore, ParticleBurst).
+
+Work Log:
+- Leído worklog previo (AVATAR-CAZADORES, APP-START) para entender el estado del proyecto.
+- Leído infraestructura AAA en `src/components/game/`:
+  * `index.ts` (exports)
+  * `GameShell.tsx` (theme: math/language/fun/kitchen/forest/sky; partículas ambientales)
+  * `GameHUD.tsx` (nivel, puntos, vidas, racha, timer, mute)
+  * `GameIntro.tsx` (icono, titulo, subtitulo, descripcion, pasos, temaColor, onJugar)
+  * `GameOverlay.tsx` (tipo victoria/completado/derrota, stats, onReiniciar, onSalir)
+  * `useGameAudio.ts` (sfx.click/success/error/combo/victory/pop/cut/whoosh/coin/tick + vibrate)
+  * `FloatingScore.tsx` (item: {id,x,y,text,color,icon})
+  * `ParticleBurst.tsx` (burst: {id,x,y,count,colors,power})
+- Leído `src/data/camionMultiplicaciones.ts` (10 niveles: 2×3, 3×4, 4×5, 5×6, 6×7, 8×4, 12×3, 14×5, 23×4, 34×6).
+- Leído `src/components/CamionMultiplicaciones.tsx` original (778 líneas, mecánica drag&drop conservada).
+- Leído `src/components/CamionMultiplicacionesWrapper.tsx` (NO modificado — wrapper provee botón Salir flotante en `top-16`).
+- Rediseñado `src/components/CamionMultiplicaciones.tsx` (~1100 líneas) con arquitectura AAA:
+
+  ### Estructura
+  - `<GameShell theme="math">` (sin onSalir — el wrapper ya provee el botón Salir).
+  - Estado "intro" → `<GameIntro>` con icono 🚛 grande, titulo "El Camión de las Multiplicaciones", subtitulo "Cargá cajitas y despachá pedidos", descripcion, pasos (4), temaColor `#22d3ee` (cyan).
+  - Estado "cargando" → `<GameHUD theme="math" nivel={nivelIdx+1} totalNiveles={10} puntos={puntos} vidas={vidas} vidasMaximas={3} racha={racha} timerMs={timerMs} timerTotalMs={90000} muted={muted} onToggleMute={toggleMute} icono={TruckIcon}/>` + contenido del juego.
+  - Estados "verificando" y "celebrando" → animación del camión.
+  - Estado "completado" → `<GameOverlay tipo="victoria" stats={{puntos, rachaMaxima, aciertos, total: intentos}} onReiniciar={reiniciarJuego} onSalir={reiniciarJuego} temaColor="#22d3ee"/>`.
+  - Estado "gameover" → `<GameOverlay tipo="derrota" .../>`.
+
+  ### Visuales AAA
+  - **CamionSVG hiperdetallado** (viewBox 0 0 360 230):
+    * Sombra inferior (ellipse con opacity 0.35).
+    * Humo del escape: 3 puffs animados (smoke-1/2/3) con keyframes `smoke-puff` (opacity 0→0.8→0, translate -12px/-28px, scale 0.5→2).
+    * Tubería del escape (rect + ellipse).
+    * Caja de carga con gradiente metálico (cajaGrad: #fef3c7→#fbbf24→#92400e), borde que cambia color según estado (rojo si se pasó, verde si completo, cyan default).
+    * Techo más oscuro (borde superior #7c2d12 opacity 0.55).
+    * 3 líneas decorativas verticales (paneles).
+    * 2 highlights metálicos (metalShine gradient).
+    * **Toldo del mercado con franjas coloridas**: 8 rectángulos de colores alternando (amarillo, rosa, verde, azul), con gradiente toldoGrad (naranja→cobre) y onda inferior de 12 triángulos.
+    * **Cabina con gradiente blue-cyan** (cabinaGrad: #22d3ee→#0891b2→#155e75), highlight metal posterior.
+    * **Parabrisas con reflejo**: ventana con gradiente ventanaGrad (#bae6fd→#7dd3fc→#0ea5e9) + 2 polígonos blancos semi-transparentes simulando reflejos de luz.
+    * Detalle de puerta (línea vertical + manija + círculo).
+    * Piso de cabina.
+    * **2 Faros delanteros amarillos** (#fef08a encendido, #fde047 apagado) con filter `faroGlow` (feGaussianBlur stdDeviation 3) — se encienden al celebrar o cuando se arrastra sobre el camión.
+    * **2 Ruedas negras con rim cromado y rayos**: radialGradient ruedaGrad (#374151→#1f2937→#0f172a) + rimGrad (#f3f4f6→#cbd5e1→#64748b) + 6 rayos por rueda (cálculos trigonométricos cos/sin) + cubo central.
+    * Contador flotante sobre la caja (badge con glow cuando completo/sePaso).
+  - **Animación de despacho** (CSS keyframes en `<style jsx>`):
+    * `truck-verifying`: shake suave (translateX ±3px, rotate ±0.4deg) cada 0.18s.
+    * `truck-celebrating`: `truck-dispatch` 2.5s cubic-bezier — 0-32% sacudida violenta (±4px, ±0.6deg), 40-100% translateX(140%) + opacity 0 (se desliza hacia la derecha).
+    * `wheel-spin`: rotación 360deg cada 0.4s linear infinite (activado durante animación).
+    * `smoke-puff`: humo sale del escape cada 1.6s con delays escalonados (0.1s, 0.35s, 0.6s).
+  - **Cajita con textura de cartón**:
+    * Gradiente marrón (cartón): #fcd34d→#d97706→#78350f (o #fde68a→#fbbf24→#d97706 si cargada).
+    * 5 líneas horizontales SVG (corrugado) con opacity 0.30.
+    * Solapa superior abierta (gradient oscuro superior).
+    * Highlight superior izquierdo (rgba blanco 0.35).
+    * Productos emoji en grid (cols dinámico: 1-3 si ≤3, 3 si ≤6, 4 si >6).
+    * Sombra inferior (gradient negro 0.25).
+    * Badge "✓" verde esquina superior derecha si cargada.
+    * Animación `bounce-in` al cargarse (clase `animate-bounce-in` de Tailwind).
+  - **ClienteSVG** (vendedor del mercado, viewBox 0 0 100 120):
+    * Sombrero de paja (ellipse ala + copa) con cinta roja.
+    * Cara con gradiente radial (caraGrad: #fde9c8→#d4a574).
+    * Ojos negros, sonrisa (path curvo), cachetes sonrojados (rosa opacity 0.5).
+    * Camisa roja (#dc2626).
+    * Delantal amarillo (delantalGrad) con cordón, bolsillo.
+    * Brazo derecho levantado señalando (path stroke rojo + mano).
+    * Brazo izquierdo (path stroke rojo + mano).
+    * Sombra inferior.
+  - **MercadoFondo** (decoraciones de fondo):
+    * 5 puestos difuminados (rounded-t-2xl + blur-md) con gradientes coloridos (rosa, esmeralda, naranja, ámbar, lima).
+    * 5 emojis decorativos (🧺🪅🥭🌽☕) con opacity 0.06-0.07.
+    * Franja de toldos superior con 12 triángulos coloridos (opacity 0.35).
+  - **Bocadillo glowing**: border cyan + shadow `0_0_18px_rgba(34,211,238,0.25)` + gradient cyan interior + triángulo conector.
+
+  ### Mejoras de jugabilidad
+  - **Puntos**: +15 por cajita correcta al despachar, +50 bonus por despacho perfecto (sin errores durante el nivel).
+  - **Combo**: racha incrementa tras cada despacho correcto. Multiplicador x2, x3, x4, x5 (cap) tras 2+ despachos seguidos sin error. Reset a 0 al fallar o tiempo agotado.
+  - **Timer**: 90 segundos por nivel. Countdown cada 200ms vía setInterval. Se resetea al entrar a cargando (vía ref `cargandoStartRef`). Barra del HUD se vuelve roja y pulsa cuando <30%. Si llega a 0 → pierde 1 vida, reinicia timer.
+  - **Vidas**: 3 corazones (VIDAS_MAXIMAS). Pierde vida al: (a) despachar incorrecto, (b) tiempo agotado. Si vidas = 0 → estado "gameover".
+  - **FloatingScore**: "+1" pequeño al cargar cajita (cyan, 📦). "+{puntosCajitas}" grande al despachar correcto (amarillo, ⭐). "+50 BONUS!" si perfecto (esmeralda, ✨). "¡COMBO x{n}!" si racha ≥ 2 (naranja, 🔥).
+  - **ParticleBurst**: explosión de 28 partículas (power 1.8) en el centro del camión al despacho perfecto. Colores: cyan, esmeralda, ámbar, naranja, rosa, blanco. Auto-cleanup tras 1s.
+  - **Confetti**: 42 piezas durante 2500ms al celebrar.
+  - **Botón "¡Despachar!"**: glossy cyan multi-capa — linear-gradient (180deg, #22d3ee→#0891b2→#0e7490), boxShadow `0 8px 0 #0e7490, 0 12px 30px rgba(34,211,238,0.5), inset 0 2px 0 rgba(255,255,255,0.4)`, sheen animado (despachar-sheen 2s ease-in-out infinite, translateX -100%→100%). Disabled state con gradient oscuro.
+
+  ### Audio (useGameAudio)
+  - `sfx.click()`: empezar juego, reiniciar, vaciar camión, toggle mute.
+  - `sfx.whoosh()`: cargar cajita al camión (+ vibrate 15ms).
+  - `sfx.pop()`: quitar cajita del camión.
+  - `sfx.coin()`: despacho correcto confirmado.
+  - `sfx.success()`: despacho perfecto (delay 180ms).
+  - `sfx.combo(racha)`: racha ≥ 2 (delay 320ms, sube de tono según nivel).
+  - `sfx.error()`: despacho incorrecto o tiempo agotado (+ vibrate [60,40,60]).
+  - `sfx.victory()`: completar los 10 niveles.
+  - `sfx.vibrate()`: feedback háptico en móviles (15ms cargando, 30ms click, [40,30,60] despacho, [60,40,60] error).
+  - Toggle mute persistente vía `sfx.setMuted(muted)`.
+
+  ### Preservación de texto (verificado)
+  - "Nivel X" + "/ 10" (en GameHUD).
+  - `nivel.frase_del_cliente` (bocadillo del cliente).
+  - `nivel.feedback_error` (al despachar incorrecto).
+  - `nivel.contexto_nicaraguense` (📍 debajo del encargo).
+  - `nivel.operacion_formal` (overlay de celebración, p.ej. "12 × 3 = 36").
+  - `nivel.grupos` y `nivel.elementos_por_grupo` (encargo visual).
+  - `PRODUCTO_NOMBRE[producto]` (nancites, café, rosquillas, pitahayas, frijoles, cuajadas, cacao, pan de leche).
+  - `PRODUCTO_EMOJI[producto]` (🫐☕🍩🍈🫘🧀🍫🥖).
+
+  ### Conservación de mecánica pedagógica
+  - Drag&drop con `draggable`, `onDragStart`, `onDragOver`, `onDrop`, `onDragLeave` intacto.
+  - Click/tap también carga cajitas (mobile-first).
+  - `EXTRAS_PILA = 4` (permite pasarse o quedarse corto).
+  - Validación: `cajitasCargadas.length === nivel.grupos`.
+  - Accesibilidad: `role="button"`, `tabIndex={0}`, `aria-label` por cajita, `onKeyDown` Enter/Space.
+  - Botón "Vaciar camión" con Undo2 icon.
+  - Quitar cajita individual al hacer click en cargada (con badge ✕ rosa en hover).
+  - Scrollbar custom en pila y camión (`scrollbarWidth: thin`, max-h-80/max-h-44 overflow-y-auto).
+
+  ### Refactor lint (react-hooks/set-state-in-effect)
+  - Removido useEffect que reseteaba timer al entrar a cargando (causaba cascading renders).
+  - Movido el reseteo del timer a los call sites explícitos: `empezarJuego`, `despachar` (wrong path), transición celebrando→cargando, timer-agotado con vidas>0.
+  - Reemplazado useEffect de "timer agotado" (que hacía setState sincrónico) por patrón ref: `handleTiempoAgotadoRef.current` se actualiza en useEffect sin deps (after every render), y se invoca desde el callback del setInterval (no desde el body del effect).
+  - Removido `sfx` de deps del effect celebrando→cargando (sfx cambia cada render porque useGameAudio retorna objeto literal, causaría reset del setTimeout en cada render).
+
+  ### Responsive mobile-first
+  - Grid `lg:grid-cols-2` (1 columna en mobile, 2 en desktop).
+  - Padding `px-3 sm:px-5`, `pt-4 sm:pt-6`.
+  - Tamaños de cajita responsive (sm/md/lg) según cantidad de grupos.
+  - HUD se adapta (timer bar hidden en mobile, mostrada como mini en desktop).
+  - Touch-friendly: min 36px touch targets en cajitas sm.
+
+  ### Lint status
+  - `bun run lint 2>&1 | grep "CamionMultiplicaciones"` → sin output (NO LINT ISSUES en el archivo).
+  - 52 errores pre-existentes en otros archivos (CartaOrtografia, ContentManager, etc.) no tocados.
+
+  ### Dev server status
+  - `tail -30 /home/z/my-project/dev.log` → todos los GET / 200, compilaciones 170-435ms, sin errores.
+  - Sin referencias a "camion" o "error" en el log.
+
+Stage Summary:
+- 1 archivo modificado: `src/components/CamionMultiplicaciones.tsx` (~1100 líneas, rediseño completo AAA).
+- Wrapper NO modificado (`CamionMultiplicacionesWrapper.tsx` intacto).
+- Infraestructura `@/components/game` reaprovechada al 100%: GameShell, GameHUD, GameIntro, GameOverlay, useGameAudio, FloatingScore, ParticleBurst.
+- Camión SVG hiperdetallado: cabina gradiente cyan, parabrisas con reflejos, ruedas cromadas con rayos, toldo de mercado con 8 franjas coloridas, faros con glow, humo del escape animado, animación de despacho (shake + slide + wheel spin).
+- Cajitas SVG con textura de cartón corrugado, productos emoji visibles, badge "✓" al cargar.
+- ClienteSVG: vendedor del mercado con sombrero de paja, delantal, sonrisa, brazo señalando.
+- MercadoFondo: 5 puestos difuminados, emojis decorativos, franja de toldos superior.
+- Mejoras de jugabilidad: +15/cajita, +50 bonus perfecto, combo x2-x5, timer 90s, 3 vidas, racha, FloatingScore, ParticleBurst, 8 SFX integrados, vibrate háptico.
+- Preservación de texto verificada: frases del cliente, feedback_error, operacion_formal, contexto_nicaraguense, nombres de productos.
+- Mecánica pedagógica conservada: drag&drop, click/tap, validación, EXTRAS_PILA=4, accesibilidad ARIA + keyboard.
+- Sin errores de lint en el archivo. Dev server compila limpio.
+
+---
+Task ID: AAA-4-CARTA
+Agent: main (Frontend Developer + Game Designer AAA)
+Task: Rediseñar el mini-juego "La Carta Mal Enviada" (CartaOrtografia.tsx) a calidad AAA usando la infraestructura de game components (GameShell, GameHUD, GameIntro, GameOverlay, useGameAudio, FloatingScore, ParticleBurst).
+
+Work Log:
+- Leído worklog.md previo (AVATAR-CAZADORES, APP-START) — app corriendo en puerto 81 vía gateway Caddy.
+- Leído infraestructura AAA en src/components/game/:
+  * GameShell.tsx: theme="language" → fondo radial púrpura oscuro + siluetas de letras á/é/í/ó + partículas star fuchsia.
+  * GameHUD.tsx: barra sticky glassmorphism con nivel/totalNiveles, puntos, vidas (corazones), racha (flame), timer opcional, mute toggle.
+  * GameIntro.tsx: pantalla presentación con ícono grande animado, título, subtítulo, descripción, pasos[], botón glossy "¡Jugar!" con sheen.
+  * GameOverlay.tsx: overlay final (victoria/derrota) con stats (puntos, rachaMaxima, aciertos, precisión), botones reiniciar/inicio, confetti.
+  * useGameAudio.ts: SFX sintetizados Web Audio API (click, success, error, combo, victory, whoosh, chime, tick, coin, pop, cut) + vibrate.
+  * FloatingScore.tsx: texto flotante "+25" que se eleva y desvanece (posicionamiento por % en parent relative).
+  * ParticleBurst.tsx: explosión de partículas en posición pixel (fixed).
+- Leído CartaOrtografia.tsx original (1095 líneas): mecánica de cartero con 4 sobres por nivel, 10 niveles, 40 cartas totales. Tipos de error: b/v, acentos, signos ¡¿. Estados: sin_abrir, abierta, corrigiendo, sellada_correcta.
+- Leído CartaOrtografiaWrapper.tsx: NO modificar. Wrapper proporciona botón "Salir" propio (fixed left-3 top-16) y monta <CartaOrtografia /> sin props.
+- Leído data/cartaOrtografia.ts: interface Carta con id, nivel, tipo_error, subtipo, texto_mostrado, correccion_correcta, regla_ortografica, feedback_error.
+
+Rediseño aplicado (src/components/CartaOrtografia.tsx, ~1720 líneas):
+
+### 1. Estructura con infraestructura AAA
+- <GameShell theme="language"> envuelve todo. onSalir opcional (no se pasa desde wrapper para evitar duplicar botón flotante con el del wrapper).
+- import useApp de @/context/AppContext → onSalir fallback = () => setVista("dashboard") para que GameOverlay "Inicio" funcione.
+- Pantalla presentación: <GameIntro> con icono 📮 (text-7xl drop-shadow violeta), titulo "La Carta Mal Enviada", subtitulo "Revisá sobres y corregí errores de ortografía", descripcion de cartero nicaragüense, 4 pasos (Abrí sobre / Decidí / Escribí corrección / Sellá y enviá), temaColor "#a855f7" violeta, onJugar=empezar.
+- <GameHUD theme="language"> con nivel={nivel} totalNiveles={10} puntos={puntos} vidas={vidas} vidasMaximas={3} racha={racha} muted={muted} onToggleMute={toggleMute} icono=<Mail/>. Oculto durante presentacion/completado/gameOver (GameOverlay cubre pantalla).
+- Completado/gameOver: <GameOverlay tipo="victoria"|"derrota"> con titulo "¡Cartero Experto!"/"¡Te quedaste sin vidas!", subtitulo con enviadas, stats {puntos, rachaMaxima, aciertos, total: intentos}, onReiniciar=reiniciarJuego, onSalir, temaColor violeta.
+
+### 2. Visuales AAA
+- SobreDefs (SVG hidden): 8 gradientes (body closed/open/sealed/error + flap closed/open/sealed/error), pattern paper-texture (puntos micro), pattern wood-texture (vetas de madera).
+- SobreSVG hiperdetallado (viewBox 0 0 140 112):
+  * Sombra inferior ellipse.
+  * Hoja asomando cuando abierta: rect blanco con líneas de cuaderno + margen rojo + texto manuscrito "Querido primo..." (translateY -7px con transition cubic-bezier).
+  * Cuerpo con gradiente según estado (cerrado=crema, abierto=ámbar brillante, sellada=verde, errorFlash=rojo) + textura papel superpuesta.
+  * Líneas de dirección manuscritas (dashed) + texto "Sr. Pérez" (italic Georgia) cuando cerrado.
+  * Sello postal nicaragüense esquina sup. derecha: rect perforado (strokeDasharray) + volcán (path) + sol (circle amarillo) + lago (path cyan) + texto "NI".
+  * Solapa: path que morphs entre triángulo cerrado (M 8 30 L 70 58 L 132 30 Z) y plano abierto (M 8 30 L 70 22 L 132 30) con transition d 0.4s + fill gradiente.
+  * Número de carta #N en esquina sup. izquierda.
+  * Sello verde "ENVIADA" rotado -12°: circle esmeralda + circle interior blanco + check path blanco + texto "ENVIADA".
+  * Sello rojo error (flash transitorio 650ms): circle rojo + X path blanco, rotado 12°.
+  * Pulso activa: rect violeta animate-pulse.
+- SelloCayendoSVG: stamp violeta que cae desde -130px con bounce (cubic-bezier 0.34,1.56,0.64,1) + estrella amarilla + check blanco + texto "APROBADO" + flash de luz blanco expansivo. Se muestra cuando selloCayendoIdx === i (800ms).
+- Hoja de carta (panel activo): clip-path bordes irregulares (polygon 0% 1%, 99% 0%, 100% 99%, 1% 100%), backgroundImage repeating-linear-gradient líneas amarillas cada 28px (cuaderno), margen rojo izquierdo (bg-rose-400), agujeros de carpeta decorativos (2 círculos), texto italic Georgia (manuscrito).
+- EstanteMaderaSVG decorativo: 3 filas de sobres mini sobre tablas de madera con pattern wood-texture + sombras.
+- BuzonSVG clásico: poste madera con vetas, cuerpo cilíndrico rojo (verde si lleno) con brillo lateral, techo semicilíndrico, bandas decorativas, ranura "CORREOS", ventanilla con 4 cartitas (amarillas no enviadas / verdes con check enviadas), check verde flotante cuando lleno.
+
+### 3. Mejoras de jugabilidad
+- Puntos: +25 por carta correcta (PUNTOS_CARTA), +75 bonus nivel perfecto 4/4 sin fallos (PUNTOS_BONUS_PERFECTO).
+- Combo: comboMultiplicador(racha) → racha<3 = x1, racha 3-5 = x2, 6-8 = x3, 9-11 = x4, 12+ = x5. Puntos ganados = 25 * mult. FloatingScore muestra "+25 ¡x2!" cuando mult>1.
+- Vidas: 3 corazones (VIDAS_MAX). Al fallar decisión o corrección: pierde 1 vida, resetea racha, fallosNivel++. Si vidas === 0 → estado "gameOver" → GameOverlay tipo="derrota".
+- FloatingScore: "+25" flota desde posición del sobre (calculada via envelopeRefs.getBoundingClientRect + gameAreaRef). Bonus "¡NIVEL PERFECTO! +75 🏆" en centro.
+- ParticleBurst: 16 partículas en colores [verde, violeta, amarillo, blanco, menta] power 1.3 desde centro del sobre.
+- Audio integrado (useGameAudio):
+  * sfx.click() al empezar, decidir "Tiene error" correcto, cancelar corrección, toggle mute, reiniciar.
+  * sfx.whoosh() al abrir sobre.
+  * sfx.chime() al sellar correcto (campana sine 1318+1975 Hz).
+  * sfx.combo(nuevaRacha) si racha >= 3 (sube de tono según nivel, delay 220ms).
+  * sfx.error() al fallar decisión/corrección + game over.
+  * sfx.victory() al completar nivel (celebrando) + al completar todo (completado).
+  * sfx.vibrate(30) en acierto, sfx.vibrate([50,30,50]) en fallo.
+- Botones glossy multi-capa (GlossyButton component reutilizable):
+  * "✓ Está bien" = variant verde (gradiente #34d399→#10b981→#059669, shadow 6px #047857, sheen animado).
+  * "✗ Tiene error" = variant rojo (gradiente #fb7185→#ef4444→#dc2626, shadow #991b1b).
+  * "Sellá" = variant violeta (gradiente #c084fc→#a855f7→#9333ea, shadow #7e22ce, icono Stamp). Reemplaza al "Corregir" original.
+  * Sheen animado en todos (keyframe carta-sheen, 2.8s infinite).
+- Stats compactas: panel "Combo activo x{mult}" con racha seguidas (visible cuando racha>=3).
+
+### 4. Preservación de texto y mecánica
+- TODO el texto conservado exacto: "Nivel X" + "/ 10", texto_mostrado, correccion_correcta, regla_ortografica, feedback_error, etiquetaTipo (uso_b_v/clasificacion_acentos/signos_apertura).
+- normalizar() idéntico (toLowerCase, trim, replace \s+ con espacio). Comparación case-insensitive y trimmed.
+- cartaTieneError() idéntico (compara texto_mostrado vs correccion_correcta normalizado).
+- Lógica decidir/corregir/cancelarCorreccion/abrirCarta preservada: "✓ Está bien" + no error → sella; "✗ Tiene error" + error → abre formulario; input pre-llenado con texto_mostrado; Enter envía corrección.
+- CartaOrtografiaWrapper.tsx NO modificado.
+
+### 5. Refactor lint (React 19 set-state-in-effect)
+- Error original: setCartasNivel dentro de useEffect([nivelIdx]) → "Calling setState synchronously within an effect".
+- Fix: lazy initial state useState(() => cartasPorNivel(1).map(...)) + helper cargarCartasDelNivel(idx) llamado desde handlers (celebrando transition, reiniciarJuego). Eliminado el useEffect de carga.
+- Error: setPuntos dentro de useEffect (bonus nivel perfecto) → movido a registrarAcierto (check selladasNivel+1 === 4 && fallosNivel === 0).
+- useEffect de level-complete simplificado: solo programar(setEstado("celebrando") + sfx.victory()) dentro de setTimeout (no síncrono, lint OK).
+- registrarAcierto deps actualizadas: [sfx, programar, agregarBurst, selladasNivel, fallosNivel].
+- Resultado: 0 errores de lint en src/components/CartaOrtografia.tsx.
+
+### 6. Accesibilidad y responsive
+- aria-labels en todos los botones (sobres, decisiones, sellá, mute, input corrección).
+- autoFocus en input de corrección + focus:ring-fuchsia-200.
+- Semantic: main implícito via div con ref, header via GameHUD sticky.
+- Mobile-first: grid-cols-2 sobres en móvil → grid-cols-4 en sm; columna buzón se apila abajo en móvil (grid lg:grid-cols-[1fr_240px]); botones flex-col en móvil → flex-row en sm.
+- min-h-screen via GameShell; footer natural push (no footer en este componente, GameShell maneja layout).
+
+### 7. Keyframes globales (style jsx global)
+- carta-stamp-fall: sello cae desde -130px con bounce (scale 0.5→1.15→0.92→1.05→1, rotate -25°→8°→-3°→2°→-8°).
+- carta-stamp-flash: flash blanco expansivo (opacity 0→0.85→0, scale 0.3→1.6→2.2).
+- carta-sheen: sheen horizontal translateX(-100%→100%) en botones glossy.
+
+Stage Summary:
+- 1 archivo rediseñado: src/components/CartaOrtografia.tsx (~1720 líneas, era 1095).
+- Infraestructura AAA integrada: GameShell (language) + GameIntro + GameHUD + GameOverlay + useGameAudio + FloatingScore + ParticleBurst.
+- Visuales AAA: SobreSVG hiperdetallado con 4 estados visuales (cerrado/abierto/sellada/errorFlash), solapa que morphs, hoja asomando, sello postal nicaragüense (volcán+sol+lago+NI), sello cayendo con bounce+flash, hoja de carta cuadriculado con margen rojo y texto italic, estante madera, buzón clásico rojo.
+- Jugabilidad AAA: puntos +25/carta, bonus +75 nivel perfecto, combo x2-x5 (racha 3+), vidas 3 corazones, game over, FloatingScore, ParticleBurst, sello cayendo.
+- SFX integrados: click, whoosh, chime, combo, error, victory, vibrate (7 SFX distintos).
+- Texto y mecánica pedagógica 100% conservada (normalizar, cartaTieneError, decidir, corregir, feedback_error, regla_ortografica, correccion_correcta).
+- Lint: 0 errores en CartaOrtografia.tsx (fixes: lazy initial state + cargarCartasDelNivel helper + bonus movido a registrarAcierto).
+- Dev server: compila limpiamente, HTTP 200 en puerto 81, sin errores de runtime.
+- CartaOrtografiaWrapper.tsx NO modificado.
+
+---
+Task ID: AAA-3-BUS
+Agent: main (Frontend Developer + Game Designer)
+Task: Rediseñar a calidad AAA el mini-juego "El Bus de las Letras" usando la infraestructura AAA compartida (GameShell, GameHUD, GameIntro, GameOverlay, useGameAudio, FloatingScore, ParticleBurst).
+
+Work Log:
+- Leído worklog.md previo (APP-START) y verificado estado: app corriendo en gateway puerto 81, 7 mini-juegos operativos, infraestructura AAA en /src/components/game lista para usar.
+- Leído BusLetras.tsx original (758 líneas) y BusLetrasWrapper.tsx (34 líneas, no modificar).
+- Leído infraestructura AAA: GameShell (theme sky/language/fun/kitchen/forest/math con partículas ambientales, vignette y botón salir flotante), GameHUD (theme language con nivel/totalNiveles/puntos/vidas/racha/timer/mute/icono), GameIntro (icono animado, título, subtítulo, descripción, pasos[], botón glossy "¡Jugar!" con sheen), GameOverlay (tipo victoria/derrota, stats, botones reiniciar/inicio), useGameAudio (sfx.click/success/error/combo/victory/pop/cut/chime/whoosh/tick/coin + vibrate + setMuted), FloatingScore (texto flota +X%, color, icon), ParticleBurst (explosión en x,y con colores y power).
+- Rediseñado BusLetras.tsx (de 758 a 1692 líneas) con arquitectura AAA:
+  * Estructura: 3 flujos de render separados — (1) GameIntro al iniciar (nivel 0, estado presentacion), (2) GameOverlay al completar (victoria o derrota según vidas), (3) GameShell+GameHUD+escena durante el juego.
+  * GameShell theme="sky" con onSalir que delega al botón Salir del Wrapper.
+  * GameIntro: icono 🚌 grande, título "El Bus de las Letras", subtítulo "Subí al pasajero correcto en cada parada", descripción del juego, 4 pasos ["Leé la consigna del pasajero","Identificá la palabra correcta","Tocala para seleccionarla","¡Subila al bus y ganá puntos!"], temaColor "#fb7185", botón glossy con sheen animado.
+  * GameHUD theme="language" con nivel=nivel.nivel, totalNiveles=10, puntos, vidas (3 corazones), racha (combo flame), muted + onToggleMute, icono BusIcon.
+  * GameOverlay tipo "victoria" o "derrota" según vidas al final, con stats {puntos, rachaMaxima, aciertos, total}, onReiniciar y onSalir.
+
+- Visuales AAA nuevos:
+  * BusSVG hiperdetallado (viewBox 0 0 380 220):
+    - Cuerpo con gradiente amarillo-naranja (busBody linearGradient: #fde047 → #facc15 → #f59e0b)
+    - Techo rosa coral (busTopStripe gradient: #fb7185 → #e11d48)
+    - 4 ventanas con gradiente cyan (windowGrad: #67e8f9 → #22d3ee → #0e7490) + reflejos diagonales blancos + brillo superior
+    - Cabina delantera con parabrisas gradiente cyan (windshield)
+    - Letrero LED superior con nombre de la parada dinámico (texto verde #34d399 sobre fondo #064e3b estilo monospace con letterSpacing)
+    - Banda decorativa roja con texto "ESCUELA" en blanco
+    - Puerta de dos hojas: hoja izquierda fija + hoja derecha deslizable (transform translateX(14px) cuando puertaAbierta, transición 0.45s cubic-bezier), manijas, ventana
+    - Faro delantero con radialGradient (headlight: #fffbeb → #fde047 → transparente), pulso animado al celebrar
+    - Luz de freno/direccional trasera roja
+    - Escape metálico (#374151)
+    - 2 ruedas hiperdetalladas: neumático negro (#111827), llanta gris (#1f2937), rayos que giran con animation wheelSpin 0.6s linear infinite cuando enMovimiento (4 rayos a 0/45/90/135 grados), centro metálico
+    - Humo del escape: 2 círculos con animate SMIL (cx, opacity, r) cuando enMovimiento
+    - Check verde al celebrar (círculo + path con bounce-in)
+  * ParadaPoste: techo colorido (gradiente rose→amber→cyan), cartel blanco con borde rose, "PARADA" uppercase + nombre de parada, LED dot pulsante rose, poste amber, base oscura.
+  * BancaSVG: asiento + respaldo color madera, patas.
+  * Palmera: conservada del original.
+  * PasajeroSVG estilizado (no emoji): viewBox 0 0 100 130, sombra ellipse, piernas azul, zapatos negros, cuerpo con ropa colorida, cuello, brazos, cabeza redonda, pelo, ojos con brillo blanco, mejillas rose, sonrisa. Mapeo emoji → paleta (piel, pelo, ropa) para 10 avatares: 🧒🧑👨👩👧👫🧓👵🦊🐰. Animación idle (pasajeroIdle 2.4s: rotate -1.5°/+1.5° + translateY). Caso especial 👫: dos personas pegadas (persona1 ropa cyan + persona2 ropa pink).
+  * BoardingPass (tarjeta de palabra estilo pase de abordar): gradiente, sombra, perforaciones circulares laterales (estilo ticket), icono maletín SVG, border rose al seleccionar, scale + translateY al activar, glow rose cuando seleccionada, check blanco al seleccionar. Variantes compacta (palabras) y normal (pronombres).
+
+- Animaciones:
+  * Entre paradas (transición de nivel): busEnMovimiento=true → bus se desliza lateralmente (translateX(-40px) con cubic-bezier), ruedas giran (wheelSpin), humo del escape animado, sfx.whoosh(). Después de 900ms: setNivelIdx+1, setBusEnMovimiento=false, setPuertaAbierta=true (abre con whoosh), vuelve a estado presentacion.
+  * Subir pasajero: al validar correcto, puertaAbierta=false (animación de cierre), sfx.coin(), pasajero SVG cambia a estado "subido" (sin animación idle), explosionPuerta() dispara ParticleBurst en posición de la puerta.
+  * Bocadillo glowing: consigna con shadow-[0_0_18px_rgba(251,113,133,0.3)] y border rose.
+  * Botón "¡Subir al bus!" glossy multi-capa: gradiente rose 3-stop (#fb7185 → #f43f5e → #e11d48), boxShadow 6px inferior #be123c + glow + inset superior, sheen animado (translateX -100% → 100% en 2.4s ease-in-out infinite), icono UserCheck, solo habilitado cuando hay selección.
+  * Confetti al celebrar (48 partículas, 2600ms).
+
+- Mejoras de jugabilidad:
+  * Puntos: +20 por acierto (PUNTOS_ACIERTO), +50 bonus por nivel perfecto sin errores (PUNTOS_BONUS_PERFECTO).
+  * Combo: racha incrementa al acertar, resetea al fallar. Combo x2 desde racha 3 (comboMult = min(racha-1, 5)), puntos multiplicados. FloatingScore "+20" en el bus (color amber #fbbf24), "+50 ¡Perfecto!" si bonus (color emerald), "¡Combo xN!" si comboMult>1 (color orange).
+  * Vidas: 3 corazones (VIDAS_MAX), -1 al fallar. Si vidas llegan a 0 → estado completado con tipo "derrota".
+  * FloatingScore: calcula posición relativa al busRef (getBoundingClientRect) y posiciona el score en % del contenedor padre. Auto-cleanup después de 950ms.
+  * ParticleBurst: explosionPuerta() calcula posición absoluta (px) de la puerta del bus (x≈70% ancho, y≈78% alto), 18 partículas con power 1.3, colores [amber, rose, cyan, emerald, blanco]. Auto-cleanup después de 1000ms.
+  * Stats finales: puntos, rachaMaxima, aciertos, total=10 → GameOverlay calcula precisión automáticamente.
+
+- SFX integrados con useGameAudio:
+  * sfx.click(): al seleccionar palabra, al empezar, al limpiar selección, al reiniciar, al toggle mute.
+  * sfx.whoosh(): al abrir puerta (empezar), al subir al bus (verificar), al mover bus entre paradas.
+  * sfx.coin(): al subir pasajero correcto (cierre de puerta).
+  * sfx.success(): al nivel perfecto sin errores.
+  * sfx.error(): al fallar validación.
+  * sfx.combo(nuevaRacha): cuando racha >= 3 (delay 500ms después del coin).
+  * sfx.victory(): al completar todos los niveles.
+  * sfx.vibrate(30): al acertar. sfx.vibrate([20,40,20]): al fallar.
+  * Mute: toggleMute → setMuted state → useEffect pasa a sfx.setMuted.
+
+- Preservación de texto pedagógico (sin alterar la mecánica):
+  * nivel.nivel renderizado como "Nivel X / 10" en GameHUD.
+  * nivel.parada renderizado en: letrero LED del bus (dinámico), cartel ParadaPoste, h2 de pantalla de presentación, pie "Parada: X".
+  * nivel.consigna_para_nino renderizado en: bocadillo glowing de pantalla de presentación, bocadillo del pasajero durante el juego.
+  * nivel.enunciado renderizado en panel "Enunciado" durante el juego. Al celebrar, se resalta la palabra_correcta con <mark> esmeralda (bg-emerald-200, text-emerald-900, glow shadow). Helper resaltarPalabraCorrecta: busca tokens del enunciado que coincidan con normalizar(palabra_correcta), los marca. Soporta palabra simple (1 token) y compuesta (múltiples tokens).
+  * nivel.palabra_correcta renderizado en: overlay de celebración ("¡Pasajero a bordo!" + palabra_correcta), resaltado en enunciado al celebrar.
+  * nivel.distractores usados para generar opciones mezcladas (mezclar Fisher-Yates) en modo pronombres.
+  * nivel.feedback_error renderizado en caja amber con 💡 cuando falla.
+  * nivel.avatar_pasajero mapeado a PasajeroSVG (paleta de colores según emoji) — el emoji original se conserva como key de mapeo.
+  * Mecánica de validación 100% preservada: tokenizar enunciado, normalizar, comparar con palabra_correcta. Modo pronombres: 1 selección, comparar con opcionesPronombres. Modo enunciado: múltiples selecciones, ordenar índices asc, unir tokens, comparar.
+  * Helpers limpiar/normalizar/esNivelPronombres/tokenizarEnunciado/mezclar: idénticos al original.
+  * Estado tipo Estado: "presentacion"|"seleccionando"|"verificando"|"celebrando"|"completado" — sin cambios.
+  * Programar timeouts con limpieza segura al desmontar (Set de timeoutsRef).
+
+- Accesibilidad:
+  * aria-label en botón "Salir del minijuego y volver al inicio" (vía onSalir que delega al botón del Wrapper).
+  * aria-label en botón "Subir al bus la selección actual".
+  * aria-label en botón "Limpiar la selección de palabras".
+  * aria-label en botón mute (activar/silenciar) — provisto por GameHUD.
+  * aria-pressed en BoardingPass (true/false según seleccionada).
+  * aria-label descriptivo en cada BoardingPass: "Palabra {texto} (seleccionada)".
+  * aria-label "Pasajero esperando el bus" en contenedor del pasajero.
+  * aria-hidden en todos los SVG decorativos (BusSVG, PasajeroSVG, ParadaPoste, BancaSVG, Palmera).
+  * Navegación por teclado: todos los botones son <button> nativos (Tab + Enter/Space funcionan). focus visible por defecto del navegador.
+  * Responsive mobile-first: grid lg:grid-cols-2, padding adaptable sm:, tarjetas compactas en móvil, palmeras ocultas en móvil (hidden sm:block).
+
+- Wrapper NO modificado (BusLetrasWrapper.tsx intacto) como se requirió. El botón Salir del wrapper sigue funcionando (delegado vía onSalir que busca y hace click en el botón aria-label="Salir del minijuego y volver al inicio").
+
+- Lint: 
+  * Primera pasada: 1 error "Calling setState synchronously within an effect" en línea 948 (useEffect que hacía setPuertaAbierta(true) sincrónicamente) + 1 warning "Unused eslint-disable directive" en línea 838.
+  * Fix 1: eliminado el useEffect problemático, inicializado useState puertaAbierta en true directamente (el bus arranca con la puerta abierta en la primera parada).
+  * Fix 2: removido el comentario eslint-disable-next-line react-hooks/exhaustive-deps y reemplazado la dependencia [nivel.nivel] por [nivel.nivel, nivel.palabra_correcta, nivel.distractores, esPronombres] para satisfacer la regla correctamente.
+  * Segunda pasada: 0 errores, 0 warnings en /home/z/my-project/src/components/BusLetras.tsx. Solo queda un warning preexistente en la copia antigua /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/BusLetras.tsx (línea 300, fuera de alcance — no se debe modificar esa copia).
+- Dev server: compila limpiamente (✓ Compiled in 182ms), GET / 200, sin errores en runtime. Hot-reload verificado tras touch del archivo.
+
+Stage Summary:
+- 1 archivo modificado: src/components/BusLetras.tsx (de 758 a 1692 líneas).
+- Arquitectura AAA integrada: GameShell (sky), GameIntro (icono 🚌 + 4 pasos), GameHUD (language: nivel/puntos/vidas/racha/mute), GameOverlay (victoria/derrota con stats).
+- 4 SVGs nuevos hiperdetallados: BusSVG (cuerpo gradiente amarillo, 4 ventanas cyan, 2 ruedas con rayos giratorios, puerta de 2 hojas deslizable, letrero LED dinámico, faro con pulso, humo del escape animado), PasajeroSVG (estilizado no emoji, 10 paletas, animación idle y caminando, caso especial pareja 👫), ParadaPoste (techo colorido + cartel + LED pulsante + poste), BancaSVG.
+- 1 componente nuevo: BoardingPass (tarjeta de palabra estilo pase de abordar con perforaciones, icono maletín, glow rose al seleccionar).
+- Animaciones: bus se desliza entre paradas (translateX), ruedas giran (wheelSpin), puerta se abre/cierra (transform cubic-bezier), humo animado (SMIL), pasajero idle (rotate+translateY), botón glossy con sheen, FloatingScore +X flota y se desvanece, ParticleBurst explosión en la puerta del bus, Confetti al celebrar, resaltado esmeralda de palabra correcta en enunciado al celebrar.
+- Audio integrado: click, whoosh (puerta + movimiento bus), coin (subir pasajero), success (nivel perfecto), error (fallo), combo (racha>=3), victory (completar todo), vibrate (30 acierto / [20,40,20] fallo). Mute toggle persistente vía useEffect → sfx.setMuted.
+- Stats: puntos (+20 base, x2 a x5 combo desde racha 3, +50 bonus perfecto), vidas (3 corazones, -1 fallo), racha (incrementa acierto, resetea fallo), aciertos, rachaMaxima, precisión (calculada en GameOverlay).
+- Mecánica pedagógica 100% preservada: tokenización, normalización, validación, nivelesBus, distractores, feedback_error, consigna_para_nino, enunciado, palabra_correcta, parada, avatar_pasajero, tipo_ejercicio (enunciado vs pronombres).
+- Wrapper NO modificado.
+- Lint: 0 errores, 0 warnings en archivo principal. Sin errores de compilación ni runtime.
+
+---
+Task ID: AAA-3-BUS
+Agent: full-stack-developer (Bus AAA)
+Task: Rediseño AAA de El Bus de las Letras
+
+Work Log:
+- Verificado estado del archivo src/components/BusLetras.tsx (1692 líneas, ya rediseñado a calidad AAA en sesión previa).
+- Leído worklog.md, src/components/game/index.ts (API infraestructura AAA), y secciones clave del archivo rediseñado (helpers, BusSVG, PasajeroSVG, BoardingPass, renders GameShell/GameIntro/GameHUD/GameOverlay).
+- Confirmada integración completa de infraestructura AAA: GameShell theme="sky", GameIntro (icono 🚌, titulo "El Bus de las Letras", subtitulo "Subí al pasajero correcto en cada parada", 4 pasos exactos, temaColor "#fb7185"), GameHUD theme="language" (nivel, totalNiveles=10, puntos, vidas, racha, muted, onToggleMute), GameOverlay tipo="victoria|derrota" con stats {puntos, rachaMaxima, aciertos, total}.
+- Confirmados 4 SVGs hiperdetallados: BusSVG (cuerpo gradiente amarillo-naranja, 4 ventanas cyan con reflejos, 2 ruedas con rayos giratorios wheelSpin, puerta 2 hojas deslizable cubic-bezier, letrero LED dinámico verde, faro radialGradient pulsante, humo escape SMIL, banda roja "ESCUELA"), PasajeroSVG (10 paletas emoji mapeadas, animación idle rotate+translateY, caso especial pareja 👫 con 2 personas), ParadaPoste (techo colorido rose→amber→cyan, LED pulsante), BancaSVG (madera).
+- Confirmado BoardingPass: gradiente rose 3-stop al seleccionar, perforaciones circulares laterales, icono maletín SVG, glow boxShadow, translateY+scale al activar, check blanco.
+- Confirmadas animaciones: bus desliza lateralmente entre paradas (translateX + cubic-bezier), ruedas giran, puerta abre/cierra, humo SMIL, pasajero idle, botón "¡Subir al bus!" glossy multi-capa con sheen animado + icono UserCheck, FloatingScore "+20"/"+50 ¡Perfecto!"/"¡Combo xN!", ParticleBurst en puerta del bus, Confetti 48 partículas al celebrar, resaltado esmeralda de palabra_correcta en enunciado.
+- Confirmados 8 SFX integrados: sfx.click (selección), sfx.whoosh (puerta + movimiento bus), sfx.coin (subir pasajero), sfx.success (nivel perfecto), sfx.error (fallo), sfx.combo (racha>=3), sfx.victory (completar todo), sfx.vibrate (30 acierto / [20,40,20] fallo).
+- Confirmada mecánica pedagógica 100% conservada: nivelesBus, tokenizarEnunciado, normalizar, limpiar, mezclar (Fisher-Yates), esNivelPronombres, validación enunciado (múltiples selecciones) vs pronombres (1 selección), feedback_error, consigna_para_nino, enunciado, palabra_correcta, parada, avatar_pasajero, tipo_ejercicio.
+- Confirmadas constantes: PUNTOS_ACIERTO=20, PUNTOS_BONUS_PERFECTO=50, VIDAS_MAX=3, comboMult=min(racha-1,5).
+- Confirmada accesibilidad: aria-label en botones (salir, subir al bus, limpiar, mute vía GameHUD), aria-pressed + aria-label en BoardingPass, aria-hidden en SVGs decorativos, navegación por teclado (button nativos), responsive mobile-first (grid lg:grid-cols-2, palmeras hidden sm:block).
+- Verificado BusLetrasWrapper.tsx NO modificado.
+- Lint: `bun run lint 2>&1 | grep -A2 "BusLetras"` → 0 errores, 0 warnings en archivo principal (src/components/BusLetras.tsx). Único warning remanente en copia Proyecto-De-Modalidad/frontend (línea 300, fuera de alcance).
+- Dev server: últimas 8 líneas de dev.log muestran GET / 200 consistentes, compile limpio, sin errores runtime.
+- Escrito registro de agente en /agent-ctx/AAA-3-BUS-frontend-developer.md.
+
+Stage Summary:
+- Archivo src/components/BusLetras.tsx verificado completo (1692 líneas, AAA): GameShell+GameIntro+GameHUD+GameOverlay integrados, BusSVG hiperdetallado con puerta deslizable+ruedas giratorias+letrero LED+humo, PasajeroSVG estilizado (10 paletas, animación idle, pareja 👫), ParadaPoste+BancaSVG+Palmera, BoardingPass estilo pase de abordar, animaciones (translateX bus, wheelSpin, puerta cubic-bezier, sheen botón, FloatingScore, ParticleBurst, Confetti, resaltado esmeralda).
+- 8 SFX integrados: click, whoosh, coin, success, error, combo, victory, vibrate.
+- Jugabilidad AAA: +20 acierto, +50 bonus perfecto, combo x2-x5 (racha 3+), 3 vidas, FloatingScore, ParticleBurst, stats finales.
+- Mecánica pedagógica 100% preservada (tokenizar, normalizar, validar, nivelesBus, feedback_error).
+- Wrapper NO modificado.
+- Lint: 0 errores, 0 warnings en archivo principal.
+- Dev server: compila limpio, HTTP 200, sin errores runtime.
+
+---
+Task ID: AAA-5-ATRAPA
+Agent: full-stack-developer (Atrapa Acento AAA)
+Task: Rediseño AAA de Atrapa el Acento
+
+Work Log:
+- Leído worklog.md (últimas 120 líneas) para contexto: proyecto Mundilex, infraestructura AAA ya creada en /src/components/game con GameShell, GameHUD, GameIntro, GameOverlay, useGameAudio, FloatingScore, ParticleBurst.
+- Leído AtrapaAcento.tsx original (1049 líneas): mecánica conservada — palabras silabeadas, sílaba tónica, 3 burbujas flotantes con rAF (Pong), timer 5s, puntos +10/-3, racha, audio_guia TTS.
+- Leído infraestructura AAA: GameShell (theme sky: bg radial blue-cyan + partículas ambientales + silhouettes + botón salir flotante), GameHUD (theme language: nivel/totalNiveles/puntos/vidas/racha/timer/mute/icono, glassmorphism con glow rose), GameIntro (icono animado + título + subtítulo + descripción + pasos[] + botón glossy con sheen), GameOverlay (tipo victoria/derrota, stats {puntos,rachaMaxima,aciertos,total}, Confetti integrado), useGameAudio (sfx.click/success/error/combo/victory/pop/whoosh/tick/coin + vibrate + setMuted), FloatingScore (texto flota +X% en posición %), ParticleBurst (explosión en x,y px fixed).
+- Rediseñado AtrapaAcento.tsx (de 1049 a 1388 líneas) con arquitectura AAA:
+  * Estructura: 4 flujos de render separados — (1) GameShell+GameIntro al iniciar (presentacion), (2) GameShell+GameOverlay al completar (victoria), (3) GameShell+GameOverlay al perder todas las vidas (derrota), (4) GameShell+GameHUD+escena durante el juego.
+  * GameShell theme="sky" con onSalir que delega al botón aria-label="Salir del minijuego y volver al inicio" del Wrapper.
+  * GameIntro: icono 🎯 grande con drop-shadow coral, título "Atrapa el Acento", subtítulo "Atrapá la vocal con tilde correcta", descripción del juego, 4 pasos ["Leé la palabra en pantalla","Identificá la sílaba tónica (la marcada)","Buscá la vocal con tilde que corresponde","¡Tocala antes de que se acabe el tiempo!"], temaColor "#fb7185".
+  * GameHUD theme="language" con nivel=Math.min(idxDesafio+1,20), totalNiveles=20, puntos, vidas=3, vidasMaximas=3, racha, timerMs=tiempoRestante*1000, timerTotalMs=5000, muted+onToggleMute, icono Target.
+  * GameOverlay tipo "victoria" al completar 20 desafíos (stats {puntos,rachaMaxima,aciertos,total:20}, título "¡Atrapa-Tilde Maestro!", subtitulo con aciertos); tipo "derrota" al llegar 0 vidas (título "¡Te quedaste sin vidas!", subtitulo con progreso).
+
+- Visuales AAA nuevos:
+  * BurbujaSVG premium (viewBox 0 0 100 100):
+    - radialGradient bubbleGrad: blanco opacidad 0.95 (top-left) → paleta.light opacidad 0.95 (18%) → paleta.base opacidad 1 (55%) → paleta.dark opacidad 1 (100% bottom)
+    - Brillo glossy superior izquierdo: ellipse 16x10 con radialGradient shine blanco→transparente, rotado -25deg
+    - Destello secundario: ellipse 5x3 blanco opacidad 0.55 rotado -15deg
+    - Sombra inferior interna: ellipse 28x8 negro opacidad 0.18
+    - Borde inferior oscuro: path arc 38x38 stroke paleta.dark opacidad 0.45
+    - Círculo principal stroke blanco 1.5px
+    - Vocal con tilde gigante: <text> fontSize=48 fontFamily="Fredoka" fontWeight=700 fill blanco stroke rgba(0,0,0,0.35) strokeWidth=1.2 paintOrder="stroke" + drop-shadow paleta.dark
+    - Drop-shadow externo dinámico: atrapada → 0 0 24px paleta.base, fallida → 0 0 16px #f43f5e, normal → 0 6px 14px rgba(0,0,0,0.45)
+    - Animación al explotar: animate-pop-burst (scale 1→1.6→0, opacity 1→0.85→0)
+    - Animación al fallar: animate-burbuja-tiembla (translateX ±7px rotate ±4deg, 6 keyframes)
+  * PaletaBurbuja tipada {light, base, dark}: 6 paletas (rose, amber, violet, emerald, pink, sky). Todas las burbujas del MISMO desafío usan la MISMA paleta (elegida random) → sin pista visual de cuál es correcta.
+  * Palabra objetivo estilo "cartel LED":
+    - Contenedor gradiente vertical #0a1a2f → #061325, border cyan opacidad 0.35, boxShadow 0 0 32px cyan + inset superior
+    - Scanlines sutiles: repeating-linear-gradient horizontal cada 4px opacidad 0.2
+    - Header uppercase tracking 0.3em text-cyan-300/80 con clasificación
+    - Sílabas separadas en flex: cada una es un "dígito LED"
+    - Sílaba tónica: bg rose opacidad 0.18, border rose opacidad 0.6, boxShadow rose 24px+inset 12px, textShadow rose 18px, animation tonicaPulse 1.4s (scale 1→1.05 + box-shadow intensifica)
+    - Sílabas no tónicas: text emerald-200/90 con textShadow emerald 12px (glow LED verde)
+    - Flecha ↓ animada pulse sobre la sílaba tónica con drop-shadow rose
+  * Fondo cielo (SkyDecor):
+    - Sol suave: amber opacidad 0.3 blur 2xl (right-6 top-20)
+    - 4 nubes SVG suaves flotando (CloudSVG: 4 ellipses blancas agrupadas) con animate-nube (translateX 0→20px 18s ease-in-out infinite, delays escalonados 0/3/6/9s), opacidad 0.20-0.30
+    - 5 vocales decorativas gigantes (á é í ó ú) text-[8-10rem] font-black Fredoka, colores rose/amber/fuchsia/orange/violet opacidad 0.15, animate-vocal-float (translateY -22px + rotate 6deg 9s, delays 0/0.6/1.2/1.8/2.4s)
+  * CampoNubes: 3 nubes SVG adicionales dentro del campo de juego (opacidad 0.15-0.20, delays 0/4/8s)
+  * Callout regla ortográfica (glassmorphism amber):
+    - Positivo (acertar): gradiente lime-100→amber-200 opacidad 0.92, border emerald opacidad 0.55, boxShadow emerald 24px, icono CheckCircle2 emerald
+    - Negativo (fallar): gradiente amber-50→orange-200 opacidad 0.92, border amber opacidad 0.6, boxShadow amber 24px, icono BookOpen amber
+    - Texto: "¡Muy bien! " o "Regla: " en font-black + desafio.regla
+    - En fallo: "{-3} puntos · ¡Intentá de nuevo!" en rose font-black
+  * Timer bar: usa la integrada de GameHUD (timerMs/timerTotalMs), con gradiente emerald→cyan normal y bg-red-500 animate-pulse cuando <30%
+  * Overlay ¡Atrapada! 🎉: card blanca con border emerald, CheckCircle2 icon, "+{PUNTOS_ACIERTO} puntos"
+  * Overlay tiempo agotado: card blanca con border rose, X icon, palabra completa con tilde resaltada en esmeralda
+  * Combo banner: pill gradiente amber→rose→violet, boxShadow rose 32px, text "🔥 ¡COMBO x{n}!" con animate-combo-pop (scale 0.4→1.15→1→0.95 + opacity)
+
+- Mejoras de jugabilidad (conserva + añade):
+  * Puntos: conserva +10 acierto, -3 error (Math.max(0, ...) para no negativos).
+  * Vidas: 3 corazones (VIDAS_MAX). Pierde 1 al fallar (manejarToque error) o al agotarse tiempo (timer effect). 0 vidas → estado "derrota" (tras 800ms para mostrar feedback en fallo, inmediato en timeout).
+  * Combo: conserva racha existente. A los 3+ muestra banner "¡COMBO x{n}!" + sfx.combo(n) con delay 220ms.
+  * FloatingScore: "+10" en amber al acertar, "-3" en rose al fallar. Posición calculada relativa al containerRef (x%, y% del rect). Auto-cleanup 950ms.
+  * ParticleBurst: explosión en posición absoluta (px) del centro de la burbuja atrapada. 20 partículas power 1.4, colores [paleta.base, paleta.light, blanco, amber, rose]. Auto-cleanup 1000ms.
+  * Stats finales: {puntos, rachaMaxima, aciertos, total:20} → GameOverlay calcula precisión automáticamente.
+
+- SFX integrados con useGameAudio:
+  * sfx.click(): al empezar, al reiniciar, al toggle mute.
+  * sfx.pop(): SIEMPRE al tocar una burbuja (feedback táctil, correcta o incorrecta).
+  * sfx.success(): al acertar.
+  * sfx.error(): al fallar + al agotarse tiempo.
+  * sfx.tick(): en los últimos 2s del timer (una vez por segundo entero, controlado con lastTickSecondRef).
+  * sfx.combo(nuevaRacha): cuando racha >= 3 (delay 220ms después del pop).
+  * sfx.victory(): al completar todos los niveles (en effect de transición a completado).
+  * sfx.vibrate(30): al acertar. sfx.vibrate([20,40,20]): al fallar o tiempo agotado.
+  * Mute: toggleMute → setMuted state → useEffect pasa a sfx.setMuted(muted).
+
+- Mecánica pedagógica 100% conservada:
+  * Palabra silabeada (palabra_incompleta.split("-")) con sílaba tónica calculada por silaba_tonica (1=última, 2=penúltima, 3=antepenúltima).
+  * 3 burbujas construidas con letra_con_tilde_correcta + 2 distractores, slots izquierda/centro/derecha repartidos (la correcta arranca en posicion_x, las otras 2 toman los slots restantes shuffleTwo).
+  * orden de burbujas shuffleThree Fisher-Yates.
+  * Velocidades: 95-140 px/s con boost cada 5 palabras (+12% por nivel), ángulos distintos por índice (↘ ↙ ↗).
+  * rAF loop CONSERVADO EXACTAMENTE: solo corre en jugando/fallando/acertando, dt Math.min(50, now-last)/1000, rebote en bordes (maxX=w-size, maxY=h-size), la burbuja atrapada se queda quieta.
+  * Timer: setInterval 100ms, tiempoRestanteRef sincronizado, transición a tiempo_agotado dentro del callback.
+  * Transiciones de estado: acertando→siguiente (1.2s) o completado; tiempo_agotado→siguiente (1.5s) o completado; fallando→jugando (1.5s).
+  * Carga automática de siguiente desafío al cambiar idxDesafio (useEffect con [idxDesafio, cargarDesafio], sin estado para evitar re-ejecuciones).
+  * Texto pedagógico exacto conservado: "Palabra X / 20", la palabra silabeada, desafio.regla, "-3 puntos · ¡Intentá de nuevo!", "¡Atrapada!", "Se acabó el tiempo", "Así se escribe con tilde. ¡A la próxima!", desafio.clasificacion + "· ¿Dónde va la tilde?", "Tocá la burbuja con la vocal que lleva tilde.", audio_guia TTS con normalizarAudioGuia (lowercase) + lang es-ES + rate 0.85 + pitch 1.1.
+  * Helpers silenciar/hablar/normalizarAudioGuia/slotAX/slotBY/elegir/shuffleThree/shuffleTwo/ariaVocal: idénticos al original.
+
+- Accesibilidad:
+  * aria-label en cada burbuja: "Vocal {v} con tilde" / "Vocal {v} sin tilde (base {base})" vía ariaVocal helper.
+  * aria-label en botón escuchar: "Escuchar cómo se pronuncia {palabra_completa}".
+  * aria-hidden en todos los SVG decorativos (BurbujaSVG, CloudSVG, SkyDecor, CampoNubes, scanlines).
+  * focus-visible:ring-4 focus-visible:ring-white/50 en botones de burbuja.
+  * aria-label provisto por GameHUD en botón mute (activar/silenciar) y por GameShell en botón salir.
+  * Navegación por teclado: todos los botones son <button> nativos.
+  * Responsive mobile-first: bubbleSize 104px desktop / 84px móvil (matchMedia min-width:640px), padding adaptable sm:, texto escalado sm:, grid flexible, nubes y vocales decorativas escaladas con sm:.
+
+- Wrapper NO modificado (AtrapaAcentoWrapper.tsx intacto). El botón Salir del wrapper sigue funcionando (delegado vía onSalir que busca y hace click en el botón aria-label="Salir del minijuego y volver al inicio").
+
+- Lint:
+  * Primera pasada: 1 warning "Unused eslint-disable directive" en línea 458 (useEffect de carga de desafío).
+  * Fix: removido el comentario eslint-disable-next-line react-hooks/exhaustive-deps y cambiada dependencia de [idxDesafio] a [idxDesafio, cargarDesafio] (cargarDesafio es estable por useCallback con deps []). NO se añadió `estado` a las deps para preservar el comportamiento original (evitar recarga del desafío en cada transición de estado).
+  * Segunda pasada: 0 errores, 0 warnings en /home/z/my-project/src/components/AtrapaAcento.tsx. Solo queda un warning preexistente en la copia antigua /home/z/my-project/Proyecto-De-Modalidad/frontend/src/components/AtrapaAcento.tsx (fuera de alcance).
+- Dev server: compila limpiamente (✓ Compiled in 536ms), GET / 200, sin errores en runtime. Hot-reload verificado.
+
+Stage Summary:
+- 1 archivo rediseñado: src/components/AtrapaAcento.tsx (de 1049 a 1388 líneas).
+- Arquitectura AAA integrada: GameShell (sky), GameIntro (icono 🎯 + 4 pasos + temaColor #fb7185), GameHUD (language: nivel/puntos/vidas 3/racha/timer 5s/mute/icono Target), GameOverlay (victoria/derrota con stats {puntos,rachaMaxima,aciertos,total:20}).
+- 3 SVGs nuevos hiperdetallados: BurbujaSVG (radialGradient 4-stop blanco→light→base→dark + brillo glossy ellipse superior izq + destello secundario + sombra inferior + borde inferior oscuro + vocal Fredoka bold 48px blanco con stroke + drop-shadow dinámico según estado), CloudSVG (4 ellipses blancas agrupadas), y decoraciones de fondo (sol + 4 nubes flotantes + 5 vocales gigantes á é í ó ú animadas).
+- Animaciones: tonicaPulse (sílaba tónica escala + box-shadow coral pulsante 1.4s), popBurst (burbuja explota scale 1→1.6→0), burbujaTiembla (6 keyframes translateX+rotate), comboPop (banner scale 0.4→1.15→1→0.95), nubeFloat (translateX 20px 18s), vocalFloat (translateY -22px + rotate 6deg 9s), sheen en botón Jugar (de GameIntro).
+- Audio integrado: click (empezar/reiniciar/mute), pop (siempre al tocar burbuja), success (acertar), error (fallar + timeout), tick (últimos 2s por segundo), combo (racha>=3), victory (completar todo), vibrate (30 acierto / [20,40,20] fallo/timeout). Mute toggle persistente vía useEffect → sfx.setMuted.
+- Stats: puntos (+10 acierto, -3 error con Math.max(0)), vidas (3 corazones, -1 fallo/timeout, 0 → derrota), racha (incrementa acierto, resetea fallo/timeout), aciertos, rachaMaxima, precisión (calculada en GameOverlay).
+- FX: FloatingScore "+10" amber / "-3" rose en posición % relativa al contenedor. ParticleBurst 20 partículas power 1.4 en posición px absoluta del centro de la burbuja. Confetti automático en GameOverlay victoria.
+- Mecánica pedagógica 100% preservada: rAF loop intacto (rebote Pong, dt clamp 50ms), timer setInterval 100ms, silabeado con silaba_tonica, 3 burbujas con slots + shuffleThree, boost velocidad cada 5 palabras, audio_guia TTS, helpers silenciar/hablar/slotAX/slotBY/ariaVocal.
+- Texto exacto conservado: "Palabra X / 20", palabra silabeada, regla ortográfica, "-3 puntos · ¡Intentá de nuevo!", "¡Atrapada!", "Se acabó el tiempo", "Así se escribe con tilde. ¡A la próxima!", clasificación + "· ¿Dónde va la tilde?", "Tocá la burbuja con la vocal que lleva tilde."
+- Wrapper NO modificado.
+- Lint: 0 errores, 0 warnings en archivo principal. Sin errores de compilación ni runtime.
+
+---
+Task ID: AAA-7-CAZADOR
+Agent: full-stack-developer (Cazador AAA)
+Task: Rediseño AAA de Cazador de Sílabas
+
+Work Log:
+- Leído worklog.md (AAA-3-BUS, AAA-2-CAMION) para contexto de infraestructura AAA compartida.
+- Leído CazadorSilabas.tsx original (488 líneas) y CazadorSilabasWrapper.tsx (32 líneas, no modificar).
+- Leído infraestructura AAA: GameShell (theme sky con radial navy/cyan + partículas ambientales cyan + vignette + botón salir flotante), GameHUD (theme language: nivel/totalNiveles/puntos/vidas/racha/timer/mute/icono con barra de timer emerald→cyan que pulsa rojo bajo 30%), GameIntro (icono animado, título épico, subtítulo, descripción, pasos[], botón glossy ¡Jugar! con sheen), GameOverlay (tipo victoria/derrota, stats {puntos,rachaMaxima,aciertos,total}, botones reiniciar/inicio), useGameAudio (sfx.click/success/error/combo/victory/pop/cut/chime/whoosh/tick/coin + vibrate + setMuted), FloatingScore (texto flota +X%, color, icon), ParticleBurst (explosión en x,y px con colores y power).
+- Rediseñado CazadorSilabas.tsx (de 488 a ~770 líneas) con arquitectura AAA:
+  * Estructura: 3 flujos — (1) estado "intro" (NUEVO) con GameIntro + SkyScene, (2) estado "jugando" con GameShell+GameHUD+escena cielo+globos, (3) estado "completado" con GameOverlay (victoria/derrota).
+  * GameShell theme="sky" con onSalir que delega al botón Salir del Wrapper vía querySelector('button[aria-label="Salir del minijuego y volver al inicio"]') — patrón BusLetras.
+  * GameIntro: icono 🎈, título "Cazador de Sílabas", subtítulo "Reventá los globos en el orden correcto", descripción, 4 pasos ["Mirá la palabra objetivo separada en sílabas","Esperá que suban los globos con las sílabas","Tocalos en el ORDEN correcto de la palabra","¡Completá la palabra antes de que se escapen!"], temaColor "#fb7185".
+  * GameHUD theme="language" con nivel=ronda, totalNiveles=8, puntos, vidas (3 corazones), racha, timerMs (20s con countdown), timerTotalMs=20000, muted + onToggleMute, icono 🎈.
+  * GameOverlay tipo "victoria" (ronda>8) o "derrota" (vidas=0), stats {puntos, rachaMaxima, aciertos, total:8}.
+
+- Visuales AAA nuevos:
+  * SkyScene: 4 nubes SVG suaves (cuerpos blancos con highlights y sombra cyan, drift horizontal con animaciones nube-drift/nube-drift-rev a distintas velocidades y delays), avioncito SVG hiperdetallado (fuselaje, cabina, ala superior, estabilizador, 4 ventanas cyan, luz roja parpadeante con SMIL, hélice giratoria con animateTransform) que cruza la pantalla con avion-vuelo (translateX + leve rotación + bob vertical), arcoíris SVG sutil de 6 arcos (rojo/naranja/amarillo/verde/cyan/violeta) con opacity 0.32 en la base de la escena.
+  * GloboView premium (96px × 132px): PNG balloon_{color}.png existente con filter drop-shadow(0 5px 10px rgba(0,0,0,0.4)) saturate(1.15) brightness(1.05); halo de brillo ambiental radial blur-xl con color del globo; marco glossy superior (radial-gradient blanco 75%→18%→transparente en ellipse); reflejo inferior sutil; sílaba blanca gigante centrada (font-display Fredoka bold text-2xl) con textShadow multi-capa (0 2px 4px negro, 0 0 14px negro, 0 -1px 0 blanco, 1px 1px 0 negro); cuerda SVG curva animada (path Q bezier con stroke blanco semi-translúcido + stroke negro translúcido offset para profundidad); onda de choque al explotar (div border-4 white con shockwave keyframe scale 0.3→2.4 + opacity 1→0); animación globo-sway (rotate -3deg/+3deg 3.2s) con swayPhase aleatorio por globo; animación globo-pop-aaa (scale 1→1.4→0.5→0 con rotación).
+  * LedSyllableDisplay: cartel LED estilo "LED matrix" con border emerald, bg gradient emerald-950→slate-950, patrón de puntos LED (radial-gradient background 8px), brillo superior, label "Palabra Objetivo" con 2 dots pulsantes (led-pulse keyframe), sílabas con 3 estados: done (bg emerald-500/30 text-emerald-300 glow ✓), current (bg amber-500/25 text-amber-200 pulse ▶), pending (bg white/5 text white/90). Separadas por guiones emerald. shake-aaa animación al errar.
+  * ProgressSilabas: glassmorphism (bg-white/10 backdrop-blur-md border-white/20) con chips de progreso (done: emerald ✓{silaba}, current: rose ▶{silaba} pulse, pending: ___ separados por ·). Label "Progreso" arriba.
+
+- Mejoras de jugabilidad:
+  * Puntos: +10 por sílaba correcta (PUNTOS_SILABA) × comboMult, +20 bonus por palabra completada con errores (PUNTOS_PALABRA), +30 bonus por palabra completada sin error (PUNTOS_PALABRA_PERFECT).
+  * Combo: racha incrementa por palabra completada SIN error (errorEnPalabraRef tracking). comboMult = max(1, min(racha, 5)). x2 desde racha 2, x3 desde racha 3, hasta x5. Reset a 0 en error o timeout.
+  * Vidas: 3 corazones (VIDAS_MAX), -1 al globo equivocado, -1 al timeout. Si vidas=0 → estado "completado" tipo "derrota".
+  * Timer: 20s por palabra (TIMER_MS). Countdown setInterval 100ms. Reset al cambiar palabra. Tick SFX cuando timer ≤ 5s (throttleado por segundo). Timeout → -1 vida + nueva palabra + reset racha.
+  * Spawn mejorado: cada 3er spawn o 40% aleatorio → sílaba correcta (garantiza disponibilidad). Cap 9 globos en pantalla. Speed 1.1-2.3 (apt para niños).
+  * Mazo: mezclar BANCO_PALABRAS al iniciar (Fisher-Yates). Cada palabra aparece una vez en 8 rondas (sin repetición).
+  * FloatingScore: "+10/+20" al globo correcto (color amber si combo<2, orange si combo>=2), "✗ ¡Ups!" al errar (color rose), "+30 PALABRA!" al completar sin error (color emerald, icon 🎉), "+20 PALABRA!" al completar con error (color amber), "¡Combo xN!" si racha>=2 (color orange, icon 🔥). Posicionado en % del área de juego.
+  * ParticleBurst: 18 partículas power 1.25, colores [color del globo, blanco, amber, cyan]. Posicionado en px del viewport (vía getBoundingClientRect del botón).
+  * Botón "Reiniciar palabra" opcional (pie de escena): resetea silabaIndex y limpia globos sin penalización (el costo es el tiempo que corre el timer).
+  * Stats finales: puntos, rachaMaxima, aciertos (palabras completadas sin error), total=8. GameOverlay calcula precisión automáticamente.
+
+- SFX integrados con useGameAudio (reemplazado Web Audio API manual):
+  * sfx.pop(): al reventar cualquier globo (correcto o incorrecto).
+  * sfx.success(): al completar palabra.
+  * sfx.error(): al globo equivocado o timeout.
+  * sfx.combo(racha): cuando racha >= 2 al completar palabra (delay 350ms después del success).
+  * sfx.victory(): al completar todas las 8 rondas.
+  * sfx.tick(): cuando timer ≤ 5s (throttleado por segundo).
+  * sfx.click(): al iniciar juego, reiniciar, mute toggle, reiniciar palabra.
+  * sfx.vibrate(30): al acierto. sfx.vibrate([20,40,20]): al error o timeout.
+  * Mute: toggleMute → setMuted state → useEffect pasa a sfx.setMuted.
+
+- Mecánica pedagógica 100% conservada:
+  * BANCO_PALABRAS intacto (8 palabras hardcodeadas: PLÁTANO, MARIPOSA, ELEFANTE, JIRAFA, TORTUGA, PELOTA, GUITARRA, VENTANA con sus sílabas).
+  * Mecánica de spawn: 50% correcta / 50% distractor (mejorada a 40%/3er-spawn pero conserva el espíritu).
+  * Validación: globo.silaba === palabraActual.syllables[silabaIndex].
+  * Loop rAF para movimiento vertical (g.y - g.speed), cleanup al desmontar.
+  * Loop setTimeout para spawn cada 1400ms (original 1500ms, ligeramente más rápido).
+  * 3 estados visuales por sílaba: done ✓ / current ▶ / pending ___.
+  * "Ronda X / 8" en HUD (como Nivel X / 8) + pie de escena.
+  * Sistema de puntos +10/+20 conservado, +30 añadido.
+  * 8 rondas, 3 vidas, game over al vidas=0.
+
+- Accesibilidad:
+  * aria-label en cada globo: "Globo con sílaba {X}. Tocá para reventarlo."
+  * aria-label en botón "Reiniciar la palabra actual sin perder puntos".
+  * aria-label en botón Salir (vía GameShell onSalir → querySelector al botón del Wrapper).
+  * aria-label en botón mute (activar/silenciar) — provisto por GameHUD.
+  * aria-hidden en todos los SVG decorativos (SkyScene, NubeSVG, AvionSVG, ArcoirisSVG, cuerda del globo, halos, glossy overlays, patrón LED).
+  * aria-live="polite" en mensaje de feedback y en LED syllable display.
+  * Navegación por teclado: todos los botones son <button> nativos.
+  * Responsive mobile-first: max-w-5xl mx-auto, padding adaptable sm:, área de juego flex-1 con minHeight 380px, globos 96px (apt para touch 44px+).
+
+- Wrapper NO modificado (CazadorSilabasWrapper.tsx intacto). El botón Salir del wrapper sigue funcionando delegado vía handleSalir que busca y hace click en el botón aria-label="Salir del minijuego y volver al inicio".
+
+- Lint: 
+  * Primera pasada: 0 errores, 0 warnings en src/components/CazadorSilabas.tsx (verificado con `npx eslint src/components/CazadorSilabas.tsx --max-warnings 0` → exit 0).
+  * Los 50 errores / 10 warnings restantes en el proyecto son preexistentes en archivos fuera de alcance (Proyecto-De-Modalidad/, scripts/generate-doc.js, CartaOrtografia.tsx, ContentManager.tsx, ParentDashboard.tsx, layout.tsx).
+
+- Dev server: compila limpiamente (✓ Compiled in 261ms tras touch), GET / 200 en 25-135ms, sin errores de runtime. Hot-reload verificado.
+
+Stage Summary:
+- 1 archivo rediseñado: src/components/CazadorSilabas.tsx (de 488 a ~770 líneas).
+- Arquitectura AAA integrada: GameShell (sky), GameIntro (icono 🎈 + 4 pasos), GameHUD (language: nivel/puntos/vidas/racha/timer 20s/mute), GameOverlay (victoria/derrota con stats).
+- Estado "intro" (NUEVO) añadido al juego que no lo tenía: GameIntro con título, subtítulo, descripción, 4 pasos y botón ¡Jugar! glossy.
+- 4 SVGs decorativos nuevos: NubeSVG (4 instancias con drift horizontal), AvionSVG (fuselaje+ala+helice+linterna parpadeante), ArcoirisSVG (6 arcos sutiles), cuerda SVG curva animada por globo.
+- GloboView premium: PNG balloon_{color} existente + halo radial blur + glossy overlay superior + reflejo inferior + sílaba Fredoka bold blanca con textShadow multi-capa + cuerda SVG curva + onda de choque al explotar + animación globo-sway (rotate -3/+3) + globo-pop-aaa (scale 1→1.4→0.5→0).
+- LedSyllableDisplay: cartel LED matrix con patrón de puntos, dots pulsantes, sílabas con 3 estados (done emerald ✓ / current amber ▶ / pending white) separadas por guiones.
+- ProgressSilabas: glassmorphism con chips de progreso.
+- Jugabilidad AAA: puntos +10×combo / +20 / +30 (sin error), combo x2..x5 (racha de palabras sin error), 3 vidas, timer 20s por palabra con tick SFX bajo 5s, FloatingScore (+pts / ✗ / PALABRA! / Combo), ParticleBurst (18 partículas color del globo+blanco+amber+cyan), botón "Reiniciar palabra" opcional.
+- Audio integrado con useGameAudio: pop (globo), success (palabra), error (globo equivocado/timeout), combo (racha>=2), victory (completar todo), tick (timer low), click (botones), vibrate (30 acierto / [20,40,20] error). Mute toggle persistente.
+- Mecánica pedagógica 100% conservada: 8 palabras hardcodeadas, sílabas, mecánica de spawn, validación por orden, 8 rondas, 3 vidas.
+- Wrapper NO modificado.
+- Lint: 0 errores, 0 warnings en archivo principal. Dev server: compila limpio, HTTP 200, sin errores de runtime.
+
+---
+Task ID: AAA-1-PULPERIA
+Agent: full-stack-developer (Pulpería AAA)
+Task: Rediseño AAA de La Pulpería de Fracciones
+
+Work Log:
+- Leído worklog.md (cola) para contexto previo: infraestructura AAA compartida en /src/components/game lista (GameShell, GameHUD, GameIntro, GameOverlay, useGameAudio, FloatingScore, ParticleBurst) y 3 mini-juegos ya rediseñados a calidad AAA (CartaOrtografia, BusLetras, otros).
+- Leído src/components/PulperiaFracciones.tsx original (901 líneas): lógica de niveles (nivelesPulperia), Fraccion, renderFrase, PiezaProducto con 5 objetos (sandía/cuajada/pastel/piña/jabón), drag&drop, validación por numerador_pedido, PantallaCompletado.
+- Leído PulperiaFraccionesWrapper.tsx (NO modificar): provee botón Salir con aria-label="Salir del minijuego y volver al inicio" y monta <PulperiaFracciones />.
+- Leído game/index.ts + componentes AAA exportados para conocer API exacta:
+  * GameShell: theme "kitchen" → bg radial cálida (3a2a1a→1a0f08) + siluetas de olla/pan/vegetales + partículas circulares ámbar + vignette + botón Salir flotante.
+  * GameHUD: theme "math" → cyan/sky con nivel/totalNiveles/puntos/vidas(3 corazones)/racha(flame xN)/timer(barra countdown)/muted.
+  * GameIntro: icono animado + título + subtitulo + descripción + pasos[] + temaColor + botón "¡Jugar!" glossy con sheen.
+  * GameOverlay: tipo victoria/derrota + stats{puntos,rachaMaxima,aciertos,total} + onReiniciar/onSalir + Confetti.
+  * useGameAudio: sfx.click/success/error/combo/victory/pop/cut/chime/whoosh/tick/coin + vibrate(pattern) + setMuted.
+  * FloatingScore + nextScoreId: texto "+10" flota (x,y en % del contenedor padre) y se desvanece.
+  * ParticleBurst: explosión en (x,y px viewport) con count/colors/power.
+
+- Rediseñado PulperiaFracciones.tsx (de 901 a 1680 líneas) con arquitectura AAA:
+
+  * Estructura de estados: "presentacion" → GameIntro; "cortando"/"arrastrando"/"verificando"/"celebrando" → GameShell+GameHUD+escena; "completado" → GameOverlay (victoria si aciertos=10, derrota si vidas=0).
+  * GameShell theme="kitchen" envuelve todo. onSalir delega al botón Salir del Wrapper vía document.querySelector('button[aria-label="Salir del minijuego y volver al inicio"]').click() (NO se pasa onSalir a GameShell para no duplicar el botón flotante; HUD sí lo recibe para su botón ✕).
+  * GameIntro: icono SVG media sandía hiperdetallado (corteza verde, pulpa rosa gradiente radial, 5 semillas negras), titulo "La Pulpería de Fracciones", subtitulo "Atiende a los clientes partiendo productos", descripción de mecánica, 4 pasos ["Leé lo que pide el cliente","Cortá el producto en partes iguales","Arrastrá los pedazos a la canasta","¡Atendé y ganá puntos!"], temaColor "#fb7185", botón "¡Jugar!" glossy con sheen animado.
+  * GameHUD theme="math" con nivel=nivel.nivel, totalNiveles=10, puntos, vidas (VIDAS_MAX=3 corazones), racha (combo flame xN), timerMs/timerTotalMs (60s/nivel), muted + onToggleMute, onSalir (delegado al Wrapper), icono Store.
+
+- Visuales AAA nuevos (SVG hiperdetallado):
+  * PiezaProducto rediseñada por tipo con gradientes radiales/lineales, patrones y detalles:
+    - Sandía: corteza verde con gradiente radial (22c55e→16a34a→14532d), rayas oscuras verticales (2 líneas por slice), pulpa rosa-roja con gradiente radial (fecdd3→fb7185→be123c), línea transición fda4af, fibras internas (1 línea radial para total<=6), brillo glossy superior (gradiente blanco vertical), semillas negras individuales con brillo gris (elipses rotadas según ángulo), borde corte oscuro #14532d.
+    - Cuajada: gradiente radial amarillo cremoso (fef9c3→fcd34d→d97706), patrón de agujeros <pattern> con círculos marrones, sombra interna tostada, borde corte #78350f.
+    - Pastel de tres leches: 4 capas visibles — dulce de leche base (gradiente fcd34d→92400e), bizcocho medio (fde68a→d97706), crema blanca (ffffff→fef3c7), bizcocho superior, glaseado blanco encima con brillo, cereza central con gradiente radial rojo (fca5a5→dc2626→7f1d1d) + brillo + talllo verde, borde corte #7c2d12.
+    - Piña: gradiente vertical amarillo (fef08a→facc15→a16207), patrón de escamas diamantadas marrones (4 filas × cols adaptativas con centro oscuro), brillo glossy superior, hojas corona verde (gradiente 86efac→15803d) con borde oscuro en pedazos extremos/centro, borde corte #713f12.
+    - Jabón de lavar: barra azul glossy con gradiente vertical (bfdbfe→60a5fa→1d4ed8), brillo superior blanco, 3 burbujas blancas con highlight, banda de etiqueta azul oscuro con texto "JABÓN" Fredoka, brillo lateral, borde corte #1e3a8a.
+  * TablaMadera: gradiente vertical (d97706→92400e→78350f) + pattern de vetas curvas + borde superior highlight + sombra inferior, sobre la que descansa el producto.
+  * AbuelaSVG (cliente estilizado): viewBox 120x140, sombra ellipse, cuerpo blusa gradient coral (fb7185→be123c) con patrón floral (5 flores amarillas), cuello piel, cabeza redonda con piel gradiente radial (fde68a→d97706), pelo gris con moño (gradiente e5e7eb→9ca3af), orejas con aretes dorados, cejas grises, ojos amables con highlight blanco, mejillas rose semi-transparente, sonrisa (cerrada o abierta si hablando), anteojos con marco gris.
+  * CanastaSVG: viewBox 240x180, sombra inferior, asa curva con gradiente marrón y patrón punteado, cuerpo trapezoidal con pattern tejido mimbre (curvas cruzadas), labio superior con gradiente y detalle interior, 8 líneas verticales de tejido.
+  * PiezaIcon: reutiliza PiezaProducto en SVG pequeño para mostrar pedazos dentro de la canasta.
+
+- Bocadillo glowing coral con glassmorphism: borde 2px rgba(251,113,133,0.4), background linear-gradient(135deg, rgba(251,113,133,0.18), rgba(251,191,36,0.10)), box-shadow 0 0 22px rgba(251,113,133,0.27) + inset 0 1px 0 rgba(255,255,255,0.18), backdrop-blur-md, tipografía Fredoka, cola del bocadillo con borde+background matching.
+
+- Botón "¡Atender al cliente!" glossy coral multi-capa: gradiente 3-stop (#fb7185→#fb7185cc→#fb718599), boxShadow 6px inferior #fb718566 + glow 24px #fb718555 + inset superior blanco, sheen animado (translateX -100%→100% en 2.4s ease-in-out infinite), icono ShoppingCart, aria-label descriptivo. Botón "Entregar pedido" en esmeralda-lima glossy. Botón "Revisando…" con spinner. Botón "¡Bien hecho!" deshabilitado al celebrar.
+
+- Jugabilidad AAA:
+  * Puntos: +10 por pieza correcta al agregarACanasta (con sfx.coin + vibrate(20) + FloatingScore "+10" ámbar desde la canasta). +50 bonus por nivel perfecto (sin errores ni timeout) multiplicado por combo si aplica.
+  * Combo: racha incrementa al entregar correcto, resetea al fallar. comboMult = min(racha-1, 5) para racha>=3 (x2 en racha 3, x3 en racha 4, etc). FloatingScore "¡Combo xN!" naranja con icono 🔥.
+  * Timer: 60s por nivel (TIMER_MS=60000). Countdown en HUD (barra esmeralda→cyan, parpadea rojo <30%). Si llega a 0: sfx.error + vibrate([20,40,20]) + -1 vida + feedback "⏰ Se acabó el tiempo" + reinicia nivel (cortesHechos=false, piezasEnCanasta=[], racha=0, huboErrorNivel=true).
+  * Vidas: 3 corazones (VIDAS_MAX). -1 al fallar entrega (cantidad incorrecta) o al agotar timer. 0 vidas → GameOverlay tipo="derrota" tras 600ms de pausa.
+  * FloatingScore "+50 ¡Perfecto!" esmeralda con ⭐ cuando no hubo error en el nivel.
+  * ParticleBurst de 20 partículas (colores [rose,amber,emerald,cyan,blanco]) power 1.4 sobre la canasta al acertar nivel.
+  * Confetti local de 48 piezas (6 colores, animación confetti-fall 1.6-3s) al celebrar.
+
+- SFX integrados (useGameAudio):
+  * sfx.click(): empezarNivel, quitarDeCanasta, vaciarCanasta, entregar, reiniciarJuego, toggleMute.
+  * sfx.cut(): cortar producto (con vibrate(15)).
+  * sfx.coin(): agregar pieza a canasta (con vibrate(20)).
+  * sfx.success(): acertar nivel (con vibrate(40)).
+  * sfx.error(): fallar entrega o timeout (con vibrate([20,40,20])).
+  * sfx.combo(nuevaRacha): cuando racha>=3, con delay 350ms después del success.
+  * sfx.victory(): al completar los 10 niveles.
+  * Mute: toggleMute → setMuted state → useEffect → sfx.setMuted.
+
+- Preservación de texto pedagógico (sin alterar mecánica):
+  * nivel.nivel renderizado como "Nivel X / 10" en GameHUD.
+  * nivel.frase_del_cliente renderizado en bocadillo glowing con renderFrase() que detecta $\frac{N}{D}$ y lo convierte en componente Fraccion visual (numerador/barra/denominador).
+  * nivel.objeto_visual mapeado a OBJETO_NOMBRE + SVG hiperdetallado correspondiente.
+  * nivel.denominador_cortes = totalPiezas (controla cuántos slices se generan).
+  * nivel.numerador_pedido = cantidad esperada en canasta para validar.
+  * nivel.feedback_error mostrado en caja ámbar glassmorphism al fallar.
+  * nivel.es_equivalente_de y nivel.fraccion_plana mostrados como pista esmeralda si existen.
+  * Helpers polar/pieSlicePath/renderFrase/Fraccion idénticos al original.
+  * Estado "presentacion" inicial solo en nivel 0; niveles 2-10 van directo a cortando tras celebrando (preserva flujo).
+  * Drag&drop nativo HTML5 conservado: dataTransfer "text/plain" con indice, onDropCanasta, onClick fallback para mobile.
+  * Mecánica de validación 100% preservada: piezasEnCanasta.length === nivel.numerador_pedido.
+
+- Accesibilidad:
+  * aria-label en SVG cortable cuando necesitaCortar: "Cortar {producto} en {N} partes".
+  * aria-label en botón ¡Atender!: "Atender al cliente y empezar a cortar el producto".
+  * aria-label en botón Entregar: "Entregar el pedido al cliente".
+  * aria-label en botones de pieza en canasta: "Quitar pedazo {i+1} de la canasta".
+  * aria-hidden en SVGs decorativos (AbuelaSVG, CanastaSVG, TablaMadera, PiezaIcon, icono intro).
+  * role="button" en SVG cortable.
+  * Navegación por teclado: todos los botones son <button> nativos.
+  * Responsive mobile-first: grid lg:grid-cols-2, padding adaptable sm:, canasta con min-h-[140px] en móvil.
+
+- Wrapper NO modificado (PulperiaFraccionesWrapper.tsx intacto). Botón Salir del wrapper funciona vía delegación DOM (querySelector + click).
+
+- Lint:
+  * Primera pasada: 1 warning "Unused eslint-disable directive" en línea 1641 (react-hooks/exhaustive-deps en useMemo de ConfettiLocal).
+  * Fix: removido el comentario eslint-disable y reemplazada la dependencia [cantidad] por [cantidad, colors] para satisfacer la regla correctamente (colors es array declarado fuera del useMemo, debe estar en deps).
+  * Segunda pasada: 0 errores, 0 warnings en src/components/PulperiaFracciones.tsx. Los errores restantes en `bun run lint` son preexistentes en archivos fuera de alcance (Proyecto-De-Modalidad/frontend/src/components/CartaOrtografia.tsx línea 433, scripts/generate-doc.js con require-imports, src/app/layout.tsx custom-font, AvatarCustomizer/ContentManager/ParentDashboard con unused-disable) — ninguno en el archivo rediseñado.
+- Dev server: compila limpiamente, GET / 200 en ~30ms, sin errores ni warnings en runtime. Hot-reload verificado tras touch del archivo (compile 2-6ms).
+
+Stage Summary:
+- 1 archivo rediseñado: src/components/PulperiaFracciones.tsx (de 901 a 1680 líneas).
+- Arquitectura AAA integrada: GameShell (kitchen) + GameIntro (icono media-sandía SVG + 4 pasos) + GameHUD (math: nivel/puntos/vidas/racha/timer/mute/icono Store) + GameOverlay (victoria/derrota con stats).
+- 5 SVGs nuevos hiperdetallados en PiezaProducto: sandía (corteza verde gradiente radial + rayas + pulpa rosa gradiente + fibras + semillas brillantes + brillo glossy), cuajada (gradiente crema + pattern agujeros), pastel (4 capas visibles + cereza gradiente + glaseado), piña (gradiente amarillo + escamas diamantadas + corona hojas), jabón (barra azul gradiente + burbujas + etiqueta). Cada pieza con borde corte oscuro y transición opacity.
+- 3 SVGs nuevos decorativos: TablaMadera (gradiente + pattern vetas), AbuelaSVG (cabeza + pelo gris moño + ojos + sonrisa + aretes + anteojos + blusa floral), CanastaSVG (mimbre pattern tejido + asa + labio + sombra).
+- Bocadillo glowing coral glassmorphism con tipografía Fredoka y cola integrada.
+- Botón "¡Atender al cliente!" glossy coral multi-capa (gradiente 3-stop + depth shadow + glow + sheen animado + icono ShoppingCart).
+- Jugabilidad: puntos (+10/pieza, +50 bonus perfecto × combo), combo (racha>=3 → x2..x5), timer 60s/nivel (-1 vida al expirar + reinicia nivel), vidas 3 corazones (derrota a 0), FloatingScore (+10/+50/¡Combo xN!), ParticleBurst (20 partículas), Confetti (48 piezas), stats finales {puntos,rachaMaxima,aciertos,total}.
+- Audio: 7 SFX (click, cut, coin, success, error, combo, victory) + vibrate (15/20/40/[20,40,20]) + mute toggle persistente.
+- Mecánica pedagógica 100% preservada: nivelesPulperia, Fraccion, renderFrase, drag&drop HTML5, validación por numerador_pedido, feedback_error, es_equivalente_de, fraccion_plana.
+- Wrapper NO modificado.
+- Lint: 0 errores, 0 warnings en archivo principal. Dev server: compila limpio, HTTP 200, sin errores runtime.
+
+---
+Task ID: AAA-6-MONSTRUO
+Agent: main (Monstruo AAA)
+Task: Rediseño AAA de Alimenta al Monstruo
+
+Work Log:
+- Leído AlimentaMonstruo.tsx original (466 líneas, sin presentacion, HUD minimalista, audio local propio).
+- Reescrito completamente (~480 líneas) usando infraestructura AAA compartida.
+- Añadido estado "intro" con GameIntro (icono Cookie, 4 pasos, temaColor #fbbf24).
+- GameHUD theme="fun" con nivel/10, puntos, 3 vidas, racha, timer 15s, mute toggle.
+- GameOverlay tipo="victoria"|"derrota" con stats (puntos, rachaMaxima, aciertos, total).
+- Reemplazado sistema audio local con useGameAudio() unificado.
+- Monstruo PNG existente con halo de luz dinámico (amber al comer, red al fallar, violeta idle).
+- Animaciones: monster-eat, monster-shake, monster-idle (breathing).
+- Cartel LED dorado con scanlines para la operación matemática.
+- Galletas con glow halo, brillo glossy superior, depth shadow.
+- Bocadillo glowing glassmorphism.
+- FloatingScore "+10"/"+30 ¡Combo!" y ParticleBurst al acertar.
+- Combo: racha 3+ = +30 bonus, sfx.combo(n), banner.
+- Timer: 15s por ronda, sfx.tick() en últimos 2s, timeout = -1 vida.
+- 0 vidas → GameOverlay tipo="derrota".
+- Lint: 0 errores tras remover eslint-disable innecesario.
+- Dev server: compila limpio HTTP 200.
+
+Stage Summary:
+- AlimentaMonstruo.tsx rediseñado a AAA usando GameShell + GameHUD + GameIntro + GameOverlay + useGameAudio.
+- Añadido estado "intro" narrativo que faltaba.
+- HUD ahora consistente con los otros 6 mini-juegos.
+- Audio unificado con useGameAudio (sfx.click/success/error/combo/victory + vibrate).
+- Combo + timer + vidas integrados.
+- FloatingScore + ParticleBurst para feedback visual.
+- Todos los 7 mini-juegos ahora tienen el mismo patrón AAA.

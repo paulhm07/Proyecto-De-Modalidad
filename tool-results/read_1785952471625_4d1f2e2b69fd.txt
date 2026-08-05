@@ -1,0 +1,1693 @@
+     1→"use client";
+     2→
+     3→import {
+     4→  useCallback,
+     5→  useEffect,
+     6→  useMemo,
+     7→  useRef,
+     8→  useState,
+     9→  type CSSProperties,
+    10→} from "react";
+    11→import {
+    12→  ArrowRight,
+    13→  BookOpen,
+    14→  Bus as BusIcon,
+    15→  Check,
+    16→  Hand,
+    17→  MapPin,
+    18→  PartyPopper,
+    19→  RefreshCw,
+    20→  RotateCcw,
+    21→  Sparkles,
+    22→  UserCheck,
+    23→} from "lucide-react";
+    24→import { nivelesBus, type NivelBus } from "@/data/busLetras";
+    25→import {
+    26→  GameShell,
+    27→  GameHUD,
+    28→  GameIntro,
+    29→  GameOverlay,
+    30→  useGameAudio,
+    31→  FloatingScore,
+    32→  type FloatingScoreItem,
+    33→  ParticleBurst,
+    34→  type BurstConfig,
+    35→  nextScoreId,
+    36→} from "@/components/game";
+    37→import { Confetti } from "@/components/Toasts";
+    38→
+    39→/* ============================================================
+    40→   El Bus de las Letras — Versión AAA
+    41→   ------------------------------------------------------------
+    42→   Mecánica conservada (sin alterar la pedagogía):
+    43→   1. Un bus escolar nicaragüense recorre una ruta. En cada parada
+    44→      espera un pasajero con una consigna de Lengua y Literatura.
+    45→   2. Debajo del bus se muestran las palabras del enunciado como
+    46→      tarjetas "boarding pass" clickeables, o 4 pronombres.
+    47→   3. El niño toca para seleccionar y presiona "¡Subir al bus!".
+    48→   4. Si es correcto → celebración + confeti + el pasajero "se sube".
+    49→   5. Si no coincide → feedback_error pedagógico y vuelve a selección.
+    50→   6. Avance por 10 niveles → "¡Conductor Experto!".
+    51→   ============================================================ */
+    52→
+    53→type Estado =
+    54→  | "presentacion"
+    55→  | "seleccionando"
+    56→  | "verificando"
+    57→  | "celebrando"
+    58→  | "completado";
+    59→
+    60→const TOTAL_NIVELES = nivelesBus.length;
+    61→const PUNTOS_ACIERTO = 20;
+    62→const PUNTOS_BONUS_PERFECTO = 50;
+    63→const VIDAS_MAX = 3;
+    64→
+    65→/* ----------------------- Helpers ----------------------- */
+    66→
+    67→function limpiar(token: string): string {
+    68→  return token
+    69→    .replace(/^[.,;:!¡¿()"']+/, "")
+    70→    .replace(/[.,;:!¡¿()"']+$/, "");
+    71→}
+    72→
+    73→function normalizar(s: string): string {
+    74→  return s
+    75→    .toLowerCase()
+    76→    .trim()
+    77→    .split(/\s+/)
+    78→    .map(limpiar)
+    79→    .filter(Boolean)
+    80→    .join(" ");
+    81→}
+    82→
+    83→function esNivelPronombres(tipo: NivelBus["tipo_ejercicio"]): boolean {
+    84→  return tipo === "pronombre_el_ella" || tipo === "pronombre_ellos_ellas";
+    85→}
+    86→
+    87→function tokenizarEnunciado(enunciado: string): string[] {
+    88→  return enunciado
+    89→    .split(/\s+/)
+    90→    .map((t) => limpiar(t))
+    91→    .filter(Boolean);
+    92→}
+    93→
+    94→function mezclar<T>(arr: readonly T[]): T[] {
+    95→  const a = [...arr];
+    96→  for (let i = a.length - 1; i > 0; i--) {
+    97→    const j = Math.floor(Math.random() * (i + 1));
+    98→    [a[i], a[j]] = [a[j], a[i]];
+    99→  }
+   100→  return a;
+   101→}
+   102→
+   103→/* ============================================================
+   104→   SVG: Palmera decorativa
+   105→   ============================================================ */
+   106→function Palmera({ className }: { className?: string }) {
+   107→  return (
+   108→    <svg viewBox="0 0 80 140" aria-hidden className={className}>
+   109→      <path
+   110→        d="M 38 140 Q 36 90 40 50 Q 42 30 44 18"
+   111→        stroke="#92400e"
+   112→        strokeWidth="6"
+   113→        fill="none"
+   114→        strokeLinecap="round"
+   115→      />
+   116→      <path
+   117→        d="M 36 120 L 44 120 M 36 100 L 44 100 M 37 80 L 45 80 M 38 60 L 46 60"
+   118→        stroke="#78350f"
+   119→        strokeWidth="1.5"
+   120→      />
+   121→      <g fill="#16a34a" stroke="#15803d" strokeWidth="1">
+   122→        <path d="M 42 20 Q 10 5 0 25 Q 18 28 42 24 Z" />
+   123→        <path d="M 42 20 Q 74 5 80 25 Q 62 28 42 24 Z" />
+   124→        <path d="M 42 18 Q 30 -5 8 -2 Q 24 14 42 22 Z" />
+   125→        <path d="M 42 18 Q 54 -5 76 -2 Q 60 14 42 22 Z" />
+   126→        <path d="M 42 16 Q 42 -8 30 -10 Q 36 8 42 20 Z" />
+   127→        <path d="M 42 16 Q 42 -8 54 -10 Q 48 8 42 20 Z" />
+   128→      </g>
+   129→      <circle cx="36" cy="26" r="3" fill="#92400e" />
+   130→      <circle cx="48" cy="28" r="3" fill="#92400e" />
+   131→    </svg>
+   132→  );
+   133→}
+   134→
+   135→/* ============================================================
+   136→   SVG: Letrero / Poste de Parada (estilizado)
+   137→   ============================================================ */
+   138→function ParadaPoste({ texto }: { texto: string }) {
+   139→  return (
+   140→    <div className="flex justify-center">
+   141→      <div className="relative inline-flex flex-col items-center">
+   142→        {/* Techo colorido */}
+   143→        <div className="h-2 w-28 rounded-t-full bg-gradient-to-r from-rose-400 via-amber-400 to-cyan-400 shadow-md" />
+   144→        {/* Cartel */}
+   145→        <div className="relative rounded-xl border-2 border-rose-500/80 bg-white/95 px-4 py-2 shadow-[0_8px_18px_rgba(244,63,94,0.25)] sm:px-5 sm:py-2.5">
+   146→          <div className="flex items-center justify-center gap-1.5">
+   147→            <BusIcon size={13} className="text-rose-600" strokeWidth={2.5} />
+   148→            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 sm:text-xs">
+   149→              Parada
+   150→            </span>
+   151→          </div>
+   152→          <p className="max-w-[200px] text-center text-sm font-bold leading-tight text-rose-950 sm:text-base">
+   153→            {texto}
+   154→          </p>
+   155→          {/* LED dot */}
+   156→          <span className="absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+   157→        </div>
+   158→        {/* Poste */}
+   159→        <div className="h-8 w-2 rounded-b bg-amber-700 sm:h-10" />
+   160→        <div className="h-2 w-6 rounded-full bg-amber-900/80 shadow" />
+   161→      </div>
+   162→    </div>
+   163→  );
+   164→}
+   165→
+   166→/* ============================================================
+   167→   SVG: Banca de parada
+   168→   ============================================================ */
+   169→function BancaSVG() {
+   170→  return (
+   171→    <svg viewBox="0 0 80 40" aria-hidden className="h-8 w-24">
+   172→      <rect x="6" y="14" width="68" height="5" rx="2" fill="#b45309" />
+   173→      <rect x="10" y="19" width="4" height="14" fill="#92400e" />
+   174→      <rect x="66" y="19" width="4" height="14" fill="#92400e" />
+   175→      <rect x="6" y="6" width="68" height="3" rx="1.5" fill="#d97706" />
+   176→    </svg>
+   177→  );
+   178→}
+   179→
+   180→/* ============================================================
+   181→   SVG: Bus escolar hiperdetallado
+   182→   ============================================================ */
+   183→
+   184→interface BusSVGProps {
+   185→  letrero: string;
+   186→  puertaAbierta: boolean;
+   187→  enMovimiento: boolean;
+   188→  celebrando: boolean;
+   189→}
+   190→
+   191→function BusSVG({ letrero, puertaAbierta, enMovimiento, celebrando }: BusSVGProps) {
+   192→  // Rayos de las ruedas (rotan con animación CSS cuando el bus se mueve)
+   193→  return (
+   194→    <svg
+   195→      viewBox="0 0 380 220"
+   196→      className="w-full drop-shadow-[0_14px_22px_rgba(0,0,0,0.35)]"
+   197→      aria-hidden
+   198→    >
+   199→      <defs>
+   200→        <linearGradient id="busBody" x1="0" y1="0" x2="0" y2="1">
+   201→          <stop offset="0%" stopColor="#fde047" />
+   202→          <stop offset="55%" stopColor="#fbbf24" />
+   203→          <stop offset="100%" stopColor="#f59e0b" />
+   204→        </linearGradient>
+   205→        <linearGradient id="busTopStripe" x1="0" y1="0" x2="0" y2="1">
+   206→          <stop offset="0%" stopColor="#fb7185" />
+   207→          <stop offset="100%" stopColor="#e11d48" />
+   208→        </linearGradient>
+   209→        <linearGradient id="windowGrad" x1="0" y1="0" x2="1" y2="1">
+   210→          <stop offset="0%" stopColor="#67e8f9" />
+   211→          <stop offset="50%" stopColor="#22d3ee" />
+   212→          <stop offset="100%" stopColor="#0e7490" />
+   213→        </linearGradient>
+   214→        <linearGradient id="windshield" x1="0" y1="0" x2="1" y2="1">
+   215→          <stop offset="0%" stopColor="#a5f3fc" />
+   216→          <stop offset="100%" stopColor="#0e7490" />
+   217→        </linearGradient>
+   218→        <radialGradient id="headlight" cx="0.5" cy="0.5" r="0.5">
+   219→          <stop offset="0%" stopColor="#fffbeb" />
+   220→          <stop offset="60%" stopColor="#fde047" />
+   221→          <stop offset="100%" stopColor="rgba(253,224,71,0)" />
+   222→        </radialGradient>
+   223→        <linearGradient id="doorGrad" x1="0" y1="0" x2="0" y2="1">
+   224→          <stop offset="0%" stopColor="#fcd34d" />
+   225→          <stop offset="100%" stopColor="#d97706" />
+   226→        </linearGradient>
+   227→      </defs>
+   228→
+   229→      {/* Sombra */}
+   230→      <ellipse cx="190" cy="206" rx="170" ry="8" fill="#000000" opacity="0.18" />
+   231→
+   232→      {/* Humo del escape (solo cuando está en movimiento) */}
+   233→      {enMovimiento && (
+   234→        <g opacity="0.55">
+   235→          <circle cx="22" cy="172" r="6" fill="#cbd5e1">
+   236→            <animate
+   237→              attributeName="cx"
+   238→              from="22"
+   239→              to="2"
+   240→              dur="0.8s"
+   241→              repeatCount="indefinite"
+   242→            />
+   243→            <animate
+   244→              attributeName="opacity"
+   245→              from="0.6"
+   246→              to="0"
+   247→              dur="0.8s"
+   248→              repeatCount="indefinite"
+   249→            />
+   250→            <animate
+   251→              attributeName="r"
+   252→              from="4"
+   253→              to="10"
+   254→              dur="0.8s"
+   255→              repeatCount="indefinite"
+   256→            />
+   257→          </circle>
+   258→          <circle cx="22" cy="172" r="5" fill="#e2e8f0">
+   259→            <animate
+   260→              attributeName="cx"
+   261→              from="22"
+   262→              to="2"
+   263→              dur="0.8s"
+   264→              begin="0.4s"
+   265→              repeatCount="indefinite"
+   266→            />
+   267→            <animate
+   268→              attributeName="opacity"
+   269→              from="0.5"
+   270→              to="0"
+   271→              dur="0.8s"
+   272→              begin="0.4s"
+   273→              repeatCount="indefinite"
+   274→            />
+   275→            <animate
+   276→              attributeName="r"
+   277→              from="3"
+   278→              to="9"
+   279→              dur="0.8s"
+   280→              begin="0.4s"
+   281→              repeatCount="indefinite"
+   282→            />
+   283→          </circle>
+   284→        </g>
+   285→      )}
+   286→
+   287→      {/* Cuerpo principal del bus */}
+   288→      <rect
+   289→        x="20"
+   290→        y="50"
+   291→        width="280"
+   292→        height="110"
+   293→        rx="18"
+   294→        fill="url(#busBody)"
+   295→        stroke="#b45309"
+   296→        strokeWidth="3"
+   297→      />
+   298→
+   299→      {/* Techo (rosa coral) */}
+   300→      <rect
+   301→        x="20"
+   302→        y="50"
+   303→        width="280"
+   304→        height="16"
+   305→        rx="8"
+   306→        fill="url(#busTopStripe)"
+   307→        opacity="0.95"
+   308→      />
+   309→
+   310→      {/* Letrero LED superior con el nombre de la parada */}
+   311→      <rect
+   312→        x="60"
+   313→        y="34"
+   314→        width="220"
+   315→        height="22"
+   316→        rx="6"
+   317→        fill="#0f172a"
+   318→        stroke="#1e293b"
+   319→        strokeWidth="2"
+   320→      />
+   321→      <rect
+   322→        x="62"
+   323→        y="36"
+   324→        width="216"
+   325→        height="18"
+   326→        rx="4"
+   327→        fill="#064e3b"
+   328→        opacity="0.85"
+   329→      />
+   330→      <text
+   331→        x="170"
+   332→        y="50"
+   333→        textAnchor="middle"
+   334→        fontSize="11"
+   335→        fontWeight="bold"
+   336→        fill="#34d399"
+   337→        fontFamily="ui-monospace, monospace"
+   338→        style={{ letterSpacing: "1px" }}
+   339→      >
+   340→        {letrero.length > 28 ? letrero.slice(0, 27) + "…" : letrero}
+   341→      </text>
+   342→
+   343→      {/* Ventanas (gradiente cyan con reflejos) */}
+   344→      {[36, 92, 148, 204].map((x) => (
+   345→        <g key={x}>
+   346→          <rect
+   347→            x={x}
+   348→            y="74"
+   349→            width="48"
+   350→            height="32"
+   351→            rx="5"
+   352→            fill="url(#windowGrad)"
+   353→            stroke="#0e7490"
+   354→            strokeWidth="1.5"
+   355→          />
+   356→          {/* Reflejo diagonal */}
+   357→          <polygon
+   358→            points={`${x + 4},${74} ${x + 18},${74} ${x + 8},${106} ${x + 4},${106}`}
+   359→            fill="#ffffff"
+   360→            opacity="0.32"
+   361→          />
+   362→          <rect
+   363→            x={x + 3}
+   364→            y="76"
+   365→            width="14"
+   366→            height="5"
+   367→            rx="2"
+   368→            fill="#ecfeff"
+   369→            opacity="0.7"
+   370→          />
+   371→        </g>
+   372→      ))}
+   373→
+   374→      {/* Banda decorativa con texto ESCUELA */}
+   375→      <rect x="20" y="128" width="280" height="14" fill="#dc2626" opacity="0.85" />
+   376→      <text
+   377→        x="160"
+   378→        y="139"
+   379→        textAnchor="middle"
+   380→        fontSize="11"
+   381→        fontWeight="bold"
+   382→        fill="#fff"
+   383→        fontFamily="Fredoka, system-ui, sans-serif"
+   384→        style={{ letterSpacing: "2px" }}
+   385→      >
+   386→        ESCUELA
+   387→      </text>
+   388→
+   389→      {/* Cabina delantera (mismo amarillo) */}
+   390→      <path
+   391→        d="M 300 78 L 300 160 L 360 160 L 360 120 Q 360 78 320 78 Z"
+   392→        fill="url(#busBody)"
+   393→        stroke="#b45309"
+   394→        strokeWidth="3"
+   395→      />
+   396→      {/* Parabrisas (gradiente cyan) */}
+   397→      <path
+   398→        d="M 312 88 L 322 88 Q 348 88 348 120 L 348 124 L 312 124 Z"
+   399→        fill="url(#windshield)"
+   400→        stroke="#0e7490"
+   401→        strokeWidth="1.5"
+   402→      />
+   403→      <polygon points="316,90 326,90 318,122 314,122" fill="#ffffff" opacity="0.32" />
+   404→
+   405→      {/* Puerta del bus (se abre cuando puertaAbierta) */}
+   406→      <g>
+   407→        {/* Marco */}
+   408→        <rect
+   409→          x="244"
+   410→          y="92"
+   411→          width="22"
+   412→          height="68"
+   413→          rx="2"
+   414→          fill="#1f2937"
+   415→          opacity="0.35"
+   416→        />
+   417→        {/* Hoja izquierda (fija) */}
+   418→        <rect
+   419→          x="244"
+   420→          y="92"
+   421→          width="10"
+   422→          height="68"
+   423→          rx="2"
+   424→          fill="url(#doorGrad)"
+   425→          stroke="#92400e"
+   426→          strokeWidth="1.5"
+   427→        />
+   428→        <line
+   429→          x1="249"
+   430→          y1="96"
+   431→          x2="249"
+   432→          y2="156"
+   433→          stroke="#92400e"
+   434→          strokeWidth="1"
+   435→          opacity="0.7"
+   436→        />
+   437→        {/* Hoja derecha (deslizable cuando puertaAbierta) */}
+   438→        <g
+   439→          style={{
+   440→            transform: puertaAbierta ? "translateX(14px)" : "translateX(0)",
+   441→            transition: "transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)",
+   442→          }}
+   443→        >
+   444→          <rect
+   445→            x="256"
+   446→            y="92"
+   447→            width="10"
+   448→            height="68"
+   449→            rx="2"
+   450→            fill="url(#doorGrad)"
+   451→            stroke="#92400e"
+   452→            strokeWidth="1.5"
+   453→          />
+   454→          <line
+   455→            x1="261"
+   456→            y1="96"
+   457→            x2="261"
+   458→            y2="156"
+   459→            stroke="#92400e"
+   460→            strokeWidth="1"
+   461→            opacity="0.7"
+   462→          />
+   463→        </g>
+   464→        {/* Manijas */}
+   465→        <circle cx="253" cy="124" r="1.5" fill="#451a03" />
+   466→        <circle cx="259" cy="124" r="1.5" fill="#451a03" />
+   467→      </g>
+   468→
+   469→      {/* Faro delantero */}
+   470→      <circle cx="352" cy="148" r="5" fill="url(#headlight)" stroke="#d97706" strokeWidth="1" />
+   471→      {celebrando && (
+   472→        <circle cx="352" cy="148" r="12" fill="#fde047" opacity="0.4">
+   473→          <animate
+   474→            attributeName="r"
+   475→            from="5"
+   476→            to="14"
+   477→            dur="0.6s"
+   478→            repeatCount="indefinite"
+   479→          />
+   480→          <animate
+   481→            attributeName="opacity"
+   482→            from="0.6"
+   483→            to="0"
+   484→            dur="0.6s"
+   485→            repeatCount="indefinite"
+   486→          />
+   487→        </circle>
+   488→      )}
+   489→
+   490→      {/* Luz de freno/direccional trasera */}
+   491→      <rect x="20" y="138" width="6" height="10" rx="2" fill="#dc2626" />
+   492→
+   493→      {/* Escape */}
+   494→      <rect x="14" y="166" width="14" height="6" rx="2" fill="#374151" />
+   495→
+   496→      {/* Ruedas con rayos que giran */}
+   497→      <g>
+   498→        {/* Rueda trasera */}
+   499→        <circle cx="80" cy="170" r="22" fill="#111827" />
+   500→        <circle cx="80" cy="170" r="18" fill="#1f2937" />
+   501→        <g
+   502→          style={{
+   503→            transformOrigin: "80px 170px",
+   504→            animation: enMovimiento
+   505→              ? "wheelSpin 0.6s linear infinite"
+   506→              : "none",
+   507→          }}
+   508→        >
+   509→          <circle cx="80" cy="170" r="9" fill="#9ca3af" />
+   510→          {[0, 45, 90, 135].map((deg) => (
+   511→            <rect
+   512→              key={deg}
+   513→              x="78.5"
+   514→              y="153"
+   515→              width="3"
+   516→              height="34"
+   517→              rx="1"
+   518→              fill="#6b7280"
+   519→              transform={`rotate(${deg} 80 170)`}
+   520→            />
+   521→          ))}
+   522→        </g>
+   523→        <circle cx="80" cy="170" r="3" fill="#374151" />
+   524→
+   525→        {/* Rueda delantera */}
+   526→        <circle cx="300" cy="170" r="22" fill="#111827" />
+   527→        <circle cx="300" cy="170" r="18" fill="#1f2937" />
+   528→        <g
+   529→          style={{
+   530→            transformOrigin: "300px 170px",
+   531→            animation: enMovimiento
+   532→              ? "wheelSpin 0.6s linear infinite"
+   533→              : "none",
+   534→          }}
+   535→        >
+   536→          <circle cx="300" cy="170" r="9" fill="#9ca3af" />
+   537→          {[0, 45, 90, 135].map((deg) => (
+   538→            <rect
+   539→              key={deg}
+   540→              x="298.5"
+   541→              y="153"
+   542→              width="3"
+   543→              height="34"
+   544→              rx="1"
+   545→              fill="#6b7280"
+   546→              transform={`rotate(${deg} 300 170)`}
+   547→            />
+   548→          ))}
+   549→        </g>
+   550→        <circle cx="300" cy="170" r="3" fill="#374151" />
+   551→      </g>
+   552→
+   553→      {/* Check verde al celebrar */}
+   554→      {celebrando && (
+   555→        <g className="animate-bounce-in">
+   556→          <circle
+   557→            cx="180"
+   558→            cy="18"
+   559→            r="18"
+   560→            fill="#10b981"
+   561→            stroke="#047857"
+   562→            strokeWidth="2.5"
+   563→          />
+   564→          <path
+   565→            d="M 170 18 L 178 26 L 190 12"
+   566→            stroke="white"
+   567→            strokeWidth="3.5"
+   568→            fill="none"
+   569→            strokeLinecap="round"
+   570→            strokeLinejoin="round"
+   571→          />
+   572→        </g>
+   573→      )}
+   574→
+   575→      <style jsx>{`
+   576→        @keyframes wheelSpin {
+   577→          from {
+   578→            transform: rotate(0deg);
+   579→          }
+   580→          to {
+   581→            transform: rotate(360deg);
+   582→          }
+   583→        }
+   584→      `}</style>
+   585→    </svg>
+   586→  );
+   587→}
+   588→
+   589→/* ============================================================
+   590→   SVG: Pasajero estilizado (no emoji)
+   591→   ============================================================ */
+   592→interface PasajeroSVGProps {
+   593→  emoji: string; // se conserva el emoji del nivel para mapear a un SVG
+   594→  estado: "idle" | "caminando" | "subido";
+   595→}
+   596→
+   597→function PasajeroSVG({ emoji, estado }: PasajeroSVGProps) {
+   598→  // Mapeo simple emoji → paleta de colores del personaje
+   599→  const paleta = (() => {
+   600→    switch (emoji) {
+   601→      case "🧒":
+   602→        return { piel: "#fcd9b6", pelo: "#7c2d12", ropa: "#0d9488" };
+   603→      case "👵":
+   604→        return { piel: "#f5d0a9", pelo: "#d1d5db", ropa: "#9333ea" };
+   605→      case "🧑":
+   606→        return { piel: "#fcd9b6", pelo: "#1f2937", ropa: "#0369a1" };
+   607→      case "👨":
+   608→        return { piel: "#fcd9b6", pelo: "#111827", ropa: "#15803d" };
+   609→      case "👩":
+   610→        return { piel: "#fde2c4", pelo: "#92400e", ropa: "#db2777" };
+   611→      case "👧":
+   612→        return { piel: "#fcd9b6", pelo: "#b45309", ropa: "#f59e0b" };
+   613→      case "👫":
+   614→        return { piel: "#fcd9b6", pelo: "#1f2937", ropa: "#0ea5e9" };
+   615→      case "🧓":
+   616→        return { piel: "#f5d0a9", pelo: "#e5e7eb", ropa: "#7c2d12" };
+   617→      case "🦊":
+   618→        return { piel: "#fb923c", pelo: "#ea580c", ropa: "#fef3c7" };
+   619→      case "🐰":
+   620→        return { piel: "#f9fafb", pelo: "#f9fafb", ropa: "#fbbf24" };
+   621→      default:
+   622→        return { piel: "#fcd9b6", pelo: "#1f2937", ropa: "#0ea5e9" };
+   623→    }
+   624→  })();
+   625→
+   626→  const esPareja = emoji === "👫";
+   627→
+   628→  return (
+   629→    <svg
+   630→      viewBox="0 0 100 130"
+   631→      className="h-full w-full"
+   632→      aria-hidden
+   633→      style={{
+   634→        animation:
+   635→          estado === "idle"
+   636→            ? "pasajeroIdle 2.4s ease-in-out infinite"
+   637→            : estado === "caminando"
+   638→              ? "pasajeroCamina 0.4s ease-in-out infinite"
+   639→              : "none",
+   640→        transformOrigin: "bottom center",
+   641→      }}
+   642→    >
+   643→      {/* Sombra */}
+   644→      <ellipse cx="50" cy="124" rx="22" ry="3.5" fill="#000000" opacity="0.18" />
+   645→
+   646→      {esPareja ? (
+   647→        <>
+   648→          {/* Persona 1 (izq) */}
+   649→          <g transform="translate(-12,0)">
+   650→            {/* Piernas */}
+   651→            <rect x="36" y="92" width="6" height="24" rx="2" fill="#1e3a8a" />
+   652→            <rect x="44" y="92" width="6" height="24" rx="2" fill="#1e3a8a" />
+   653→            {/* Zapatos */}
+   654→            <ellipse cx="39" cy="118" rx="5" ry="2.5" fill="#111827" />
+   655→            <ellipse cx="47" cy="118" rx="5" ry="2.5" fill="#111827" />
+   656→            {/* Cuerpo */}
+   657→            <rect x="34" y="58" width="18" height="38" rx="6" fill={paleta.ropa} />
+   658→            {/* Brazos */}
+   659→            <rect x="28" y="60" width="6" height="22" rx="3" fill={paleta.piel} />
+   660→            <rect x="52" y="60" width="6" height="22" rx="3" fill={paleta.piel} />
+   661→            {/* Cabeza */}
+   662→            <circle cx="43" cy="46" r="13" fill={paleta.piel} />
+   663→            {/* Pelo */}
+   664→            <path
+   665→              d="M 30 44 Q 30 30 43 30 Q 56 30 56 44 L 54 40 Q 50 36 43 36 Q 36 36 32 40 Z"
+   666→              fill={paleta.pelo}
+   667→            />
+   668→            {/* Ojos */}
+   669→            <circle cx="40" cy="46" r="1.6" fill="#111827" />
+   670→            <circle cx="46" cy="46" r="1.6" fill="#111827" />
+   671→            {/* Sonrisa */}
+   672→            <path
+   673→              d="M 40 50 Q 43 53 46 50"
+   674→              stroke="#9d174d"
+   675→              strokeWidth="1.4"
+   676→              fill="none"
+   677→              strokeLinecap="round"
+   678→            />
+   679→          </g>
+   680→
+   681→          {/* Persona 2 (der) */}
+   682→          <g transform="translate(14,0)">
+   683→            <rect x="36" y="92" width="6" height="24" rx="2" fill="#7c2d12" />
+   684→            <rect x="44" y="92" width="6" height="24" rx="2" fill="#7c2d12" />
+   685→            <ellipse cx="39" cy="118" rx="5" ry="2.5" fill="#111827" />
+   686→            <ellipse cx="47" cy="118" rx="5" ry="2.5" fill="#111827" />
+   687→            <rect x="34" y="58" width="18" height="38" rx="6" fill="#db2777" />
+   688→            <rect x="28" y="60" width="6" height="22" rx="3" fill="#fcd9b6" />
+   689→            <rect x="52" y="60" width="6" height="22" rx="3" fill="#fcd9b6" />
+   690→            <circle cx="43" cy="46" r="13" fill="#fcd9b6" />
+   691→            <path
+   692→              d="M 30 44 Q 30 30 43 30 Q 56 30 56 44 L 54 40 Q 50 36 43 36 Q 36 36 32 40 Z"
+   693→              fill="#92400e"
+   694→            />
+   695→            <circle cx="40" cy="46" r="1.6" fill="#111827" />
+   696→            <circle cx="46" cy="46" r="1.6" fill="#111827" />
+   697→            <path
+   698→              d="M 40 50 Q 43 53 46 50"
+   699→              stroke="#9d174d"
+   700→              strokeWidth="1.4"
+   701→              fill="none"
+   702→              strokeLinecap="round"
+   703→            />
+   704→          </g>
+   705→        </>
+   706→      ) : (
+   707→        <>
+   708→          {/* Piernas */}
+   709→          <rect x="40" y="92" width="8" height="26" rx="3" fill="#1e3a8a" />
+   710→          <rect x="52" y="92" width="8" height="26" rx="3" fill="#1e3a8a" />
+   711→          {/* Zapatos */}
+   712→          <ellipse cx="44" cy="120" rx="6" ry="3" fill="#111827" />
+   713→          <ellipse cx="56" cy="120" rx="6" ry="3" fill="#111827" />
+   714→          {/* Cuerpo */}
+   715→          <rect x="36" y="58" width="28" height="40" rx="8" fill={paleta.ropa} />
+   716→          {/* Cuello */}
+   717→          <rect x="46" y="52" width="8" height="8" fill={paleta.piel} />
+   718→          {/* Brazos */}
+   719→          <rect x="28" y="60" width="8" height="24" rx="4" fill={paleta.piel} />
+   720→          <rect x="64" y="60" width="8" height="24" rx="4" fill={paleta.piel} />
+   721→          {/* Cabeza */}
+   722→          <circle cx="50" cy="42" r="15" fill={paleta.piel} />
+   723→          {/* Pelo */}
+   724→          <path
+   725→            d="M 35 42 Q 35 24 50 24 Q 65 24 65 42 L 62 36 Q 56 30 50 30 Q 44 30 38 36 Z"
+   726→            fill={paleta.pelo}
+   727→          />
+   728→          {/* Ojos */}
+   729→          <circle cx="45" cy="42" r="2" fill="#111827" />
+   730→          <circle cx="55" cy="42" r="2" fill="#111827" />
+   731→          <circle cx="45.5" cy="41.5" r="0.6" fill="#fff" />
+   732→          <circle cx="55.5" cy="41.5" r="0.6" fill="#fff" />
+   733→          {/* Mejillas */}
+   734→          <circle cx="42" cy="47" r="2" fill="#fb7185" opacity="0.4" />
+   735→          <circle cx="58" cy="47" r="2" fill="#fb7185" opacity="0.4" />
+   736→          {/* Sonrisa */}
+   737→          <path
+   738→            d="M 45 48 Q 50 53 55 48"
+   739→            stroke="#9d174d"
+   740→            strokeWidth="1.6"
+   741→            fill="none"
+   742→            strokeLinecap="round"
+   743→          />
+   744→        </>
+   745→      )}
+   746→
+   747→      <style jsx>{`
+   748→        @keyframes pasajeroIdle {
+   749→          0%,
+   750→          100% {
+   751→            transform: rotate(-1.5deg) translateY(0);
+   752→          }
+   753→          50% {
+   754→            transform: rotate(1.5deg) translateY(-2px);
+   755→          }
+   756→        }
+   757→        @keyframes pasajeroCamina {
+   758→          0%,
+   759→          100% {
+   760→            transform: translateY(0) rotate(-2deg);
+   761→          }
+   762→          50% {
+   763→            transform: translateY(-4px) rotate(2deg);
+   764→          }
+   765→        }
+   766→      `}</style>
+   767→    </svg>
+   768→  );
+   769→}
+   770→
+   771→/* ============================================================
+   772→   Componente principal
+   773→   ============================================================ */
+   774→export function BusLetras() {
+   775→  const [nivelIdx, setNivelIdx] = useState(0);
+   776→  const [estado, setEstado] = useState<Estado>("presentacion");
+   777→  const [seleccionadas, setSeleccionadas] = useState<number[]>([]);
+   778→  const [pasajerosTransportados, setPasajerosTransportados] = useState(0);
+   779→  const [feedback, setFeedback] = useState<string | null>(null);
+   780→
+   781→  // AAA: stats y audio
+   782→  const [puntos, setPuntos] = useState(0);
+   783→  const [vidas, setVidas] = useState(VIDAS_MAX);
+   784→  const [racha, setRacha] = useState(0);
+   785→  const [rachaMaxima, setRachaMaxima] = useState(0);
+   786→  const [erroresNivel, setErroresNivel] = useState(0);
+   787→  const [muted, setMuted] = useState(false);
+   788→  const [aciertos, setAciertos] = useState(0);
+   789→
+   790→  // Animación bus: movimiento entre paradas
+   791→  const [busEnMovimiento, setBusEnMovimiento] = useState(false);
+   792→  // El bus arranca con la puerta abierta en la primera parada
+   793→  const [puertaAbierta, setPuertaAbierta] = useState(true);
+   794→  const [nivelCambiando, setNivelCambiando] = useState(false);
+   795→
+   796→  // FloatingScore + ParticleBurst
+   797→  const [scores, setScores] = useState<FloatingScoreItem[]>([]);
+   798→  const [bursts, setBursts] = useState<(BurstConfig & { id: number })[]>([]);
+   799→  const busRef = useRef<HTMLDivElement | null>(null);
+   800→
+   801→  const sfx = useGameAudio();
+   802→
+   803→  // Ref para timeouts internos
+   804→  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+   805→  const programar = useCallback((fn: () => void, ms: number) => {
+   806→    const t = setTimeout(() => {
+   807→      timeoutsRef.current.delete(t);
+   808→      fn();
+   809→    }, ms);
+   810→    timeoutsRef.current.add(t);
+   811→  }, []);
+   812→
+   813→  useEffect(() => {
+   814→    const set = timeoutsRef.current;
+   815→    return () => {
+   816→      set.forEach((t) => clearTimeout(t));
+   817→      set.clear();
+   818→    };
+   819→  }, []);
+   820→
+   821→  // Mutear / desmutear
+   822→  useEffect(() => {
+   823→    sfx.setMuted(muted);
+   824→  }, [muted, sfx]);
+   825→
+   826→  const nivel = nivelesBus[nivelIdx];
+   827→  const esPronombres = esNivelPronombres(nivel.tipo_ejercicio);
+   828→
+   829→  const tokensEnunciado = useMemo(
+   830→    () => tokenizarEnunciado(nivel.enunciado),
+   831→    [nivel],
+   832→  );
+   833→
+   834→  const opcionesPronombres = useMemo(
+   835→    () =>
+   836→      esPronombres
+   837→        ? mezclar([nivel.palabra_correcta, ...nivel.distractores])
+   838→        : [],
+   839→    // Se mezcla una sola vez por nivel (no recalcular al cambiar selección)
+   840→    [nivel.nivel, nivel.palabra_correcta, nivel.distractores, esPronombres],
+   841→  );
+   842→
+   843→  /* ---- Helper: mostrar FloatingScore ---- */
+   844→  const mostrarScore = useCallback(
+   845→    (text: string, color: string, offsetX = 50, offsetY = 30) => {
+   846→      // Posición relativa al bus
+   847→      const el = busRef.current;
+   848→      const rect = el?.getBoundingClientRect();
+   849→      const parentRect = el?.parentElement?.getBoundingClientRect();
+   850→      if (!rect || !parentRect) {
+   851→        const item: FloatingScoreItem = {
+   852→          id: nextScoreId(),
+   853→          x: offsetX,
+   854→          y: offsetY,
+   855→          text,
+   856→          color,
+   857→        };
+   858→        setScores((p) => [...p, item]);
+   859→        programar(
+   860→          () => setScores((p) => p.filter((s) => s.id !== item.id)),
+   861→          950,
+   862→        );
+   863→        return;
+   864→      }
+   865→      const xPct =
+   866→        ((rect.left - parentRect.left + rect.width * (offsetX / 100)) /
+   867→          parentRect.width) *
+   868→        100;
+   869→      const yPct =
+   870→        ((rect.top - parentRect.top + rect.height * (offsetY / 100)) /
+   871→          parentRect.height) *
+   872→        100;
+   873→      const item: FloatingScoreItem = {
+   874→        id: nextScoreId(),
+   875→        x: xPct,
+   876→        y: yPct,
+   877→        text,
+   878→        color,
+   879→      };
+   880→      setScores((p) => [...p, item]);
+   881→      programar(
+   882→        () => setScores((p) => p.filter((s) => s.id !== item.id)),
+   883→        950,
+   884→      );
+   885→    },
+   886→    [programar],
+   887→  );
+   888→
+   889→  /* ---- Helper: explosión de partículas en la puerta del bus ---- */
+   890→  const explosionPuerta = useCallback(() => {
+   891→    const el = busRef.current;
+   892→    const rect = el?.getBoundingClientRect();
+   893→    // Puerta del bus está aproximadamente en x≈70% del ancho, y≈80% del alto
+   894→    const x = rect ? rect.left + rect.width * 0.7 : window.innerWidth / 2;
+   895→    const y = rect ? rect.top + rect.height * 0.78 : window.innerHeight / 2;
+   896→    const id = Date.now() + Math.random();
+   897→    setBursts((p) => [
+   898→      ...p,
+   899→      {
+   900→        id,
+   901→        x,
+   902→        y,
+   903→        count: 18,
+   904→        power: 1.3,
+   905→        colors: ["#fbbf24", "#fb7185", "#22d3ee", "#34d399", "#ffffff"],
+   906→      },
+   907→    ]);
+   908→    programar(
+   909→      () => setBursts((p) => p.filter((b) => b.id !== id)),
+   910→      1000,
+   911→    );
+   912→  }, [programar]);
+   913→
+   914→  /* ---- Transición: celebrando → siguiente nivel o completado ---- */
+   915→  useEffect(() => {
+   916→    if (estado !== "celebrando") return;
+   917→    const t = setTimeout(() => {
+   918→      if (nivelIdx + 1 >= TOTAL_NIVELES) {
+   919→        sfx.victory();
+   920→        setEstado("completado");
+   921→      } else {
+   922→        // Animación de movimiento del bus a la siguiente parada
+   923→        setPuertaAbierta(false);
+   924→        setBusEnMovimiento(true);
+   925→        setNivelCambiando(true);
+   926→        sfx.whoosh();
+   927→        setTimeout(() => {
+   928→          setNivelIdx((n) => n + 1);
+   929→          setSeleccionadas([]);
+   930→          setFeedback(null);
+   931→          setErroresNivel(0);
+   932→          setBusEnMovimiento(false);
+   933→          setNivelCambiando(false);
+   934→          // El bus llegó → abrir puerta
+   935→          setTimeout(() => {
+   936→            setPuertaAbierta(true);
+   937→            sfx.whoosh();
+   938→          }, 250);
+   939→          setEstado("presentacion");
+   940→        }, 900);
+   941→      }
+   942→    }, 2600);
+   943→    return () => clearTimeout(t);
+   944→  }, [estado, nivelIdx, sfx]);
+   945→
+   946→  /* ---- Validación ---- */
+   947→  const validar = useCallback((): boolean => {
+   948→    if (seleccionadas.length === 0) return false;
+   949→    if (esPronombres) {
+   950→      if (seleccionadas.length !== 1) return false;
+   951→      return (
+   952→        normalizar(opcionesPronombres[seleccionadas[0]]) ===
+   953→        normalizar(nivel.palabra_correcta)
+   954→      );
+   955→    }
+   956→    const frase = [...seleccionadas]
+   957→      .sort((a, b) => a - b)
+   958→      .map((i) => tokensEnunciado[i])
+   959→      .join(" ");
+   960→    return normalizar(frase) === normalizar(nivel.palabra_correcta);
+   961→  }, [
+   962→    seleccionadas,
+   963→    esPronombres,
+   964→    opcionesPronombres,
+   965→    nivel.palabra_correcta,
+   966→    tokensEnunciado,
+   967→  ]);
+   968→
+   969→  /* ---- Acciones ---- */
+   970→  const empezar = useCallback(() => {
+   971→    sfx.click();
+   972→    if (!puertaAbierta) {
+   973→      setPuertaAbierta(true);
+   974→      sfx.whoosh();
+   975→    }
+   976→    setEstado("seleccionando");
+   977→    setFeedback(null);
+   978→  }, [sfx, puertaAbierta]);
+   979→
+   980→  const toggleSeleccion = useCallback(
+   981→    (i: number) => {
+   982→      if (estado !== "seleccionando") return;
+   983→      sfx.click();
+   984→      setFeedback(null);
+   985→      if (esPronombres) {
+   986→        setSeleccionadas((p) => (p.includes(i) ? [] : [i]));
+   987→        return;
+   988→      }
+   989→      setSeleccionadas((p) =>
+   990→        p.includes(i) ? p.filter((x) => x !== i) : [...p, i],
+   991→      );
+   992→    },
+   993→    [estado, esPronombres, sfx],
+   994→  );
+   995→
+   996→  const subirAlBus = useCallback(() => {
+   997→    if (estado !== "seleccionando") return;
+   998→    if (seleccionadas.length === 0) return;
+   999→    setEstado("verificando");
+  1000→    sfx.whoosh();
+  1001→    const correcto = validar();
+  1002→    programar(() => {
+  1003→      if (correcto) {
+  1004→        // Cerrar puerta (animación de subida)
+  1005→        setPuertaAbierta(false);
+  1006→        sfx.coin();
+  1007→
+  1008→        // Calcular puntos
+  1009→        const nuevaRacha = racha + 1;
+  1010→        const comboMult = nuevaRacha >= 3 ? Math.min(nuevaRacha - 1, 5) : 1;
+  1011→        const puntosBase = PUNTOS_ACIERTO;
+  1012→        const puntosGanados = puntosBase * comboMult;
+  1013→        const bonusPerfecto = erroresNivel === 0 ? PUNTOS_BONUS_PERFECTO : 0;
+  1014→        const totalGanado = puntosGanados + bonusPerfecto;
+  1015→
+  1016→        setPuntos((v) => v + totalGanado);
+  1017→        setRacha(nuevaRacha);
+  1018→        setRachaMaxima((m) => Math.max(m, nuevaRacha));
+  1019→        setAciertos((v) => v + 1);
+  1020→        setPasajerosTransportados((v) => v + 1);
+  1021→
+  1022→        // FloatingScore en el bus
+  1023→        mostrarScore(`+${puntosGanados}`, "#fbbf24", 50, 30);
+  1024→        if (bonusPerfecto > 0) {
+  1025→          programar(() => {
+  1026→            mostrarScore(`+${bonusPerfecto} ¡Perfecto!`, "#34d399", 50, 15);
+  1027→          }, 250);
+  1028→        }
+  1029→        if (comboMult > 1) {
+  1030→          programar(() => {
+  1031→            mostrarScore(`¡Combo x${comboMult}!`, "#fb923c", 30, 45);
+  1032→          }, 450);
+  1033→        }
+  1034→
+  1035→        // Explosión en la puerta
+  1036→        programar(() => {
+  1037→          explosionPuerta();
+  1038→        }, 300);
+  1039→
+  1040→        // Sonidos
+  1041→        if (erroresNivel === 0) {
+  1042→          sfx.success();
+  1043→        }
+  1044→        if (nuevaRacha >= 3) {
+  1045→          programar(() => sfx.combo(nuevaRacha), 500);
+  1046→        }
+  1047→
+  1048→        sfx.vibrate(30);
+  1049→
+  1050→        setEstado("celebrando");
+  1051→      } else {
+  1052→        // Error
+  1053→        sfx.error();
+  1054→        sfx.vibrate([20, 40, 20]);
+  1055→        setVidas((v) => Math.max(0, v - 1));
+  1056→        setRacha(0);
+  1057→        setErroresNivel((e) => e + 1);
+  1058→        setFeedback(nivel.feedback_error);
+  1059→        mostrarScore("✗", "#f43f5e", 50, 30);
+  1060→        setEstado("seleccionando");
+  1061→
+  1062→        // Si se quedó sin vidas → terminar
+  1063→        if (vidas - 1 <= 0) {
+  1064→          programar(() => {
+  1065→            setEstado("completado");
+  1066→          }, 1200);
+  1067→        }
+  1068→      }
+  1069→    }, 550);
+  1070→  }, [
+  1071→    estado,
+  1072→    seleccionadas.length,
+  1073→    validar,
+  1074→    nivel.feedback_error,
+  1075→    programar,
+  1076→    sfx,
+  1077→    racha,
+  1078→    erroresNivel,
+  1079→    vidas,
+  1080→    mostrarScore,
+  1081→    explosionPuerta,
+  1082→  ]);
+  1083→
+  1084→  const limpiarSeleccion = useCallback(() => {
+  1085→    sfx.click();
+  1086→    setSeleccionadas([]);
+  1087→    setFeedback(null);
+  1088→  }, [sfx]);
+  1089→
+  1090→  const reiniciarJuego = useCallback(() => {
+  1091→    sfx.click();
+  1092→    setNivelIdx(0);
+  1093→    setEstado("presentacion");
+  1094→    setSeleccionadas([]);
+  1095→    setPasajerosTransportados(0);
+  1096→    setFeedback(null);
+  1097→    setPuntos(0);
+  1098→    setVidas(VIDAS_MAX);
+  1099→    setRacha(0);
+  1100→    setRachaMaxima(0);
+  1101→    setErroresNivel(0);
+  1102→    setAciertos(0);
+  1103→    setPuertaAbierta(true);
+  1104→    setBusEnMovimiento(false);
+  1105→    setNivelCambiando(false);
+  1106→  }, [sfx]);
+  1107→
+  1108→  const toggleMute = useCallback(() => {
+  1109→    setMuted((m) => !m);
+  1110→  }, []);
+  1111→
+  1112→  /* ---- Derivados ---- */
+  1113→  const esPresentacion = estado === "presentacion";
+  1114→  const esSeleccionando = estado === "seleccionando";
+  1115→  const esVerificando = estado === "verificando";
+  1116→  const esCelebrando = estado === "celebrando";
+  1117→  const puedeSubir = esSeleccionando && seleccionadas.length > 0;
+  1118→
+  1119→  const onSalir = () => {
+  1120→    // El wrapper ya gestiona la salida real; aquí delegamos.
+  1121→    // Mantenemos compatibilidad: buscamos el botón Salir del wrapper.
+  1122→    const btn = document.querySelector<HTMLButtonElement>(
+  1123→      'button[aria-label="Salir del minijuego y volver al inicio"]',
+  1124→    );
+  1125→    btn?.click();
+  1126→  };
+  1127→
+  1128→  /* ===================== RENDER: Pantalla de presentación inicial ===================== */
+  1129→  if (estado === "presentacion" && nivelIdx === 0 && !busEnMovimiento) {
+  1130→    return (
+  1131→      <GameShell theme="sky" onSalir={onSalir}>
+  1132→        <GameIntro
+  1133→          icono={<span className="text-7xl">🚌</span>}
+  1134→          titulo="El Bus de las Letras"
+  1135→          subtitulo="Subí al pasajero correcto en cada parada"
+  1136→          descripcion="Un bus escolar nicaragüense recorre 10 paradas. En cada una espera un pasajero con una consigna de Lengua y Literatura. ¡Identificá la palabra correcta y subila al bus!"
+  1137→          pasos={[
+  1138→            "Leé la consigna del pasajero",
+  1139→            "Identificá la palabra correcta",
+  1140→            "Tocala para seleccionarla",
+  1141→            "¡Subila al bus y ganá puntos!",
+  1142→          ]}
+  1143→          temaColor="#fb7185"
+  1144→          onJugar={empezar}
+  1145→        />
+  1146→      </GameShell>
+  1147→    );
+  1148→  }
+  1149→
+  1150→  /* ===================== RENDER: Pantalla final (victoria o derrota) ===================== */
+  1151→  if (estado === "completado") {
+  1152→    const esVictoria = aciertos > 0 && vidas > 0;
+  1153→    return (
+  1154→      <GameShell theme="sky">
+  1155→        <GameOverlay
+  1156→          tipo={esVictoria ? "victoria" : "derrota"}
+  1157→          titulo={esVictoria ? "¡Conductor Experto!" : "¡Buen intento!"}
+  1158→          subtitulo={
+  1159→            esVictoria
+  1160→              ? `Transportaste ${pasajerosTransportados} pasajeros con éxito en el bus escolar.`
+  1161→              : "Te quedaste sin vidas. ¡Intentalo de nuevo!"
+  1162→          }
+  1163→          stats={{
+  1164→            puntos,
+  1165→            rachaMaxima,
+  1166→            aciertos,
+  1167→            total: TOTAL_NIVELES,
+  1168→          }}
+  1169→          onReiniciar={reiniciarJuego}
+  1170→          onSalir={onSalir}
+  1171→          temaColor="#fb7185"
+  1172→        />
+  1173→      </GameShell>
+  1174→    );
+  1175→  }
+  1176→
+  1177→  /* ===================== RENDER: Jugando ===================== */
+  1178→  return (
+  1179→    <GameShell theme="sky" onSalir={onSalir}>
+  1180→      {/* HUD superior */}
+  1181→      <GameHUD
+  1182→        theme="language"
+  1183→        nivel={nivel.nivel}
+  1184→        totalNiveles={TOTAL_NIVELES}
+  1185→        puntos={puntos}
+  1186→        vidas={vidas}
+  1187→        racha={racha}
+  1188→        muted={muted}
+  1189→        onToggleMute={toggleMute}
+  1190→        icono={<BusIcon size={18} strokeWidth={2.5} />}
+  1191→      />
+  1192→
+  1193→      {/* Contenedor principal */}
+  1194→      <div className="relative mx-auto max-w-5xl px-3 pb-8 pt-4 sm:px-5 sm:pt-6">
+  1195→        {/* Palmeras a los lados (desktop) */}
+  1196→        <Palmera className="pointer-events-none absolute -left-2 bottom-2 z-0 hidden h-56 w-32 -rotate-6 opacity-70 sm:block lg:h-72 lg:w-40" />
+  1197→        <Palmera className="pointer-events-none absolute -right-2 bottom-2 z-0 hidden h-56 w-32 rotate-6 opacity-70 sm:block lg:h-72 lg:w-40" />
+  1198→
+  1199→        {/* FloatingScores */}
+  1200→        {scores.map((s) => (
+  1201→          <FloatingScore key={s.id} item={s} />
+  1202→        ))}
+  1203→
+  1204→        {/* ParticleBursts */}
+  1205→        {bursts.map((b) => (
+  1206→          <ParticleBurst key={b.id} burst={b} />
+  1207→        ))}
+  1208→
+  1209→        {/* ===================== Pantalla: presentación del nivel ===================== */}
+  1210→        {esPresentacion ? (
+  1211→          <div className="animate-bounce-in relative z-10 rounded-3xl border-2 border-rose-500/30 bg-white/85 p-6 text-center shadow-xl backdrop-blur-md sm:p-8">
+  1212→            <p className="text-xs font-bold uppercase tracking-wider text-rose-600">
+  1213→              Parada {nivel.nivel} de {TOTAL_NIVELES}
+  1214→            </p>
+  1215→            <h2 className="mt-1 flex items-center justify-center gap-1.5 text-2xl font-black text-rose-950 sm:text-3xl">
+  1216→              <MapPin size={22} className="text-rose-500" strokeWidth={2.5} />
+  1217→              {nivel.parada}
+  1218→            </h2>
+  1219→
+  1220→            {/* Pasajero SVG estilizado */}
+  1221→            <div className="mx-auto my-5 flex h-32 w-32 items-end justify-center rounded-full bg-gradient-to-br from-amber-100 to-rose-100 shadow-inner sm:h-36 sm:w-36">
+  1222→              <div className="h-28 w-28 sm:h-32 sm:w-32">
+  1223→                <PasajeroSVG emoji={nivel.avatar_pasajero} estado="idle" />
+  1224→              </div>
+  1225→            </div>
+  1226→
+  1227→            <p className="text-base font-bold text-rose-900 sm:text-lg">
+  1228→              “¡Buenas! Vengo esperando el bus.”
+  1229→            </p>
+  1230→            {/* Bocadillo glowing con la consigna */}
+  1231→            <div className="relative mx-auto mt-3 max-w-md rounded-2xl border-2 border-rose-400/70 bg-rose-50 px-4 py-3 shadow-[0_0_22px_rgba(251,113,133,0.35)]">
+  1232→              <div className="absolute -left-2 top-5 h-4 w-4 rotate-45 border-b-2 border-l-2 border-rose-400/70 bg-rose-50" />
+  1233→              <p className="text-sm font-semibold text-rose-700 sm:text-base">
+  1234→                <Sparkles
+  1235→                  size={14}
+  1236→                  className="mr-1 inline"
+  1237→                  strokeWidth={2.5}
+  1238→                />
+  1239→                {nivel.consigna_para_nino}
+  1240→              </p>
+  1241→            </div>
+  1242→
+  1243→            <button
+  1244→              onClick={empezar}
+  1245→              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-rose-500 to-fuchsia-500 py-3.5 text-base font-bold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-95 sm:w-auto sm:px-10"
+  1246→            >
+  1247→              <Sparkles size={18} strokeWidth={2.5} /> ¡Recoger al pasajero!
+  1248→              <ArrowRight size={18} strokeWidth={2.5} />
+  1249→            </button>
+  1250→          </div>
+  1251→        ) : (
+  1252→          /* ===================== Pantalla: jugando ===================== */
+  1253→          <div className="relative z-10 grid gap-4 lg:grid-cols-2">
+  1254→            {/* ============ Columna izquierda: escena (pasajero + bus) ============ */}
+  1255→            <div className="flex flex-col gap-4">
+  1256→              {/* Pasajero con bocadillo */}
+  1257→              <div className="rounded-3xl border-2 border-rose-300/60 bg-white/85 p-4 shadow-lg backdrop-blur-md sm:p-5">
+  1258→                <div className="flex items-start gap-3">
+  1259→                  <div
+  1260→                    className={`flex h-20 w-16 shrink-0 items-end justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-rose-100 shadow-inner transition-all duration-700 ease-out sm:h-24 sm:w-20 ${
+  1261→                      esCelebrando
+  1262→                        ? "translate-x-8 -translate-y-2 scale-50 opacity-0"
+  1263→                        : ""
+  1264→                    }`}
+  1265→                    aria-label="Pasajero esperando el bus"
+  1266→                  >
+  1267→                    <div className="h-16 w-14 sm:h-20 sm:w-16">
+  1268→                      <PasajeroSVG
+  1269→                        emoji={nivel.avatar_pasajero}
+  1270→                        estado={esCelebrando ? "subido" : "idle"}
+  1271→                      />
+  1272→                    </div>
+  1273→                  </div>
+  1274→                  <div className="relative flex-1 rounded-2xl border-2 border-rose-400/70 bg-rose-50 px-4 py-3 shadow-[0_0_18px_rgba(251,113,133,0.3)]">
+  1275→                    <div className="absolute -left-2 top-5 h-4 w-4 rotate-45 border-b-2 border-l-2 border-rose-400/70 bg-rose-50" />
+  1276→                    <p className="text-base font-semibold leading-snug text-rose-950 sm:text-lg">
+  1277→                      {nivel.consigna_para_nino}
+  1278→                    </p>
+  1279→                  </div>
+  1280→                </div>
+  1281→                <p className="mt-3 flex items-center justify-center gap-1 text-center text-xs font-semibold text-rose-700/80 sm:text-sm">
+  1282→                  <MapPin size={12} strokeWidth={2.5} /> Parada:{" "}
+  1283→                  <span className="font-bold text-rose-800">{nivel.parada}</span>
+  1284→                </p>
+  1285→              </div>
+  1286→
+  1287→              {/* Letrero de parada + banca */}
+  1288→              <div className="flex items-end justify-center gap-3">
+  1289→                <div className="hidden sm:block">
+  1290→                  <BancaSVG />
+  1291→                </div>
+  1292→                <ParadaPoste texto={nivel.parada} />
+  1293→              </div>
+  1294→
+  1295→              {/* Bus SVG hiperdetallado */}
+  1296→              <div
+  1297→                ref={busRef}
+  1298→                className="relative rounded-3xl border-2 border-amber-400/50 bg-white/70 p-3 shadow-lg backdrop-blur-md sm:p-4"
+  1299→                style={{
+  1300→                  transform: nivelCambiando
+  1301→                    ? "translateX(-40px)"
+  1302→                    : "translateX(0)",
+  1303→                  transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+  1304→                }}
+  1305→              >
+  1306→                <BusSVG
+  1307→                  letrero={nivel.parada}
+  1308→                  puertaAbierta={puertaAbierta}
+  1309→                  enMovimiento={busEnMovimiento}
+  1310→                  celebrando={esCelebrando}
+  1311→                />
+  1312→                <p className="mt-1 text-center text-xs font-semibold text-rose-700/70">
+  1313→                  {esCelebrando
+  1314→                    ? "¡Pasajero a bordo! 🎉"
+  1315→                    : puertaAbierta
+  1316→                      ? "Puerta abierta — esperando pasajeros…"
+  1317→                      : "Bus escolar listo para partir…"}
+  1318→                </p>
+  1319→              </div>
+  1320→            </div>
+  1321→
+  1322→            {/* ============ Columna derecha: palabras + feedback + botones ============ */}
+  1323→            <div className="flex flex-col gap-4">
+  1324→              {/* Tarjetas de palabra (estilo boarding pass) */}
+  1325→              <div className="rounded-3xl border-2 border-rose-300/60 bg-white/85 p-4 shadow-lg backdrop-blur-md sm:p-5">
+  1326→                <div className="mb-2 flex items-center justify-between">
+  1327→                  <h3 className="flex items-center gap-1.5 text-sm font-bold text-rose-950 sm:text-base">
+  1328→                    <BookOpen
+  1329→                      size={16}
+  1330→                      className="text-rose-600"
+  1331→                      strokeWidth={2.5}
+  1332→                    />
+  1333→                    {esPronombres
+  1334→                      ? "¿Qué pronombre usamos?"
+  1335→                      : "Oración del pasajero"}
+  1336→                  </h3>
+  1337→                  <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-bold text-rose-800">
+  1338→                    {seleccionadas.length} selec.
+  1339→                  </span>
+  1340→                </div>
+  1341→
+  1342→                {/* Enunciado (siempre visible) */}
+  1343→                <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50/60 px-3 py-2 text-center">
+  1344→                  <p className="text-[11px] font-bold uppercase tracking-wide text-rose-600/70">
+  1345→                    Enunciado
+  1346→                  </p>
+  1347→                  <p className="text-base font-semibold text-rose-950 sm:text-lg">
+  1348→                    {resaltarPalabraCorrecta(
+  1349→                      nivel.enunciado,
+  1350→                      nivel.palabra_correcta,
+  1351→                      esCelebrando,
+  1352→                    )}
+  1353→                  </p>
+  1354→                </div>
+  1355→
+  1356→                {!esPronombres && (
+  1357→                  <p className="mb-3 text-center text-xs font-semibold text-rose-700/80 sm:text-sm">
+  1358→                    <Hand
+  1359→                      size={13}
+  1360→                      className="mr-1 inline"
+  1361→                      strokeWidth={2.5}
+  1362→                    />
+  1363→                    Tocá la palabra (o palabras) correcta y luego{" "}
+  1364→                    <b>“Subir al bus”</b>.
+  1365→                  </p>
+  1366→                )}
+  1367→                {esPronombres && (
+  1368→                  <p className="mb-3 text-center text-xs font-semibold text-rose-700/80 sm:text-sm">
+  1369→                    <Hand
+  1370→                      size={13}
+  1371→                      className="mr-1 inline"
+  1372→                      strokeWidth={2.5}
+  1373→                    />
+  1374→                    Elegí el pronombre correcto y luego{" "}
+  1375→                    <b>“Subir al bus”</b>.
+  1376→                  </p>
+  1377→                )}
+  1378→
+  1379→                {/* Lista de palabras / opciones (estilo boarding pass) */}
+  1380→                {esPronombres ? (
+  1381→                  <div className="flex flex-wrap items-center justify-center gap-3">
+  1382→                    {opcionesPronombres.map((opcion, i) => {
+  1383→                      const sel = seleccionadas.includes(i);
+  1384→                      return (
+  1385→                        <BoardingPass
+  1386→                          key={i}
+  1387→                          texto={opcion}
+  1388→                          seleccionada={sel}
+  1389→                          seleccionable={esSeleccionando}
+  1390→                          onClick={() => toggleSeleccion(i)}
+  1391→                        />
+  1392→                      );
+  1393→                    })}
+  1394→                  </div>
+  1395→                ) : (
+  1396→                  <div className="flex flex-wrap items-center justify-center gap-2">
+  1397→                    {tokensEnunciado.map((palabra, i) => {
+  1398→                      const sel = seleccionadas.includes(i);
+  1399→                      return (
+  1400→                        <BoardingPass
+  1401→                          key={i}
+  1402→                          texto={palabra}
+  1403→                          seleccionada={sel}
+  1404→                          seleccionable={esSeleccionando}
+  1405→                          onClick={() => toggleSeleccion(i)}
+  1406→                          compacta
+  1407→                        />
+  1408→                      );
+  1409→                    })}
+  1410→                  </div>
+  1411→                )}
+  1412→
+  1413→                {/* Frase construida (preview) */}
+  1414→                {seleccionadas.length > 0 && (
+  1415→                  <div className="mt-3 rounded-xl bg-rose-50/80 px-3 py-2 text-center">
+  1416→                    <p className="text-[11px] font-bold uppercase tracking-wide text-rose-600/70">
+  1417→                      Subiendo al bus:
+  1418→                    </p>
+  1419→                    <p className="text-base font-bold text-rose-900 sm:text-lg">
+  1420→                      {esPronombres
+  1421→                        ? opcionesPronombres[seleccionadas[0]]
+  1422→                        : [...seleccionadas]
+  1423→                            .sort((a, b) => a - b)
+  1424→                            .map((i) => tokensEnunciado[i])
+  1425→                            .join(" ")}
+  1426→                    </p>
+  1427→                  </div>
+  1428→                )}
+  1429→              </div>
+  1430→
+  1431→              {/* Feedback de error */}
+  1432→              {feedback && esSeleccionando && (
+  1433→                <div className="animate-bounce-in rounded-2xl border-2 border-amber-300 bg-amber-50 px-4 py-3 shadow-md">
+  1434→                  <p className="flex items-start gap-2 text-sm font-semibold text-amber-900">
+  1435→                    <span className="text-lg">💡</span>
+  1436→                    <span>{feedback}</span>
+  1437→                  </p>
+  1438→                </div>
+  1439→              )}
+  1440→
+  1441→              {/* Botones de acción */}
+  1442→              <div className="flex flex-col gap-2 sm:flex-row">
+  1443→                <button
+  1444→                  onClick={subirAlBus}
+  1445→                  disabled={!puedeSubir || esVerificando}
+  1446→                  aria-label="Subir al bus la selección actual"
+  1447→                  className={`group relative flex-1 overflow-hidden rounded-2xl py-3.5 text-base font-black shadow-md transition active:scale-95 ${
+  1448→                    puedeSubir
+  1449→                      ? "text-white hover:shadow-lg"
+  1450→                      : "cursor-not-allowed bg-rose-200/70 text-rose-400/70"
+  1451→                  }`}
+  1452→                  style={
+  1453→                    puedeSubir
+  1454→                      ? {
+  1455→                          background:
+  1456→                            "linear-gradient(180deg, #fb7185 0%, #f43f5e 55%, #e11d48 100%)",
+  1457→                          boxShadow:
+  1458→                            "0 6px 0 #be123c, 0 10px 24px rgba(244,63,94,0.45), inset 0 2px 0 rgba(255,255,255,0.4)",
+  1459→                        }
+  1460→                      : undefined
+  1461→                  }
+  1462→                >
+  1463→                  {/* sheen */}
+  1464→                  {puedeSubir && (
+  1465→                    <span
+  1466→                      className="pointer-events-none absolute inset-0 opacity-60"
+  1467→                      style={{
+  1468→                        background:
+  1469→                          "linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)",
+  1470→                        transform: "translateX(-100%)",
+  1471→                        animation: "sheen-bus 2.4s ease-in-out infinite",
+  1472→                      }}
+  1473→                    />
+  1474→                  )}
+  1475→                  {esVerificando ? (
+  1476→                    <span className="relative flex items-center justify-center gap-2">
+  1477→                      <RefreshCw
+  1478→                        size={18}
+  1479→                        className="animate-spin"
+  1480→                        strokeWidth={2.5}
+  1481→                      />{" "}
+  1482→                      Revisando…
+  1483→                    </span>
+  1484→                  ) : (
+  1485→                    <span className="relative flex items-center justify-center gap-2">
+  1486→                      <UserCheck size={18} strokeWidth={2.5} /> ¡Subir al bus!
+  1487→                    </span>
+  1488→                  )}
+  1489→                  <style jsx>{`
+  1490→                    @keyframes sheen-bus {
+  1491→                      0%,
+  1492→                      100% {
+  1493→                        transform: translateX(-100%);
+  1494→                      }
+  1495→                      50% {
+  1496→                        transform: translateX(100%);
+  1497→                      }
+  1498→                    }
+  1499→                  `}</style>
+  1500→                </button>
+  1501→
+  1502→                {seleccionadas.length > 0 && esSeleccionando && (
+  1503→                  <button
+  1504→                    onClick={limpiarSeleccion}
+  1505→                    className="flex items-center justify-center gap-1.5 rounded-2xl border-2 border-rose-300 bg-white py-3.5 px-4 text-sm font-bold text-rose-700 transition hover:bg-rose-50 active:scale-95 sm:text-base"
+  1506→                    aria-label="Limpiar la selección de palabras"
+  1507→                  >
+  1508→                    <RotateCcw size={16} strokeWidth={2.5} /> Limpiar
+  1509→                  </button>
+  1510→                )}
+  1511→
+  1512→                {esCelebrando && (
+  1513→                  <button
+  1514→                    disabled
+  1515→                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-lime-500 py-3.5 text-base font-bold text-white shadow-md"
+  1516→                  >
+  1517→                    <PartyPopper size={18} strokeWidth={2.5} /> ¡Bien hecho!
+  1518→                  </button>
+  1519→                )}
+  1520→              </div>
+  1521→            </div>
+  1522→          </div>
+  1523→        )}
+  1524→
+  1525→        {/* Overlay de celebración */}
+  1526→        {esCelebrando && (
+  1527→          <div className="pointer-events-none absolute inset-0 z-20 flex items-start justify-center pt-24 sm:pt-32">
+  1528→            <div className="animate-bounce-in rounded-3xl border-2 border-emerald-300 bg-white/95 px-6 py-4 shadow-2xl">
+  1529→              <p className="text-center text-sm font-bold uppercase tracking-wide text-emerald-700">
+  1530→                ¡Pasajero a bordo!
+  1531→              </p>
+  1532→              <p className="mt-1 text-center text-2xl font-black text-emerald-900 sm:text-3xl">
+  1533→                {nivel.palabra_correcta}
+  1534→              </p>
+  1535→              <p className="mt-1 text-center text-xs font-semibold text-emerald-700 sm:text-sm">
+  1536→                ¡Muy bien! El pasajero subió al bus.
+  1537→              </p>
+  1538→            </div>
+  1539→          </div>
+  1540→        )}
+  1541→      </div>
+  1542→
+  1543→      {/* Confeti al celebrar */}
+  1544→      {esCelebrando && <Confetti duracionMs={2600} cantidad={48} />}
+  1545→    </GameShell>
+  1546→  );
+  1547→}
+  1548→
+  1549→/* ============================================================
+  1550→   BoardingPass — tarjeta de palabra estilo pase de abordar
+  1551→   ============================================================ */
+  1552→interface BoardingPassProps {
+  1553→  texto: string;
+  1554→  seleccionada: boolean;
+  1555→  seleccionable: boolean;
+  1556→  onClick: () => void;
+  1557→  compacta?: boolean;
+  1558→}
+  1559→
+  1560→function BoardingPass({
+  1561→  texto,
+  1562→  seleccionada,
+  1563→  seleccionable,
+  1564→  onClick,
+  1565→  compacta,
+  1566→}: BoardingPassProps) {
+  1567→  const style: CSSProperties = seleccionada
+  1568→    ? {
+  1569→        background:
+  1570→          "linear-gradient(135deg, #fb7185 0%, #f43f5e 60%, #e11d48 100%)",
+  1571→        boxShadow:
+  1572→          "0 8px 18px rgba(244,63,94,0.5), 0 0 22px rgba(251,113,133,0.55), inset 0 2px 0 rgba(255,255,255,0.45)",
+  1573→        transform: "translateY(-4px) scale(1.05)",
+  1574→      }
+  1575→    : {
+  1576→        background:
+  1577→          "linear-gradient(135deg, #fff 0%, #fef2f2 60%, #ffe4e6 100%)",
+  1578→        boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+  1579→      };
+  1580→
+  1581→  return (
+  1582→    <button
+  1583→      onClick={onClick}
+  1584→      disabled={!seleccionable}
+  1585→      aria-pressed={seleccionada}
+  1586→      aria-label={`Palabra ${texto}${seleccionada ? " (seleccionada)" : ""}`}
+  1587→      className={`group relative select-none overflow-hidden rounded-xl border-2 px-4 py-2.5 text-base font-bold transition-all duration-200 sm:text-lg ${
+  1588→        compacta ? "px-3.5" : "px-6 py-3"
+  1589→      } ${
+  1590→        seleccionada
+  1591→          ? "border-rose-200 text-white"
+  1592→          : "border-rose-300/70 text-rose-950 hover:border-rose-400 hover:bg-rose-50"
+  1593→      } ${seleccionable ? "cursor-pointer active:scale-95" : "cursor-default"}`}
+  1594→      style={style}
+  1595→    >
+  1596→      {/* Perforación lateral (estilo boarding pass) */}
+  1597→      <span
+  1598→        className={`absolute left-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full ${
+  1599→          seleccionada ? "bg-white/40" : "bg-rose-200"
+  1600→        }`}
+  1601→      />
+  1602→      <span
+  1603→        className={`absolute right-1 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full ${
+  1604→          seleccionada ? "bg-white/40" : "bg-rose-200"
+  1605→        }`}
+  1606→      />
+  1607→      {/* Icono maletín */}
+  1608→      <span
+  1609→        className={`mr-1.5 inline-block align-middle ${
+  1610→          seleccionada ? "text-white/90" : "text-rose-400"
+  1611→        }`}
+  1612→      >
+  1613→        <svg width="13" height="11" viewBox="0 0 24 20" fill="none">
+  1614→          <rect
+  1615→            x="3"
+  1616→            y="6"
+  1617→            width="18"
+  1618→            height="12"
+  1619→            rx="2"
+  1620→            stroke="currentColor"
+  1621→            strokeWidth="2.2"
+  1622→            fill={seleccionada ? "rgba(255,255,255,0.2)" : "none"}
+  1623→          />
+  1624→          <path
+  1625→            d="M9 6V4h6v2"
+  1626→            stroke="currentColor"
+  1627→            strokeWidth="2.2"
+  1628→            fill="none"
+  1629→          />
+  1630→        </svg>
+  1631→      </span>
+  1632→      <span className="align-middle">{texto}</span>
+  1633→      {/* Check al seleccionar */}
+  1634→      {seleccionada && (
+  1635→        <span className="ml-1.5 inline-block align-middle">
+  1636→          <Check size={14} strokeWidth={3} className="text-white" />
+  1637→        </span>
+  1638→      )}
+  1639→    </button>
+  1640→  );
+  1641→}
+  1642→
+  1643→/* ============================================================
+  1644→   Helper: resalta la palabra correcta en el enunciado al celebrar
+  1645→   ============================================================ */
+  1646→function resaltarPalabraCorrecta(
+  1647→  enunciado: string,
+  1648→  palabraCorrecta: string,
+  1649→  celebrando: boolean,
+  1650→): React.ReactNode {
+  1651→  if (!celebrando) return enunciado;
+  1652→
+  1653→  // Normalizar para búsqueda insensible a mayúsculas/puntuación
+  1654→  const tokens = enunciado.split(/(\s+)/); // conserva espacios
+  1655→  const correctasNorm = normalizar(palabraCorrecta)
+  1656→    .split(" ")
+  1657→    .filter(Boolean);
+  1658→
+  1659→  if (correctasNorm.length === 0) return enunciado;
+  1660→
+  1661→  // Para 1 palabra: marcar el primer token que coincida
+  1662→  if (correctasNorm.length === 1) {
+  1663→    return tokens.map((tok, i) => {
+  1664→      if (normalizar(tok) === correctasNorm[0]) {
+  1665→        return (
+  1666→          <mark
+  1667→            key={i}
+  1668→            className="rounded bg-emerald-200 px-1 font-bold text-emerald-900 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+  1669→          >
+  1670→            {tok}
+  1671→          </mark>
+  1672→        );
+  1673→      }
+  1674→      return tok;
+  1675→    });
+  1676→  }
+  1677→
+  1678→  // Para múltiples palabras: marcar todos los tokens que coincidan
+  1679→  return tokens.map((tok, i) => {
+  1680→    if (correctasNorm.includes(normalizar(tok))) {
+  1681→      return (
+  1682→        <mark
+  1683→          key={i}
+  1684→          className="rounded bg-emerald-200 px-1 font-bold text-emerald-900 shadow-[0_0_8px_rgba(16,185,129,0.6)]"
+  1685→        >
+  1686→          {tok}
+  1687→        </mark>
+  1688→      );
+  1689→    }
+  1690→    return tok;
+  1691→  });
+  1692→}
+  1693→
