@@ -39,6 +39,17 @@ model Usuario {
   // Asignaturas creadas/gestionadas por un maestro
   asignaturas      Asignatura[]
 
+  // Secciones (aulas) creadas por un maestro
+  seccionesComoMaestro   Seccion[]      @relation("SeccionMaestro")
+  // Inscripciones del estudiante en secciones
+  inscripcionesComoEst   Inscripcion[]  @relation("InscripcionEstudiante")
+  // Entregas de tareas del estudiante
+  entregas               EntregaTarea[] @relation("EntregaEstudiante")
+  // Calificaciones manuales recibidas
+  calificacionesRecibidas Calificacion[] @relation("CalificacionEstudiante")
+  // Registros de asistencia del estudiante
+  asistencias            Asistencia[]   @relation("AsistenciaEstudiante")
+
   // Avatar personalizable + artículos comprados en la tienda
   avatarConfig  AvatarConfig?
   items         UsuarioItem[]
@@ -109,6 +120,7 @@ model Asignatura {
   maestroId   String?
   maestro     Usuario? @relation(fields: [maestroId], references: [id], onDelete: SetNull)
   modulos     Modulo[]
+  secciones   Seccion[]
 }
 
 model Modulo {
@@ -133,6 +145,7 @@ model Desafio {
   orden       Int
   opciones    Opcion[]
   progresos   ProgresoEstudiante[]
+  tareas      Tarea[]
 }
 
 model Opcion {
@@ -175,4 +188,102 @@ model MedallaEstudiante {
   ganadaEn   DateTime @default(now())
 
   @@unique([usuarioId, medallaId])
+}
+
+// ===================== MÓDULO DE MAESTRO =====================
+
+// Sección / Aula: un maestro agrupa estudiantes bajo una sección vinculada
+// a una asignatura y un año escolar (ej. "3ro A - Matemáticas 2026").
+model Seccion {
+  id           String   @id @default(uuid())
+  nombre       String   // "3ro A"
+  grado        Int      @default(3)
+  maestroId    String
+  maestro      Usuario  @relation("SeccionMaestro", fields: [maestroId], references: [id], onDelete: Cascade)
+  asignaturaId String?
+  asignatura   Asignatura? @relation(fields: [asignaturaId], references: [id], onDelete: SetNull)
+  anioEscolar  Int      @default(2026)
+  activa       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  inscripciones Inscripcion[]
+  tareas        Tarea[]
+  asistencias   Asistencia[]
+}
+
+// Inscripción: vincula un estudiante a una sección (muchos a muchos).
+model Inscripcion {
+  id            String   @id @default(uuid())
+  seccionId     String
+  seccion       Seccion  @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  estudianteId  String
+  estudiante    Usuario  @relation("InscripcionEstudiante", fields: [estudianteId], references: [id], onDelete: Cascade)
+  activa        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  @@unique([seccionId, estudianteId])
+}
+
+// Tarea: un desafío asignado a una sección con fecha límite.
+model Tarea {
+  id            String   @id @default(uuid())
+  seccionId     String
+  seccion       Seccion  @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  desafioId     String
+  desafio       Desafio  @relation(fields: [desafioId], references: [id], onDelete: Cascade)
+  titulo        String
+  descripcion   String?
+  fechaAsignada DateTime @default(now())
+  fechaLimite   DateTime
+  estado        String   @default("ACTIVA") // ACTIVA | CERRADA | BORRADOR
+  createdAt     DateTime @default(now())
+
+  calificaciones Calificacion[]
+  entregas       EntregaTarea[]
+}
+
+// Entrega: registro de que el estudiante respondió la tarea.
+model EntregaTarea {
+  id            String   @id @default(uuid())
+  tareaId       String
+  tarea         Tarea    @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  estudianteId  String
+  estudiante    Usuario  @relation("EntregaEstudiante", fields: [estudianteId], references: [id], onDelete: Cascade)
+  opcionId      String?
+  correcta      Boolean?
+  puntosGanados Int      @default(0)
+  entregadaEn   DateTime @default(now())
+  tarde         Boolean  @default(false)
+
+  @@unique([tareaId, estudianteId])
+}
+
+// Calificación manual del maestro (desafíos abiertos, composiciones, etc.).
+model Calificacion {
+  id            String   @id @default(uuid())
+  tareaId       String
+  tarea         Tarea    @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  estudianteId  String
+  estudiante    Usuario  @relation("CalificacionEstudiante", fields: [estudianteId], references: [id], onDelete: Cascade)
+  nota          Float    // 0-100
+  comentario    String?
+  calificadaEn  DateTime @default(now())
+  maestroId     String
+
+  @@unique([tareaId, estudianteId])
+}
+
+// Asistencia: un registro por estudiante por día/sesión.
+model Asistencia {
+  id           String   @id @default(uuid())
+  seccionId    String
+  seccion      Seccion  @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  estudianteId String
+  estudiante   Usuario  @relation("AsistenciaEstudiante", fields: [estudianteId], references: [id], onDelete: Cascade)
+  fecha        DateTime // día de la clase
+  estado       String   // PRESENTE | AUSENTE | TARDANZA | JUSTIFICADO
+  observacion  String?
+  createdAt    DateTime @default(now())
+
+  @@unique([seccionId, estudianteId, fecha])
 }

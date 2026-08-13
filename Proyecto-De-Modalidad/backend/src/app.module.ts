@@ -4,6 +4,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 import { DesafiosModule } from './desafios/desafios.module';
 import { ProgresoModule } from './progreso/progreso.module';
 import { AvatarsModule } from './avatars/avatars.module';
+import { MaestrosModule } from './maestros/maestros.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AvatarsModule } from './avatars/avatars.module';
     DesafiosModule,
     ProgresoModule,
     AvatarsModule,
+    MaestrosModule,
   ],
 })
 export class AppModule {}

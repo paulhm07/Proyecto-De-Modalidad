@@ -84,6 +84,14 @@ export function LoginScreen() {
     setRolSeleccionado(rol);
     try {
       const usuario = await api.loginDemo(rol);
+      // Si es maestro demo, preparar sección + estudiantes demo (idempotente)
+      if (rol === "MAESTRO") {
+        try {
+          await api.seedMaestroDemo(usuario.id);
+        } catch {
+          // El seed es opcional; si falla no bloqueamos el login
+        }
+      }
       setUsuario(usuario);
       setRolSeleccionado(usuario.rol);
       setVista("dashboard");

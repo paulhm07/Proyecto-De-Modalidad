@@ -21,6 +21,14 @@ export type Vista =
   | "perfil"
   | "padre"
   | "maestro"
+  | "maestro-seccion"
+  | "maestro-estudiantes"
+  | "maestro-crear-tarea"
+  | "maestro-tareas"
+  | "maestro-tarea-detalle"
+  | "maestro-asistencia"
+  | "maestro-reportes"
+  | "maestro-reporte-estudiante"
   | "progreso-estudiante"
   | "contenido"
   | "banco-desafios"
@@ -46,6 +54,7 @@ interface AppContextValue {
   asignaturaId: string | null;
   rolSeleccionado: Rol;
   estudianteSeleccionadoId: string | null;
+  seccionSeleccionadaId: string | null;
   toasts: Toast[];
   setUsuario: (u: Usuario | null) => void;
   setVista: (v: Vista) => void;
@@ -53,6 +62,7 @@ interface AppContextValue {
   setAsignaturaId: (id: string | null) => void;
   setRolSeleccionado: (r: Rol) => void;
   setEstudianteSeleccionadoId: (id: string | null) => void;
+  setSeccionSeleccionadaId: (id: string | null) => void;
   mostrarToast: (mensaje: string, tipo?: Toast["tipo"]) => void;
   cerrarSesion: () => void;
 }
@@ -69,6 +79,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [asignaturaId, setAsignaturaId] = useState<string | null>(null);
   const [rolSeleccionado, setRolSeleccionado] = useState<Rol>("ESTUDIANTE");
   const [estudianteSeleccionadoId, setEstudianteSeleccionadoId] = useState<string | null>(null);
+  const [seccionSeleccionadaId, setSeccionSeleccionadaId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [hidratado, setHidratado] = useState(false);
 
@@ -133,6 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setModuloId(null);
     setAsignaturaId(null);
     setEstudianteSeleccionadoId(null);
+    setSeccionSeleccionadaId(null);
     setRolSeleccionado("ESTUDIANTE");
   }, []);
 
@@ -144,6 +156,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       asignaturaId,
       rolSeleccionado,
       estudianteSeleccionadoId,
+      seccionSeleccionadaId,
       toasts,
       setUsuario,
       setVista,
@@ -151,6 +164,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAsignaturaId,
       setRolSeleccionado,
       setEstudianteSeleccionadoId,
+      setSeccionSeleccionadaId,
       mostrarToast,
       cerrarSesion,
     }),
@@ -161,6 +175,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       asignaturaId,
       rolSeleccionado,
       estudianteSeleccionadoId,
+      seccionSeleccionadaId,
       toasts,
       setUsuario,
       mostrarToast,

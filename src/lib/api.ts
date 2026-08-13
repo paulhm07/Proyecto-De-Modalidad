@@ -1,14 +1,23 @@
 import type {
+  AlertasMaestro,
   Asignatura,
+  Calificacion,
   ComprarResponse,
   Desafio,
+  EntregaTarea,
   EquiparResponse,
+  EstadoAsistencia,
   ItemTienda,
   MedallaEstudiante,
   MiAvatarResponse,
   Modulo,
+  RegistroAsistencia,
+  ReporteEstudiante,
+  ResumenSeccion,
   RespuestaProgreso,
   Rol,
+  Seccion,
+  Tarea,
   Usuario,
 } from "./types";
 
@@ -163,5 +172,115 @@ export const api = {
   },
   seedTienda(): Promise<any> {
     return post(`/api/avatars/seed`);
+  },
+
+  // ===================== MÓDULO DE MAESTRO =====================
+
+  // Secciones
+  obtenerSeccionesMaestro(maestroId: string): Promise<Seccion[]> {
+    return get<Seccion[]>(`/api/maestros/secciones/maestro/${maestroId}`);
+  },
+  obtenerSeccion(id: string): Promise<Seccion> {
+    return get<Seccion>(`/api/maestros/secciones/${id}`);
+  },
+  crearSeccion(data: {
+    nombre: string;
+    grado?: number;
+    maestroId: string;
+    asignaturaId?: string;
+  }): Promise<Seccion> {
+    return post<Seccion>(`/api/maestros/secciones`, data);
+  },
+  actualizarSeccion(id: string, data: { nombre?: string; grado?: number; asignaturaId?: string | null }): Promise<Seccion> {
+    return http<Seccion>(`/api/maestros/secciones/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  eliminarSeccion(id: string): Promise<any> {
+    return del(`/api/maestros/secciones/${id}`);
+  },
+  inscribirEstudiante(seccionId: string, estudianteId: string): Promise<any> {
+    return post(`/api/maestros/secciones/${seccionId}/inscribir`, { estudianteId });
+  },
+  desinscribirEstudiante(seccionId: string, estudianteId: string): Promise<any> {
+    return del(`/api/maestros/secciones/${seccionId}/inscribir/${estudianteId}`);
+  },
+  obtenerEstudiantesSeccion(seccionId: string): Promise<any[]> {
+    return get<any[]>(`/api/maestros/secciones/${seccionId}/estudiantes`);
+  },
+
+  // Tareas
+  obtenerTareasSeccion(seccionId: string): Promise<Tarea[]> {
+    return get<Tarea[]>(`/api/maestros/tareas/seccion/${seccionId}`);
+  },
+  obtenerTarea(id: string): Promise<Tarea & { entregas: EntregaTarea[]; calificaciones: Calificacion[] }> {
+    return get(`/api/maestros/tareas/${id}`);
+  },
+  crearTarea(data: {
+    seccionId: string;
+    desafioId: string;
+    titulo: string;
+    descripcion?: string;
+    fechaLimite: string;
+  }): Promise<Tarea> {
+    return post<Tarea>(`/api/maestros/tareas`, data);
+  },
+  actualizarTarea(id: string, data: { titulo?: string; descripcion?: string | null; fechaLimite?: string; estado?: string }): Promise<Tarea> {
+    return http<Tarea>(`/api/maestros/tareas/${id}`, { method: "PUT", body: JSON.stringify(data) });
+  },
+  cerrarTarea(id: string): Promise<any> {
+    return post(`/api/maestros/tareas/${id}/cerrar`);
+  },
+  eliminarTarea(id: string): Promise<any> {
+    return del(`/api/maestros/tareas/${id}`);
+  },
+
+  // Calificaciones
+  registrarCalificacion(data: {
+    tareaId: string;
+    estudianteId: string;
+    nota: number;
+    comentario?: string;
+    maestroId: string;
+  }): Promise<Calificacion> {
+    return post<Calificacion>(`/api/maestros/calificaciones`, data);
+  },
+  obtenerCalificacionesTarea(tareaId: string): Promise<Calificacion[]> {
+    return get<Calificacion[]>(`/api/maestros/calificaciones/tarea/${tareaId}`);
+  },
+  obtenerCalificacionesEstudiante(estudianteId: string): Promise<Calificacion[]> {
+    return get<Calificacion[]>(`/api/maestros/calificaciones/estudiante/${estudianteId}`);
+  },
+
+  // Asistencia
+  registrarAsistencia(registros: {
+    seccionId: string;
+    estudianteId: string;
+    fecha: string;
+    estado: EstadoAsistencia;
+    observacion?: string;
+  }[]): Promise<any> {
+    return post(`/api/maestros/asistencia`, { registros });
+  },
+  obtenerAsistenciaSeccion(seccionId: string, fecha?: string): Promise<RegistroAsistencia[]> {
+    const q = fecha ? `?fecha=${encodeURIComponent(fecha)}` : "";
+    return get<RegistroAsistencia[]>(`/api/maestros/asistencia/seccion/${seccionId}${q}`);
+  },
+  obtenerAsistenciaEstudiante(estudianteId: string): Promise<{ registros: RegistroAsistencia[]; resumen: any }> {
+    return get(`/api/maestros/asistencia/estudiante/${estudianteId}`);
+  },
+
+  // Reportes
+  obtenerResumenSeccion(seccionId: string): Promise<ResumenSeccion> {
+    return get<ResumenSeccion>(`/api/maestros/reportes/seccion/${seccionId}/resumen`);
+  },
+  obtenerReporteEstudiante(estudianteId: string): Promise<ReporteEstudiante> {
+    return get<ReporteEstudiante>(`/api/maestros/reportes/estudiante/${estudianteId}/acumulado`);
+  },
+  obtenerAlertasMaestro(maestroId: string): Promise<AlertasMaestro> {
+    return get<AlertasMaestro>(`/api/maestros/alertas/${maestroId}`);
+  },
+
+  // Seed
+  seedMaestroDemo(maestroId: string): Promise<any> {
+    return post(`/api/maestros/seed/${maestroId}`);
   },
 };

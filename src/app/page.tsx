@@ -10,6 +10,14 @@ import { RankingView } from "@/components/RankingView";
 import { ProfileView } from "@/components/ProfileView";
 import { ParentDashboard } from "@/components/ParentDashboard";
 import { TeacherDashboard } from "@/components/TeacherDashboard";
+import { TeacherSecciones } from "@/components/TeacherSecciones";
+import { TeacherEstudiantes } from "@/components/TeacherEstudiantes";
+import { TeacherCrearTarea } from "@/components/TeacherCrearTarea";
+import { TeacherTareas } from "@/components/TeacherTareas";
+import { TeacherTareaDetalle } from "@/components/TeacherTareaDetalle";
+import { TeacherAsistencia } from "@/components/TeacherAsistencia";
+import { TeacherReportes } from "@/components/TeacherReportes";
+import { TeacherReporteEstudiante } from "@/components/TeacherReporteEstudiante";
 import { StudentProgressView } from "@/components/StudentProgressView";
 import { ContentManager } from "@/components/ContentManager";
 import { BancoDesafiosViewer } from "@/components/BancoDesafiosViewer";
@@ -56,6 +64,30 @@ function Router() {
       break;
     case "maestro":
       contenido = <TeacherDashboard />;
+      break;
+    case "maestro-seccion":
+      contenido = <TeacherSecciones />;
+      break;
+    case "maestro-estudiantes":
+      contenido = <TeacherEstudiantes />;
+      break;
+    case "maestro-crear-tarea":
+      contenido = <TeacherCrearTarea />;
+      break;
+    case "maestro-tareas":
+      contenido = <TeacherTareas />;
+      break;
+    case "maestro-tarea-detalle":
+      contenido = <TeacherTareaDetalle />;
+      break;
+    case "maestro-asistencia":
+      contenido = <TeacherAsistencia />;
+      break;
+    case "maestro-reportes":
+      contenido = <TeacherReportes />;
+      break;
+    case "maestro-reporte-estudiante":
+      contenido = <TeacherReporteEstudiante />;
       break;
     case "progreso-estudiante":
       contenido = <StudentProgressView />;

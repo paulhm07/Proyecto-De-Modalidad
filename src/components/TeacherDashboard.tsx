@@ -12,10 +12,16 @@ import {
   Plus,
   Library,
   GraduationCap,
+  ClipboardList,
+  CalendarCheck,
+  BarChart3,
+  AlertCircle,
+  ClipboardCheck,
+  Clock,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
-import type { Asignatura } from "@/lib/types";
+import type { Asignatura, AlertasMaestro, Seccion } from "@/lib/types";
 
 interface EstudianteMaestro {
   id: string;
@@ -28,9 +34,11 @@ interface EstudianteMaestro {
 }
 
 export function TeacherDashboard() {
-  const { usuario, setVista, setEstudianteSeleccionadoId, setAsignaturaId, setModuloId, mostrarToast } = useApp();
+  const { usuario, setVista, setEstudianteSeleccionadoId, setAsignaturaId, setModuloId, setSeccionSeleccionadaId, mostrarToast } = useApp();
   const [estudiantes, setEstudiantes] = useState<EstudianteMaestro[]>([]);
   const [asignaturas, setAsignaturas] = useState<Asignatura[]>([]);
+  const [secciones, setSecciones] = useState<Seccion[]>([]);
+  const [alertas, setAlertas] = useState<AlertasMaestro | null>(null);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -39,13 +47,17 @@ export function TeacherDashboard() {
     (async () => {
       setCargando(true);
       try {
-        const [ests, asigs] = await Promise.all([
+        const [ests, asigs, seccs, alts] = await Promise.all([
           api.obtenerEstudiantesMaestro(usuario.id),
           api.obtenerAsignaturasMaestro(usuario.id),
+          api.obtenerSeccionesMaestro(usuario.id).catch(() => []),
+          api.obtenerAlertasMaestro(usuario.id).catch(() => null),
         ]);
         if (cancelado) return;
         setEstudiantes(ests);
         setAsignaturas(asigs);
+        setSecciones(seccs);
+        setAlertas(alts);
       } catch (err) {
         if (!cancelado) {
           mostrarToast(err instanceof Error ? err.message : "Error al cargar datos", "error");
@@ -68,6 +80,8 @@ export function TeacherDashboard() {
 
   if (!usuario) return null;
 
+  const totalAlertas = alertas?.totalAlertas ?? 0;
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
       <button
@@ -85,13 +99,142 @@ export function TeacherDashboard() {
           <div>
             <h1 className="text-2xl font-black text-stone-800">Panel del maestro/a</h1>
             <p className="text-sm font-semibold text-stone-600">
-              Hola, {usuario.nombre}. Gestiona tus asignaturas y estudiantes.
+              Hola, {usuario.nombre}. Gestiona tus secciones, tareas y estudiantes.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Acceso rápido al Banco de Desafíos */}
+      {/* ===== ALERTAS PENDIENTES ===== */}
+      {alertas && totalAlertas > 0 && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-2">
+            <AlertCircle size={18} className="text-rose-500" strokeWidth={2.5} />
+            <h2 className="text-lg font-black text-stone-800">Alertas pendientes</h2>
+            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">
+              {totalAlertas}
+            </span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <button
+              onClick={() => setVista("maestro-tareas")}
+              className="card-premium animate-pop group flex items-center gap-3 rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
+              style={{ animationDelay: "0ms" }}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-md">
+                <ClipboardList size={22} className="text-white" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-2xl font-black text-stone-800">{alertas.tareasPorCalificar}</p>
+                <p className="text-xs font-bold text-stone-600">Tareas por calificar</p>
+              </div>
+              <ChevronRight size={16} className="text-stone-400 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+            </button>
+
+            <button
+              onClick={() => setVista("maestro-asistencia")}
+              className="card-premium animate-pop group flex items-center gap-3 rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
+              style={{ animationDelay: "50ms" }}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-400 to-fuchsia-500 shadow-md">
+                <CalendarCheck size={22} className="text-white" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-2xl font-black text-stone-800">{alertas.asistenciasPendientesHoy}</p>
+                <p className="text-xs font-bold text-stone-600">Asistencias hoy</p>
+              </div>
+              <ChevronRight size={16} className="text-stone-400 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+            </button>
+
+            <button
+              onClick={() => setVista("maestro-tareas")}
+              className="card-premium animate-pop group flex items-center gap-3 rounded-2xl p-4 text-left transition-all hover:scale-[1.02]"
+              style={{ animationDelay: "100ms" }}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 shadow-md">
+                <Clock size={22} className="text-white" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-2xl font-black text-stone-800">{alertas.entregasTardias}</p>
+                <p className="text-xs font-bold text-stone-600">Entregas tardías</p>
+              </div>
+              <ChevronRight size={16} className="text-stone-400 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===== HERRAMIENTAS DE GESTIÓN ===== */}
+      <div className="mb-6">
+        <h2 className="mb-3 text-lg font-black text-stone-800">Herramientas de gestión</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button
+            onClick={() => setVista("maestro-seccion")}
+            className="btn-3d group flex items-center gap-4 rounded-3xl bg-gradient-to-r from-fuchsia-500 to-rose-500 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
+          >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-2 ring-white/40">
+              <Users size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-lg font-black text-white">Mis Secciones</p>
+              <p className="text-sm font-semibold text-white/90">
+                {secciones.length} sección{secciones.length !== 1 ? "es" : ""} · Gestiona estudiantes inscritos
+              </p>
+            </div>
+            <ChevronRight size={24} className="text-white transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+          </button>
+
+          <button
+            onClick={() => setVista("maestro-tareas")}
+            className="btn-3d group flex items-center gap-4 rounded-3xl bg-gradient-to-r from-orange-500 to-rose-500 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
+          >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-2 ring-white/40">
+              <ClipboardCheck size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-lg font-black text-white">Tareas</p>
+              <p className="text-sm font-semibold text-white/90">
+                Crea y califica tareas asignadas a tus secciones
+              </p>
+            </div>
+            <ChevronRight size={24} className="text-white transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+          </button>
+
+          <button
+            onClick={() => setVista("maestro-asistencia")}
+            className="btn-3d group flex items-center gap-4 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
+          >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-2 ring-white/40">
+              <CalendarCheck size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-lg font-black text-white">Asistencia</p>
+              <p className="text-sm font-semibold text-white/90">
+                Toma lista diaria y revisa historial
+              </p>
+            </div>
+            <ChevronRight size={24} className="text-white transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+          </button>
+
+          <button
+            onClick={() => setVista("maestro-reportes")}
+            className="btn-3d group flex items-center gap-4 rounded-3xl bg-gradient-to-r from-violet-500 to-fuchsia-500 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
+          >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm ring-2 ring-white/40">
+              <BarChart3 size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-lg font-black text-white">Reportes</p>
+              <p className="text-sm font-semibold text-white/90">
+                Métricas grupales e individuales acumuladas
+              </p>
+            </div>
+            <ChevronRight size={24} className="text-white transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+          </button>
+        </div>
+      </div>
+
+      {/* ===== RECURSOS CURRICULARES ===== */}
       <button
         onClick={() => setVista("banco-desafios")}
         className="btn-3d group mb-3 flex w-full items-center gap-4 rounded-3xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-rose-500 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
@@ -108,7 +251,6 @@ export function TeacherDashboard() {
         <ChevronRight size={24} className="text-white transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
       </button>
 
-      {/* Acceso al Contenido MINED */}
       <button
         onClick={() => setVista("contenido-mined")}
         className="btn-3d group mb-6 flex w-full items-center gap-4 rounded-3xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 p-5 text-left shadow-md transition-all hover:scale-[1.01]"
@@ -135,7 +277,7 @@ export function TeacherDashboard() {
           <section>
             <div className="mb-3 flex items-center gap-2">
               <Users size={18} className="text-fuchsia-500" strokeWidth={2.5} />
-              <h2 className="text-lg font-black text-stone-800">Mis estudiantes</h2>
+              <h2 className="text-lg font-black text-stone-800">Estudiantes activos</h2>
               <span className="rounded-full bg-fuchsia-100 px-2 py-0.5 text-xs font-bold text-fuchsia-700">
                 {estudiantes.length}
               </span>
@@ -144,11 +286,11 @@ export function TeacherDashboard() {
               <div className="card-premium rounded-3xl p-6 text-center">
                 <Users size={32} className="mx-auto mb-2 text-fuchsia-300" />
                 <p className="text-sm font-bold text-stone-600">
-                  No tienes estudiantes asignados a tus asignaturas todavía.
+                  No tienes estudiantes con actividad todavía. Crea una sección para inscribirlos.
                 </p>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="max-h-96 space-y-2.5 overflow-y-auto pr-1">
                 {estudiantes.map((e, i) => {
                   const nivel = Math.floor((e.experiencia ?? 0) / 100) + 1;
                   const completados = e.desafiosCompletados ?? 0;
@@ -217,7 +359,7 @@ export function TeacherDashboard() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="max-h-96 space-y-2.5 overflow-y-auto pr-1">
                 {asignaturas.map((a, i) => (
                   <div
                     key={a.id}
