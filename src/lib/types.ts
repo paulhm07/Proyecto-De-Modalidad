@@ -266,3 +266,179 @@ export interface ReporteEstudiante {
     completados: number;
   };
 }
+
+// ===================== MÓDULO DE PADRES =====================
+
+export interface HijoVinculado extends Usuario {
+  parentesco: string;
+  verificado: boolean;
+}
+
+export interface SeccionHijo {
+  id: string;
+  nombre: string;
+  grado: number;
+  asignatura: { id: string; nombre: string } | null;
+  maestro: { id: string; nombre: string };
+}
+
+export interface ResumenPadre {
+  hijo: {
+    id: string;
+    nombre: string;
+    avatar: string;
+    puntos: number;
+    experiencia: number;
+    monedas: number;
+    gemas: number;
+  };
+  nivel: number;
+  secciones: SeccionHijo[];
+  kpis: {
+    promedioNotas: number;
+    porcentajeProgreso: number;
+    porcentajeAsistencia: number;
+  };
+  tareasActivas: Array<{
+    id: string;
+    titulo: string;
+    descripcion: string | null;
+    fechaLimite: string;
+    estado: string;
+    desafio: { id: string; pregunta: string; puntos: number } | null;
+    seccion: { nombre: string; asignatura: { nombre: string } | null };
+    entregada: boolean;
+    entrega: { id: string; entregadaEn: string; tarde: boolean; correcta: boolean | null; puntosGanados: number } | null;
+  }>;
+  calificacionesRecientes: Array<{
+    id: string;
+    nota: number;
+    comentario: string | null;
+    calificadaEn: string;
+    tarea: { id: string; titulo: string; seccion: { asignatura: { nombre: string } | null } };
+  }>;
+  medallas: Array<{
+    id: string;
+    ganadaEn: string;
+    medalla: { id: string; titulo: string; descripcion: string; iconoUrl: string };
+  }>;
+  avisosNoLeidos: Aviso[];
+}
+
+export interface Aviso {
+  id: string;
+  seccionId: string;
+  maestroId: string;
+  tipo: 'CIRCULAR' | 'RECORDATORIO' | 'URGENTE' | 'EVENTO';
+  titulo: string;
+  contenido: string;
+  prioridad: number;
+  fechaEnvio: string;
+  fechaEvento: string | null;
+  requiereFirma: boolean;
+  activo: boolean;
+  leido: boolean;
+  firmado: boolean;
+  seccion: { id: string; nombre: string; asignatura: { nombre: string } | null };
+  maestro: { id: string; nombre: string };
+  hijosDestinatarios: string[];
+}
+
+export interface CalificacionPadre {
+  id: string;
+  nota: number;
+  comentario: string | null;
+  calificadaEn: string;
+  tarea: {
+    id: string;
+    titulo: string;
+    fechaLimite: string;
+    seccion: { id: string; nombre: string; asignatura: { id: string; nombre: string } | null };
+  };
+}
+
+export interface ResumenCalificaciones {
+  calificaciones: CalificacionPadre[];
+  promedioGeneral: number;
+  resumenPorAsignatura: Array<{
+    asignaturaId: string;
+    nombre: string;
+    promedio: number;
+    cantidad: number;
+  }>;
+  total: number;
+}
+
+export interface RegistroAsistenciaPadre {
+  id: string;
+  fecha: string;
+  estado: 'PRESENTE' | 'AUSENTE' | 'TARDANZA' | 'JUSTIFICADO';
+  observacion: string | null;
+  seccion: { nombre: string; asignatura: { nombre: string } | null };
+}
+
+export interface ResumenAsistencia {
+  mes: number;
+  anio: number;
+  registros: RegistroAsistenciaPadre[];
+  conteo: Record<string, number>;
+  total: number;
+  porcentaje: number;
+}
+
+export interface Conversacion {
+  id: string;
+  padreId: string;
+  maestroId: string;
+  hijoId: string;
+  seccionId: string | null;
+  asunto: string;
+  ultimaActividad: string;
+  maestro: { id: string; nombre: string; avatar: string };
+  hijo: { id: string; nombre: string };
+  seccion: { id: string; nombre: string; asignatura: { nombre: string } | null } | null;
+  mensajes: Array<{
+    cuerpo: string;
+    enviadoEn: string;
+    remitenteId: string;
+    leidoEn: string | null;
+  }>;
+  noLeidos: number;
+}
+
+export interface ConversacionDetalle extends Omit<Conversacion, 'mensajes' | 'noLeidos'> {
+  mensajes: Mensaje[];
+}
+
+export interface Mensaje {
+  id: string;
+  conversacionId: string;
+  remitenteId: string;
+  cuerpo: string;
+  enviadoEn: string;
+  leidoEn: string | null;
+  remitente: { id: string; nombre: string; avatar: string };
+}
+
+export interface Notificacion {
+  id: string;
+  usuarioId: string;
+  tipo: string;
+  titulo: string;
+  cuerpo: string;
+  data: string | null;
+  leida: boolean;
+  enviadaPush: boolean;
+  creadaEn: string;
+}
+
+export interface MedallasHijo {
+  ganadas: Array<{
+    id: string;
+    ganadaEn: string;
+    medalla: { id: string; titulo: string; descripcion: string; iconoUrl: string };
+  }>;
+  bloqueadas: Array<{ id: string; titulo: string; descripcion: string; iconoUrl: string }>;
+  total: number;
+  desbloqueadas: number;
+}

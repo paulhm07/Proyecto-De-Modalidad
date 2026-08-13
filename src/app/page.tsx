@@ -9,6 +9,13 @@ import { AvatarCustomizer } from "@/components/AvatarCustomizer";
 import { RankingView } from "@/components/RankingView";
 import { ProfileView } from "@/components/ProfileView";
 import { ParentDashboard } from "@/components/ParentDashboard";
+import { ParentCalificaciones } from "@/components/ParentCalificaciones";
+import { ParentAsistencia } from "@/components/ParentAsistencia";
+import { ParentAvisos } from "@/components/ParentAvisos";
+import { ParentMensajes } from "@/components/ParentMensajes";
+import { ParentMensajeThread } from "@/components/ParentMensajeThread";
+import { ParentNotificaciones } from "@/components/ParentNotificaciones";
+import { ParentVincularHijo } from "@/components/ParentVincularHijo";
 import { TeacherDashboard } from "@/components/TeacherDashboard";
 import { TeacherSecciones } from "@/components/TeacherSecciones";
 import { TeacherEstudiantes } from "@/components/TeacherEstudiantes";
@@ -61,6 +68,27 @@ function Router() {
       break;
     case "padre":
       contenido = <ParentDashboard />;
+      break;
+    case "padre-calificaciones":
+      contenido = <ParentCalificaciones />;
+      break;
+    case "padre-asistencia":
+      contenido = <ParentAsistencia />;
+      break;
+    case "padre-avisos":
+      contenido = <ParentAvisos />;
+      break;
+    case "padre-mensajes":
+      contenido = <ParentMensajes />;
+      break;
+    case "padre-mensaje-thread":
+      contenido = <ParentMensajeThread />;
+      break;
+    case "padre-notificaciones":
+      contenido = <ParentNotificaciones />;
+      break;
+    case "padre-vincular":
+      contenido = <ParentVincularHijo />;
       break;
     case "maestro":
       contenido = <TeacherDashboard />;

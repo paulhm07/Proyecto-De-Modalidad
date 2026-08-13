@@ -243,3 +243,182 @@ Stage Summary:
 - Verificado end-to-end vía gateway: SW activo, login funcional, dashboard carga, offline sirve shell cacheado, install prompt funciona.
 - Servicios: FE 3000 (200), BE 3001 (corriendo, /api/usuarios/demo devuelve 500 pre-existente pero frontend tiene fallback), Gateway 81 (200).
 - Screenshots: pwa-install-prompt.png, pwa-dashboard-gateway.png, pwa-offline-gateway.png (dashboard servido offline).
+
+---
+Task ID: F3-A
+Agent: full-stack-developer
+Task: Rediseñar ParentDashboard (home) + crear ParentNotificaciones
+
+Work Log:
+- Leí worklog previo (entradas del Módulo de Maestro y PWA) para entender convenciones: tema "espacio profundo" (fondo violeta oscuro #07061f, búho naranja, estrellas doradas), clases premium `card-premium` / `btn-3d` / `animate-pop` / `animate-bounce-in`, gradientes permitidos amber→orange, rose→fuchsia, emerald→teal, orange→rose (sin indigo/blue), patrón de listas scrollables `max-h-96 overflow-y-auto` con `animationDelay: ${i*50}ms`, avatar inicial cuadrada con gradiente rose→fuchsia.
+- Revisé archivos de referencia: `types.ts` (interfaces `ResumenPadre`, `Notificacion`, `HijoVinculado`, `Aviso`), `api.ts` (firmas exactas: `seedPadreDemo`, `obtenerHijosPadre`, `obtenerResumenPadre`, `obtenerNotificaciones`, `marcarNotificacionLeida`, `marcarTodasNotificacionesLeidas`), `AppContext.tsx` (hook `useApp` con `hijoSeleccionadoId`, `setHijoSeleccionadoId`, `mostrarToast`, union `Vista` que ya incluye `padre`, `padre-calificaciones`, `padre-asistencia`, `padre-avisos`, `padre-mensajes`, `padre-mensaje-thread`, `padre-notificaciones`, `padre-vincular`), `TeacherDashboard.tsx` y `TeacherEstudiantes.tsx` (convenciones de tarjetas/alertas/KPIs), `globals.css` (clases `card-premium` glassmorphism con borde cyan, `animate-pop`/`animate-bounce-in` keyframes).
+- Verifiqué que `page.tsx` ya importa `ParentDashboard` (caso `"padre"`) y `ParentNotificaciones` (caso `"padre-notificaciones"`) — este último aún no existía.
+- Componente 1 — `ParentDashboard.tsx` (reescribí completo, ~706 líneas):
+  - Al montar: llama `api.seedPadreDemo(usuario.id)` en background (catch silencioso, idempotente) + `api.obtenerHijosPadre(usuario.id)` + `api.obtenerNotificaciones(usuario.id, true)` para badge de campana.
+  - Estado cargando: spinner `Loader2` naranja + mensaje "Cargando panel de padre…".
+  - Estado error: card con `AlertTriangle` rose + botón Reintentar.
+  - Estado vacío (sin hijos): ilustración búho 🦉 grande + mensaje "Aún no tienes hijos vinculados" + botón "Vincular por PIN" → `setVista("padre-vincular")`.
+  - Estado con hijos: cabecera con avatar inicial (gradiente rose→fuchsia), nombre, badge de parentesco, nivel (de `resumen.nivel`), puntos, sección count; selector desplegable "Cambiar hijo" si hay >1 (con dropdown `absolute z-20` + overlay `fixed inset-0 z-10`); botón "Vincular otro" si solo 1.
+  - Autoselección de primer hijo vía useEffect si `hijoSeleccionadoId` es null o apunta a hijo inexistente.
+  - KPIs en `grid sm:grid-cols-3`: (a) Promedio notas (`Award` amber, `/100`), (b) % Progreso (`TrendingUp` emerald), (c) % Asistencia (`CalendarCheck` fuchsia). Cada `card-premium animate-pop` con delay escalonado 0/50/100ms.
+  - Avisos urgentes (solo si `avisosNoLeidos.length > 0`): header con `AlertTriangle` rose + badge count + "Ver todos" → `padre-avisos`. Lista top 3 con fecha formateada `es-NI`.
+  - Actividades del día: lista scrollable `max-h-96 overflow-y-auto` de `tareasActivas`. Cada tarea con icono de urgencia (Flame rose si vence hoy/ayer, Clock amber si ≤3 días, Clock gris si más), título, asignatura, fecha límite (`es-NI`), badge estado (Pendiente amber / Entregada emerald / Tardía rose). Botón "Ver" → toast "Detalle de tarea próximamente".
+  - Notas recientes: lista de `calificacionesRecientes` (max 5). Cada una con nota grande coloreada (emerald ≥80, amber 60-79, rose <60), título tarea, asignatura, comentario italic, fecha.
+  - Top bar: botón "Volver" (ArrowLeft) → `perfil` + botón campana (Bell) con badge de no leídas → `padre-notificaciones`.
+  - Bottom nav fija (`fixed inset-x-0 bottom-0 max-w-4xl`): 5 botones (Inicio/Notas/Avisos/Mensajes/Perfil) con iconos `Home`/`BarChart3`/`AlertTriangle`/`MessageCircle`/`User`. El activo se resalta con gradiente amber→orange. Contenedor principal con `pb-24` para que el nav no tape contenido.
+- Componente 2 — `ParentNotificaciones.tsx` (creé nuevo, ~270 líneas):
+  - Al montar: `api.obtenerNotificaciones(usuario.id)` (todas). Ordena: no leídas primero, luego por fecha desc.
+  - Cabecera: botón "Volver" (ArrowLeft) → `padre` + título "Notificaciones" con badge de no leídas + botón "Marcar todas" (CheckCheck, gradiente emerald→teal) → `api.marcarTodasNotificacionesLeidas` → toast `${actualizadas} marcadas` → recarga.
+  - Lista scrollable `max-h-[70vh] overflow-y-auto`. Cada notif: icono según `tipo` (mapa completo `ICONOS_TIPO`): NUEVA_TAREA 📋 amber, TAREA_CALIFICADA ✅ emerald, INASISTENCIA ⚠️ rose, NUEVO_AVISO 📢 orange, MENSAJE_DOCENTE 💬 cyan, LOGRO 🏆 amber, ENTREGA_TARDIA ⏰ rose, TAREA_POR_VENCER ⏳ amber. Fallback a `Bell` stone si tipo desconocido.
+  - Badge "Nueva" rose con `animate-pulse` si `!leida`. Ring rose-200 alrededor de cards no leídas.
+  - Fecha relativa vía helper `fechaRelativa()`: "ahora" (<1 min), "hace X min" (<60), "hace X h" (<24), "ayer" (1 día), "hace X días" (<7), "hace X sem" (<5 semanas), si no `es-NI` date.
+  - Click: marca como leída con `api.marcarNotificacionLeida` (loader en el icono) + navega: NUEVO_AVISO → `padre-avisos`, MENSAJE_DOCENTE → `padre-mensajes`, otros → toast "Abriendo detalle…".
+  - Estado vacío: ilustración `BellOff` emerald + "No tienes notificaciones. Todo al día ✨".
+  - Loader centrado con `Loader2` naranja.
+  - Contenedor `mx-auto max-w-3xl px-4 py-6 sm:py-8`.
+- Helpers compartidos: `fmtFecha` (toLocaleDateString es-NI), `fechaRelativa`, `urgenciaTarea`, `estadoTarea`, `colorNota`, `iconoParaTipo`.
+- Restricciones cumplidas: solo gradientes amber→orange / rose→fuchsia / emerald→teal / orange→rose / amber→fuchsia (sin indigo ni blue); clases premium `card-premium`, `btn-3d`, `animate-pop`/`animate-bounce-in` con delays escalonados; mobile-first con `sm:` breakpoints; touch targets ≥40px; iconos lucide-react; `"use client"` al inicio; feedback vía `mostrarToast`.
+
+Stage Summary:
+- Archivos: `src/components/ParentDashboard.tsx` (reescribí, ~706 líneas), `src/components/ParentNotificaciones.tsx` (creé, ~270 líneas).
+- Verificación typecheck: `npx tsc --noEmit --skipLibCheck 2>&1 | grep -E "(ParentDashboard|ParentNotificaciones)"` → **vacío, 0 errores**. (Tuve 1 error inicial de tipado en `BottomNavProps` porque `vista: string` hacía que `it.id` se infiriera como `string` en lugar de la unión literal; lo corregí extrayendo un tipo `VistaNav` y usándolo tanto en `setVista` como en el array `items[].id`.)
+- Verificación lint: `bun run lint 2>&1 | grep ParentDashboard|ParentNotificaciones` → **vacío, 0 errores y 0 warnings** para nuestros archivos en `/src/components/`. (Un warning homónimo aparece solo en `Proyecto-De-Modalidad/frontend/src/components/ParentDashboard.tsx`, un duplicado legacy de otro subproyecto, no en mi archivo.)
+- Dev server: Next.js 16.1.3 Turbopack en puerto 3000, "Ready in 7.8s", sirviendo 200 OK.
+- Ambos componentes listos para integrarse al flujo padre (login PADRE → vista "padre" → campana "padre-notificaciones"). Faltan por construir otros agentes: ParentVincular, ParentCalificaciones, ParentAsistencia, ParentAvisos, ParentMensajes.
+
+---
+Task ID: F3-C
+Agent: full-stack-developer
+Task: Crear ParentMensajes + ParentMensajeThread + ParentVincularHijo
+
+Work Log:
+- Leí worklog.md previo (entradas del Módulo de Maestro: Task 1-2, 4b-A, 4b-B, 4b-C, 3-6 final, PWA-1) para alinear convenciones: card-premium dark glass, btn-3d, animate-pop con animationDelay escalonado, gradientes sin indigo/blue (amber→orange, rose→fuchsia, emerald→teal, violet→fuchsia, cyan para badges info), botón "Volver" con ArrowLeft estilo `bg-white/70 text-stone-700`, contenedor `mx-auto max-w-3xl px-4 py-6 sm:py-8`, scroll lists con `max-h-[75vh] overflow-y-auto`, Loader2 spin naranja, toasts vía `mostrarToast`.
+- Leí archivos clave: ParentDashboard.tsx viejo (patrón PIN existente para reusar), AppContext.tsx (Vista union, useApp, conversacionSeleccionadaId, mostrarToast), api.ts (firmas de métodos padres), types.ts (Conversacion, ConversacionDetalle, Mensaje, HijoVinculado, SeccionHijo, ResumenPadre), TeacherDashboard.tsx (convenciones), TeacherSecciones.tsx (uso de Dialog de shadcn), TeacherTareaDetalle.tsx (patrón tabs + formularios), globals.css (card-premium dark glass cyan-tinted), layout.tsx (fondo cosmic deep-space).
+- Verifiqué que las 3 vistas (`padre-mensajes`, `padre-mensaje-thread`, `padre-vincular`) ya estaban cableadas en page.tsx switch (líneas 81-92) pero faltaban los 3 archivos — dev server reportaba "Module not found" para ParentVincularHijo.
+- Componente 1 — `src/components/ParentMensajes.tsx` (~410 líneas):
+  - Carga `api.obtenerConversaciones(usuario.id)` al montar.
+  - Cabecera con icono MessageSquare en cuadrado gradiente violet→fuchsia + título "Mensajes" + botón "Nueva conversación" (Plus icon, gradiente amber→orange, btn-3d, label responsive).
+  - Lista de conversaciones scrollable (`max-h-[75vh] overflow-y-auto`). Cada item como botón card-premium animate-pop delay `i*50ms`: avatar inicial cuadrada gradiente violet→fuchsia (o UserCircle si no hay inicial), nombre del maestro, rol "Maestro/a de {asignatura.nombre}", asunto truncado, último mensaje truncado (italic si no es mío, prefix "Tú: " si es mío), tiempo relativo ("hace X h", "ayer"), badge no leídos (rose→fuchsia con número) si noLeidos>0, ChevronRight al final.
+  - Click → `setConversacionSeleccionadaId(conv.id)` + `setVista("padre-mensaje-thread")`.
+  - Modal "Nueva conversación" con Dialog de shadcn: Select hijo (cargado vía `api.obtenerHijosPadre`), input asunto (maxLength 100 con contador), textarea mensaje inicial (maxLength 500 con contador, opcional). Al submitir: obtiene resumen del hijo vía `api.obtenerResumenPadre` para encontrar la primera sección y su maestro, valida que el hijo tenga secciones (toast "Tu hijo no tiene maestro asignado" si no), llama `api.iniciarConversacion(usuario.id, {maestroId, hijoId, asunto, seccionId, mensajeInicial})` → toast éxito → cerrar modal → recargar lista → abrir thread. Loader en botón mientras opera.
+  - Estado vacío y cargando con Loader2.
+- Componente 2 — `src/components/ParentMensajeThread.tsx` (~260 líneas):
+  - Si `conversacionSeleccionadaId` es null → toast "Selecciona una conversación primero" + `setVista("padre-mensajes")`.
+  - Carga `api.obtenerConversacion(usuario.id, conversacionId)` → ConversacionDetalle.
+  - Layout `mx-auto flex min-h-[80vh] max-w-3xl flex-col px-4 py-4 sm:py-6`:
+    - Cabecera card-premium: avatar maestro + nombre + rol + asunto + badges contexto "Sobre: {hijo.nombre}" (cyan) y sección (violet).
+    - Thread scrollable (`flex-1 overflow-y-auto`): cada mensaje en burbuja animate-pop delay `min(i,10)*30ms`. Padre (remitenteId === usuario.id): alineado derecha, gradiente amber→orange, texto violet-950, indicador ✓ (violet-900/60 si no leído) o ✓✓ cyan-600 si `leidoEn` no null. Maestro: alineado izquierda, `bg-white/10 border border-cyan-400/30 text-stone-100`. Hora legible ("14:32", "ayer 18:05", o "3 dic 14:32" si más antiguo).
+    - Auto-scroll al final al cargar y tras enviar (useRef + scrollIntoView smooth).
+    - Composer sticky bottom card-premium: textarea auto-resize (max-h-140px) + botón circular Send (gradiente amber→orange, btn-3d). Enter envía, Shift+Enter salto de línea. Disabled si cuerpo vacío o enviando.
+  - Enviar mensaje: `api.enviarMensajePadre(usuario.id, conversacionId, texto)` → agregar mensaje a la lista local (sin recargar todo el thread) + limpiar input + scroll al final. Loader en botón mientras opera.
+  - Estados: cargando (Loader2 centrado), error (card con botón "Volver a mensajes").
+- Componente 3 — `src/components/ParentVincularHijo.tsx` (~360 líneas):
+  - Cabecera con icono UserPlus en gradiente amber→orange + título "Vincular hijo/a".
+  - Formulario principal card-premium: input nombre (maxLength 40), input PIN (password numeric maxLength 4 tracking-[0.4em]), Select parentesco (MADRE/PADRE/TUTOR_LEGAL/ABUELO/OTRO con labels legibles), botón "Vincular" (gradiente amber→orange, btn-3d, full-width en mobile auto en sm+). Hint "Escribe el nombre y PIN exactos que usa tu hijo/a en Mundilex." → `api.solicitarVinculoHijo(usuario.id, {nombre, pin, parentesco})` → toast éxito → limpiar form → `setVista("padre")`. Loader en botón.
+  - Lista hijos vinculados (cargar con `api.obtenerHijosPadre`): avatar inicial cuadrada gradiente rose→fuchsia, nombre, badge parentesco (violet), badge estado (emerald "Verificado" con BadgeCheck si `verificado=true`, amber "Pendiente" con Clock3 si false), botón "Desvincular" (rose→fuchsia) que abre AlertDialog.
+  - AlertDialog de confirmación: "¿Desvincular a {nombre}?" con descripción explicando que no elimina la cuenta del niño/a, botones Cancelar + Desvincular (loader en botón mientras opera). → `api.desvincularHijoPadre(usuario.id, hijoId)` → toast info → recargar lista.
+  - Sección informativa card-premium "¿No conoces el PIN?": 3 tarjetas explicando las 3 vías de vinculación. Vía 1 (PIN): activa, gradiente emerald→teal, badge "Activo". Vía 2 (Código de maestro): stone, badge "Próximamente". Vía 3 (Código de estudiante): stone, badge "Próximamente". Iconos KeyRound/Sparkles/Lock.
+  - Estados: cargando (Loader2), vinculando (loader en botón), desvinculando (loader en botón).
+- Helper `tiempoRelativo(iso)` implementado en ParentMensajes: "ahora" (<1min), "hace X min" (<60min), "hace X h" (<24h), "ayer" (1 día), "hace X días" (<7d), luego "d mes" corto. Helper `horaLegible(iso)` en ParentMensajeThread: hora del día si mismo día, "ayer HH:MM" si ayer, "d mes HH:MM" si más antiguo.
+- Verificaciones:
+  - `npx tsc --noEmit --skipLibCheck 2>&1 | grep -E "(ParentMensajes|ParentMensajeThread|ParentVincularHijo)"` → vacío (0 errores en mis 3 archivos). Errores pre-existentes en `Proyecto-De-Modalidad/backend/*` (NestJS decorators) y `src/components/AvatarCustomizer.tsx` (AvatarConfig shape mismatch) — ninguno mío.
+  - `bun run lint 2>&1 | grep -E "(ParentMensajes|ParentMensajeThread|ParentVincularHijo)"` → vacío (0 warnings ni errores en mis 3 archivos). Warnings pre-existentes en `ParentAvisos.tsx` (unused eslint-disable) y `Proyecto-De-Modalidad/frontend/src/components/ParentDashboard.tsx` — ninguno mío.
+- Convenciones respetadas: clases `card-premium rounded-3xl p-6`, `btn-3d` con gradientes amber→orange, rose→fuchsia, emerald→teal, violet→fuchsia; `animate-pop` con `animationDelay: \`${i * 50}ms\``; `animate-bounce-in` en headers; botón "Volver" con `ArrowLeft` y `bg-white/70 text-stone-700 hover:bg-white`; contenedores `mx-auto max-w-3xl px-4 py-6 sm:py-8`; lists scrollable `max-h-[75vh] overflow-y-auto`; Loader2 spin naranja; responsive mobile-first (grid sm:grid-cols-2, flex-wrap, labels ocultos en mobile); NO indigo ni blue (solo cyan para badges info y bordes sutiles); toasts vía `mostrarToast`; `Dialog` y `AlertDialog` de shadcn/ui para modales/confirmaciones; Select shadcn estilizado con `border-2 border-orange-200 bg-white` para verse premium; `"use client"` al inicio; helpers de fecha es-NI.
+
+Stage Summary:
+- 3 componentes creados en `src/components/`: ParentMensajes.tsx (~410 líneas), ParentMensajeThread.tsx (~260 líneas), ParentVincularHijo.tsx (~360 líneas).
+- Todos `"use client"`, usan `useApp()` y `api` del proyecto, respetan convenciones premium del Módulo de Maestro.
+- Tipos TypeScript verificados contra `@/lib/types` (Conversacion, ConversacionDetalle, Mensaje, HijoVinculado, SeccionHijo vía ResumenPadre).
+- Integración con page.tsx: las 3 vistas (`padre-mensajes`, `padre-mensaje-thread`, `padre-vincular`) ya estaban cableadas en el switch — solo faltaban los archivos, ahora creados.
+- Persistencia de conversación seleccionada: vía `AppContext.conversacionSeleccionadaId` (se setea en ParentMensajes al hacer click, se lee en ParentMensajeThread). No usa localStorage porque el contexto ya maneja el state en memoria.
+- Flujo completo: ParentDashboard → (botón Mensajes) → ParentMensajes → click conversación → ParentMensajeThread → enviar mensaje → "Volver" → ParentMensajes. Flujo vinculación: ParentDashboard → (botón Vincular) → ParentVincularHijo → submit form → ParentDashboard. Flujo nueva conversación: ParentMensajes → "Nueva conversación" → Dialog → submit → ParentMensajeThread (abre conversación creada).
+- Con los 3 archivos creados, el dev server ya no reporta `Module not found` para `@/components/ParentVincularHijo`. (ParentCalificaciones, ParentAsistencia, ParentAvisos y ParentNotificaciones fueron creados por agentes paralelos F3-A/F3-B en la misma ventana de tiempo.)
+
+---
+Task ID: F3-B
+Agent: full-stack-developer
+Task: Crear ParentCalificaciones + ParentAsistencia + ParentAvisos
+
+Work Log:
+- Lei contexto completo: worklog (Task 1-2 Arquitecto + 4b-A/B/C Maestro), src/lib/types.ts (ResumenCalificaciones, CalificacionPadre, ResumenAsistencia, RegistroAsistenciaPadre, Aviso, MedallasHijo), src/lib/api.ts (métodos padres: obtenerCalificacionesHijo, obtenerAsistenciaHijo, obtenerMedallasHijo, obtenerAvisosPadre, marcarAvisoLeido, firmarAviso), src/context/AppContext.tsx (Vista union, useApp, hijoSeleccionadoId, mostrarToast), src/components/TeacherDashboard.tsx (convenciones card-premium + btn-3d + gradientes), src/components/TeacherReporteEstudiante.tsx (colorNota, configEstado, formatearFechaCorta), src/app/globals.css (.card-premium glass, .animate-pop, .btn-3d marker).
+- Verifiqué package.json: recharts ^2.15.4 + date-fns ^4.1.0 disponibles. Cables ya en page.tsx: case "padre-calificaciones" → <ParentCalificaciones />, "padre-asistencia" → <ParentAsistencia />, "padre-avisos" → <ParentAvisos />.
+- **ParentCalificaciones.tsx** (~270 líneas):
+  - Si hijoSeleccionadoId null → toast info + setVista("padre").
+  - Carga paralela: api.obtenerCalificacionesHijo + api.obtenerMedallasHijo + api.obtenerPerfil (para nombre hijo).
+  - Header: btn Volver + Trophy + "Calificaciones y Avance" + nombre hijo.
+  - Gauge RadialBarChart (startAngle 90 / endAngle -270) con valor único promedioGeneral; color dinámico emerald (#10b981) si ≥80, amber (#f59e0b) 60-79, rose (#f43f5e) <60. Número grande + "/100" centrado, texto "Promedio general". KPIs laterales: total notas, asignaturas, excelentes (≥80), a mejorar (<60). Texto "— Sin histórico comparativo" como tendencia.
+  - Barras horizontales BarChart layout="vertical" con resumenPorAsignatura, Cell amber/orange dinámico por rango, LabelList derecha, altura dinámica (mín 180px + 44px por asignatura).
+  - Historial scrollable (max-h-96) ordenado por calificadaEn desc, cada item con nota grande (gradient emerald/amber/rose según rango), título tarea, asignatura+sección, comentario italic con icon MessageSquare, fecha. animate-pop escalonado (delay 40ms × index, cap 12).
+  - Medallas grid grid-cols-4 sm:grid-cols-6: ganadas con emoji dinámico (🥇🥈🥉🏆⭐🔥⚡🧠🎓🏅) en bg amber/orange; bloqueadas con 🔒 en grayscale opacity-60. Tooltip title con título+descripción. Contador desbloqueadas/total abajo con icon TrendingUp.
+- **ParentAsistencia.tsx** (~290 líneas):
+  - Si hijoSeleccionadoId null → toast + setVista("padre").
+  - Estados mes (1-12) y anio inicializados con Date actual. Navegación mesPrev/mesSig con wrap de año.
+  - Carga api.obtenerAsistenciaHijo + api.obtenerPerfil. Recarga automática al cambiar mes/anio.
+  - Header: Volver + "Asistencia de {hijo}" + selector mes con ChevronLeft/ChevronRight + nombre mes-anio en es-NI capitalize.
+  - KPIs grid sm:grid-cols-4: % Asistencia (emerald), Presentes (Check), Ausentes (X), Tardanzas (Clock). Justificados como nota adicional abajo si >0.
+  - Calendario grid grid-cols-7: headers Lun-Dom, días del mes con offset inicial calculado (Monday=0). Cada día: aspect-square con dot coloreado (emerald PRESENTE, amber TARDANZA, rose AUSENTE, stone JUSTIFICADO), ring-2 cyan si es hoy. Empty cells en blanco para días fuera del mes. Tooltip con estado+fecha larga.
+  - Lista detallada scrollable (max-h-96): registros ordenados asc por fecha, badge coloreado con icon, fecha larga capitalize, asignatura+sección, observación italic si existe. animate-pop escalonado.
+- **ParentAvisos.tsx** (~340 líneas):
+  - Carga api.obtenerAvisosPadre. Contador noLeidos mostrado como badge pulse en header.
+  - Header: Volver + Megaphone + "Avisos y Circulares".
+  - Filtros tabs (4 botones btn-3d): Todos, Urgentes, Recordatorios, Eventos. Filtro en cliente vía useMemo + sort por fechaEnvio desc. Contador urgentes en badge.
+  - Lista scrollable max-h-[70vh]. Cada aviso: card-premium con border-l-4 según prioridad (rose p≥3, amber p=2, cyan p=1). Badge tipo con emoji (🚨📋🎉📢) + color (rose/amber/cyan/stone). NEW pulse si !leido. ✓ Firmado emerald si firmado. Requiere firma badge amber si pendiente.
+  - Contenido truncable: si >180 chars → recorta con "…" y botón "Ver más"/"Ver menos" (ChevronDown/Up).
+  - Metadata: fecha envío (Calendar cyan), fecha evento si existe (Calendar amber, capitalize), maestro (User fuchsia), sección destinataria (Megaphone emerald).
+  - Acciones: botón Firmar (btn-3d amber→orange gradient) si requiereFirma && !firmado, abre AlertDialog. Botón "Marcar leído" discreto si !leido.
+  - AlertDialog custom con border amber-300/40 bg-stone-950/95: muestra tipo+emoji, título, contenido completo scrollable, fecha evento, maestro. Botón "Firmar y confirmar" con loader → api.firmarAviso → toast éxito → recargar. Cancelar cierra.
+- **Verificaciones**:
+  - `npx tsc --noEmit --skipLibCheck | grep Parent` → vacío (0 errores en mis 3 archivos).
+  - `npx eslint src/components/Parent{Calificaciones,Asistencia,Avisos}.tsx` → exit 0 (0 errores, 0 warnings).
+  - Dev server sigue respondiendo 200 en / tras guardar.
+
+Stage Summary:
+- 3 componentes creados: src/components/ParentCalificaciones.tsx, src/components/ParentAsistencia.tsx, src/components/ParentAvisos.tsx. Todos "use client", usando useApp() + api, tipos de @/lib/types, recharts (RadialBarChart + BarChart), AlertDialog shadcn/ui, iconos lucide-react.
+- Convenciones respetadas: card-premium rounded-3xl p-5/6, btn-3d, animate-pop escalonado con style={{animationDelay}}, animate-bounce-in en headers. Gradientes solo amber→orange, emerald→teal, rose→fuchsia, orange→rose. NO indigo/blue. Cyan solo para badges informativos (EVENTO).
+- Formateo fechas con toLocaleDateString("es-NI", {...}). mostrarToast para feedback. Responsive mobile-first (grid sm:grid-cols-4, max-h-* overflow-y-auto, breakpoints sm/lg).
+- Cableado existente en src/app/page.tsx (case "padre-calificaciones"|"padre-asistencia"|"padre-avisos") ya estaba listo; solo faltaban los archivos.
+
+---
+Task ID: PADRES-FINAL
+Agent: main (Arquitecto)
+Task: Implementación completa del Módulo de Padres — schema + backend + 8 componentes frontend + verificación
+
+Work Log:
+- F1 Schema: Agregué 6 modelos nuevos al schema Prisma (Aviso, AvisoLeido, Conversacion, Mensaje, Notificacion, PushSubscription) + extendí PadreHijo con parentesco/verificado/activo + agregué relaciones inversas en Usuario y Seccion. `prisma db push` + `prisma generate` exitosos.
+- F2 Backend: Creé módulo NestJS `padres/` completo:
+  - `padres.service.ts` (~900 líneas): vinculación (solicitarVinculo, vincularPorHijoId, desvincular), verificarAccesoHijo (row-level security), resumen home, calificaciones con promedios por asignatura, asistencia mensual con conteo, avisos con lecturas/firmas, conversaciones con mensajes y noLeídos, notificaciones in-app, push subscriptions, medallas, seed demo.
+  - `padres.controller.ts`: ~25 endpoints bajo /api/padres/*.
+  - `padres.module.ts` + registrado en AppModule.
+  - Fix de 2 errores de tipos Prisma 7: `none: { where: {...} }` → `none: { padreId }` y relación inversa `Seccion.conversaciones` + `Conversacion.seccion`.
+- F3-0 Base frontend: Agregué 6 nuevas vistas a Vista en AppContext (padre-calificaciones, padre-asistencia, padre-avisos, padre-mensajes, padre-mensaje-thread, padre-notificaciones, padre-vincular) + estado hijoSeleccionadoId y conversacionSeleccionadaId. Agregué ~15 tipos TypeScript a types.ts (HijoVinculado, ResumenPadre, Aviso, CalificacionPadre, ResumenCalificaciones, ResumenAsistencia, Conversacion, ConversacionDetalle, Mensaje, Notificacion, MedallasHijo). Agregué ~20 métodos API a api.ts. Cableé 7 imports en page.tsx.
+- F3-A/B/C (3 subagentes en paralelo): Crearon 8 componentes:
+  - ParentDashboard rediseñado (~706 líneas): home con selector de hijo, KPIs (notas/progreso/asistencia), avisos urgentes, actividades del día, notas recientes, bottom nav de 5 botones, campana con badge.
+  - ParentNotificaciones (~270 líneas): campana in-app con 8 tipos de notificación, tiempos relativos, "Marcar todas".
+  - ParentCalificaciones (~270 líneas): gauge RadialBarChart, barras por asignatura, historial, medallas grid.
+  - ParentAsistencia (~290 líneas): calendario mensual 7-col, KPIs, lista detallada, navegación de meses.
+  - ParentAvisos (~340 líneas): filtros por tipo, lista con bordes por prioridad, AlertDialog de firma.
+  - ParentMensajes (~410 líneas): lista conversaciones + modal "Nueva conversación" con Select hijo.
+  - ParentMensajeThread (~260 líneas): chat con burbujas diferenciadas, composer sticky, auto-scroll.
+  - ParentVincularHijo (~360 líneas): formulario PIN + parentesco + lista hijos vinculados + AlertDialog desvincular.
+  Todos con 0 errores tsc/lint, convenciones premium (card-premium, btn-3d, animate-pop, sin indigo/blue).
+- F4 LoginScreen: Modifiqué entrarDemo y onSubmit para: (a) llamar seedPadreDemo tras login PadreDemo (idempotente), (b) navegar a vista "padre" si rol es PADRE, "maestro" si MAESTRO, "dashboard" si ESTUDIANTE.
+- Bug fix crítico: El schema nuevo agregó `verificado Boolean @default(false)` a PadreHijo. Los vínculos existentes (creados antes del campo) quedaron con verificado=false. El seed era idempotente y no los actualizaba. Agregué lógica: si el vínculo existe pero !verificado, hacer update a verificado=true. Reconstruí backend + re-seedé → hijos ahora aparecen.
+- Verificación con Agent Browser (vía gateway :81):
+  - Login PadreDemo → dashboard carga con hijo DemoKid, KPIs, 3 avisos urgentes, actividades, notas, bottom nav, campana. 0 errores.
+  - Avisos → 3 circulares con filtros (Todos/Urgentes/Recordatorios/Eventos). Click "Firmar" en Reunión de padres → AlertDialog → "Firmar y confirmar" → badge "FIRMADO" verde verificado por VLM.
+  - Mensajes → lista con conversación "Sobre el progreso de DemoKid" (badge 1 no leído). Click → thread con mensaje del maestro visible. Escribí "Muchas gracias por el aviso..." → click Enviar → mensaje aparece en el chat (verificado por innerText).
+  - Calificaciones → estado vacío "Aún no hay calificaciones publicadas" (correcto, DemoKid no tiene notas). VLM confirma.
+  - Notificaciones → 3 notifs con iconos (💬📢🏆), badges "NUEVA", tiempos relativos ("HACE 1 H", "AYER"), botón "Marcar todas".
+  - 0 errores de consola en todo el flujo.
+
+Stage Summary:
+- Módulo de Padres COMPLETO y verificado end-to-end:
+  - 6 modelos Prisma nuevos + PadreHijo extendido con verificación de vínculo
+  - Módulo NestJS padres/ con ~25 endpoints (vinculación, resumen, calificaciones, asistencia, avisos, conversaciones, mensajes, notificaciones, push, seed)
+  - 8 componentes React (ParentDashboard rediseñado + 7 nuevos)
+  - Seed automático al login PadreDemo (vínculo DemoKid + 3 avisos + 1 conversación + 3 notificaciones)
+  - LoginScreen redirige por rol (padre→padre, maestro→maestro, estudiante→dashboard)
+  - Row-level security: verificarAccesoHijo valida vínculo verificado+activo en cada endpoint
+- Flujo verificado: login → dashboard (KPIs, avisos, actividades) → avisos (firmar circular) → mensajes (abrir conversación, enviar mensaje) → notificaciones (lista con tiempos relativos)
+- Servicios: FE 3000 (200), BE 3001 (200, módulo padres mapeado), Gateway 81 (200)
+- Screenshots: padre-dashboard.png, padre-avisos.png, padre-firmar-dialog.png, padre-avisos-post-firma.png, padre-mensajes-lista.png, padre-mensaje-thread.png, padre-mensaje-enviado.png, padre-calificaciones.png, padre-notificaciones.png

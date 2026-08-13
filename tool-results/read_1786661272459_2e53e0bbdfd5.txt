@@ -1,0 +1,625 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useState } from "react";
+     4→import {
+     5→  ArrowLeft,
+     6→  Loader2,
+     7→  Award,
+     8→  Trophy,
+     9→  Star,
+    10→  TrendingUp,
+    11→  TrendingDown,
+    12→  Minus,
+    13→  Check,
+    14→  Hand,
+    15→  X,
+    16→  PenLine,
+    17→  CalendarDays,
+    18→  Target,
+    19→  Medal,
+    20→} from "lucide-react";
+    21→import { api } from "@/lib/api";
+    22→import { useApp } from "@/context/AppContext";
+    23→import type { EstadoAsistencia, ReporteEstudiante } from "@/lib/types";
+    24→import { Progress } from "@/components/ui/progress";
+    25→import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+    26→import {
+    27→  Accordion,
+    28→  AccordionContent,
+    29→  AccordionItem,
+    30→  AccordionTrigger,
+    31→} from "@/components/ui/accordion";
+    32→
+    33→type EstadoAvance = "AL_DIA" | "EN_PROGRESO" | "REZAGADO";
+    34→
+    35→function formatearFechaCorta(fecha: string): string {
+    36→  try {
+    37→    return new Date(fecha).toLocaleDateString("es-NI", {
+    38→      day: "numeric",
+    39→      month: "short",
+    40→      year: "numeric",
+    41→    });
+    42→  } catch {
+    43→    return fecha;
+    44→  }
+    45→}
+    46→
+    47→function colorNota(nota: number): { bg: string; texto: string } {
+    48→  if (nota >= 70) return { bg: "bg-emerald-100", texto: "text-emerald-700" };
+    49→  if (nota >= 50) return { bg: "bg-amber-100", texto: "text-amber-700" };
+    50→  return { bg: "bg-rose-100", texto: "text-rose-700" };
+    51→}
+    52→
+    53→function configEstado(estado: EstadoAvance): {
+    54→  label: string;
+    55→  bg: string;
+    56→  texto: string;
+    57→  icon: typeof Check;
+    58→  gradiente: string;
+    59→} {
+    60→  switch (estado) {
+    61→    case "AL_DIA":
+    62→      return {
+    63→        label: "Al día",
+    64→        bg: "bg-emerald-100",
+    65→        texto: "text-emerald-700",
+    66→        icon: Check,
+    67→        gradiente: "from-emerald-400 to-teal-500",
+    68→      };
+    69→    case "EN_PROGRESO":
+    70→      return {
+    71→        label: "En progreso",
+    72→        bg: "bg-amber-100",
+    73→        texto: "text-amber-700",
+    74→        icon: Minus,
+    75→        gradiente: "from-amber-400 to-orange-500",
+    76→      };
+    77→    case "REZAGADO":
+    78→      return {
+    79→        label: "Rezagado",
+    80→        bg: "bg-rose-100",
+    81→        texto: "text-rose-700",
+    82→        icon: TrendingDown,
+    83→        gradiente: "from-rose-400 to-fuchsia-500",
+    84→      };
+    85→  }
+    86→}
+    87→
+    88→function configEstadoAsistencia(estado: EstadoAsistencia): {
+    89→  label: string;
+    90→  bg: string;
+    91→  texto: string;
+    92→  icon: typeof Check;
+    93→} {
+    94→  switch (estado) {
+    95→    case "PRESENTE":
+    96→      return { label: "Presente", bg: "bg-emerald-100", texto: "text-emerald-700", icon: Check };
+    97→    case "TARDANZA":
+    98→      return { label: "Tardanza", bg: "bg-amber-100", texto: "text-amber-700", icon: Hand };
+    99→    case "AUSENTE":
+   100→      return { label: "Ausente", bg: "bg-rose-100", texto: "text-rose-700", icon: X };
+   101→    case "JUSTIFICADO":
+   102→      return { label: "Justificado", bg: "bg-violet-100", texto: "text-violet-700", icon: PenLine };
+   103→  }
+   104→}
+   105→
+   106→function MedallaIcono({ iconoUrl, size = 28 }: { iconoUrl?: string | null; size?: number }) {
+   107→  const esUrl = iconoUrl && (iconoUrl.startsWith("http") || iconoUrl.startsWith("/"));
+   108→  const esEmoji = iconoUrl && !esUrl && iconoUrl.length <= 4;
+   109→  if (esUrl) {
+   110→    return (
+   111→      <img
+   112→        src={iconoUrl!}
+   113→        alt=""
+   114→        width={size}
+   115→        height={size}
+   116→        className="h-auto w-auto"
+   117→        style={{ maxWidth: size, maxHeight: size }}
+   118→        onError={(e) => {
+   119→          (e.currentTarget as HTMLImageElement).style.display = "none";
+   120→        }}
+   121→      />
+   122→    );
+   123→  }
+   124→  if (esEmoji) {
+   125→    return <span style={{ fontSize: size }}>{iconoUrl}</span>;
+   126→  }
+   127→  return <Award size={size} className="text-amber-500" strokeWidth={2.5} />;
+   128→}
+   129→
+   130→export function TeacherReporteEstudiante() {
+   131→  const { estudianteSeleccionadoId, setVista, mostrarToast } = useApp();
+   132→  const [reporte, setReporte] = useState<ReporteEstudiante | null>(null);
+   133→  const [cargando, setCargando] = useState(false);
+   134→  const [tab, setTab] = useState("progreso");
+   135→
+   136→  useEffect(() => {
+   137→    if (!estudianteSeleccionadoId) {
+   138→      setReporte(null);
+   139→      return;
+   140→    }
+   141→    let cancelado = false;
+   142→    (async () => {
+   143→      setCargando(true);
+   144→      try {
+   145→        const data = await api.obtenerReporteEstudiante(estudianteSeleccionadoId);
+   146→        if (cancelado) return;
+   147→        setReporte(data);
+   148→      } catch (err) {
+   149→        if (!cancelado) {
+   150→          mostrarToast(err instanceof Error ? err.message : "Error al cargar reporte", "error");
+   151→        }
+   152→      } finally {
+   153→        if (!cancelado) setCargando(false);
+   154→      }
+   155→    })();
+   156→    return () => {
+   157→      cancelado = true;
+   158→    };
+   159→  }, [estudianteSeleccionadoId, mostrarToast]);
+   160→
+   161→  // Sin estudiante seleccionado
+   162→  if (!estudianteSeleccionadoId) {
+   163→    return (
+   164→      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+   165→        <button
+   166→          onClick={() => setVista("maestro-reportes")}
+   167→          className="mb-4 inline-flex items-center gap-1.5 rounded-xl bg-white/70 px-3 py-2 text-sm font-bold text-stone-700 transition-all hover:scale-105 hover:bg-white"
+   168→        >
+   169→          <ArrowLeft size={16} strokeWidth={2.5} /> Volver
+   170→        </button>
+   171→        <div className="card-premium rounded-3xl p-8 text-center">
+   172→          <Award size={40} className="mx-auto mb-3 text-amber-300" />
+   173→          <p className="text-base font-black text-stone-700">No hay estudiante seleccionado</p>
+   174→          <p className="mt-1 text-sm font-semibold text-stone-500">
+   175→            Vuelve a la lista de estudiantes para ver el reporte individual.
+   176→          </p>
+   177→        </div>
+   178→      </div>
+   179→    );
+   180→  }
+   181→
+   182→  if (cargando) {
+   183→    return (
+   184→      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+   185→        <button
+   186→          onClick={() => setVista("maestro-reportes")}
+   187→          className="mb-4 inline-flex items-center gap-1.5 rounded-xl bg-white/70 px-3 py-2 text-sm font-bold text-stone-700 transition-all hover:scale-105 hover:bg-white"
+   188→        >
+   189→          <ArrowLeft size={16} strokeWidth={2.5} /> Volver
+   190→        </button>
+   191→        <div className="flex items-center justify-center py-10">
+   192→          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+   193→        </div>
+   194→      </div>
+   195→    );
+   196→  }
+   197→
+   198→  if (!reporte) {
+   199→    return (
+   200→      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+   201→        <button
+   202→          onClick={() => setVista("maestro-reportes")}
+   203→          className="mb-4 inline-flex items-center gap-1.5 rounded-xl bg-white/70 px-3 py-2 text-sm font-bold text-stone-700 transition-all hover:scale-105 hover:bg-white"
+   204→        >
+   205→          <ArrowLeft size={16} strokeWidth={2.5} /> Volver
+   206→        </button>
+   207→        <div className="card-premium rounded-3xl p-8 text-center">
+   208→          <Award size={40} className="mx-auto mb-3 text-amber-300" />
+   209→          <p className="text-base font-black text-stone-700">No se pudo cargar el reporte</p>
+   210→        </div>
+   211→      </div>
+   212→    );
+   213→  }
+   214→
+   215→  const est = reporte.estudiante;
+   216→  const inicial = est.nombre?.charAt(0)?.toUpperCase() ?? "🧑";
+   217→  const estadoCfg = configEstado(reporte.resumen.estadoAvance);
+   218→  const EstadoIcon = estadoCfg.icon;
+   219→  const pctGlobal = Math.round(reporte.resumen.porcentajeGlobal ?? 0);
+   220→  const completados = reporte.resumen.completados ?? 0;
+   221→  const totalDesafios = reporte.resumen.totalDesafios ?? 0;
+   222→  const ultimosRegistros = reporte.asistencia.registros.slice(0, 10);
+   223→
+   224→  return (
+   225→    <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+   226→      <button
+   227→        onClick={() => setVista("maestro-reportes")}
+   228→        className="mb-4 inline-flex items-center gap-1.5 rounded-xl bg-white/70 px-3 py-2 text-sm font-bold text-stone-700 transition-all hover:scale-105 hover:bg-white"
+   229→      >
+   230→        <ArrowLeft size={16} strokeWidth={2.5} /> Volver
+   231→      </button>
+   232→
+   233→      {/* Header */}
+   234→      <div className="card-premium animate-bounce-in mb-6 rounded-3xl p-6">
+   235→        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+   236→          <div className="flex items-center gap-4">
+   237→            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500 to-rose-500 text-2xl font-black text-white shadow-md">
+   238→              {inicial}
+   239→            </div>
+   240→            <div>
+   241→              <h1 className="text-2xl font-black text-stone-800">{est.nombre}</h1>
+   242→              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
+   243→                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
+   244→                  Nivel {est.nivel}
+   245→                </span>
+   246→                <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-amber-700">
+   247→                  <Star size={10} strokeWidth={2.5} className="mr-0.5 inline" />
+   248→                  {est.puntos} pts
+   249→                </span>
+   250→              </div>
+   251→            </div>
+   252→          </div>
+   253→          <span
+   254→            className={`inline-flex items-center gap-1.5 self-start rounded-full ${estadoCfg.bg} px-3 py-1.5 text-sm font-black ${estadoCfg.texto} sm:self-auto`}
+   255→          >
+   256→            <EstadoIcon size={14} strokeWidth={2.75} />
+   257→            {estadoCfg.label}
+   258→          </span>
+   259→        </div>
+   260→      </div>
+   261→
+   262→      {/* Resumen global */}
+   263→      <div className="card-premium animate-pop mb-6 rounded-3xl p-5 sm:p-6" style={{ animationDelay: "50ms" }}>
+   264→        <div className="mb-3 flex items-center justify-between gap-3">
+   265→          <div className="flex items-center gap-2">
+   266→            <div
+   267→              className={`flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${estadoCfg.gradiente} shadow-md`}
+   268→            >
+   269→              <Target size={20} className="text-white" strokeWidth={2.5} />
+   270→            </div>
+   271→            <div>
+   272→              <p className="text-xs font-black uppercase tracking-wide text-stone-500">
+   273→                Progreso global
+   274→              </p>
+   275→              <p className="text-sm font-black text-stone-800">
+   276→                {completados} / {totalDesafios} desafíos completados
+   277→              </p>
+   278→            </div>
+   279→          </div>
+   280→          <p className="text-3xl font-black text-stone-800">
+   281→            {pctGlobal}
+   282→            <span className="text-base font-bold text-stone-400">%</span>
+   283→          </p>
+   284→        </div>
+   285→        <div className="h-4 w-full overflow-hidden rounded-full bg-stone-200">
+   286→          <div
+   287→            className={`h-full rounded-full bg-gradient-to-r ${estadoCfg.gradiente} transition-all`}
+   288→            style={{ width: `${Math.min(100, pctGlobal)}%` }}
+   289→          />
+   290→        </div>
+   291→      </div>
+   292→
+   293→      {/* Tabs */}
+   294→      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+   295→        <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-2xl bg-stone-100 p-1.5 sm:flex-nowrap">
+   296→          <TabsTrigger
+   297→            value="progreso"
+   298→            className="rounded-xl px-3 py-2 text-xs font-black data-[state=active]:bg-white data-[state=active]:text-fuchsia-600 data-[state=active]:shadow-sm sm:text-sm"
+   299→          >
+   300→            Progreso
+   301→          </TabsTrigger>
+   302→          <TabsTrigger
+   303→            value="calificaciones"
+   304→            className="rounded-xl px-3 py-2 text-xs font-black data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm sm:text-sm"
+   305→          >
+   306→            Calificaciones
+   307→          </TabsTrigger>
+   308→          <TabsTrigger
+   309→            value="asistencia"
+   310→            className="rounded-xl px-3 py-2 text-xs font-black data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm sm:text-sm"
+   311→          >
+   312→            Asistencia
+   313→          </TabsTrigger>
+   314→          <TabsTrigger
+   315→            value="medallas"
+   316→            className="rounded-xl px-3 py-2 text-xs font-black data-[state=active]:bg-white data-[state=active]:text-violet-600 data-[state=active]:shadow-sm sm:text-sm"
+   317→          >
+   318→            Medallas
+   319→          </TabsTrigger>
+   320→        </TabsList>
+   321→
+   322→        {/* === Tab Progreso === */}
+   323→        <TabsContent value="progreso">
+   324→          {reporte.progresoPorAsignatura.length === 0 ? (
+   325→            <div className="card-premium rounded-3xl p-6 text-center">
+   326→              <TrendingUp size={32} className="mx-auto mb-2 text-fuchsia-300" />
+   327→              <p className="text-sm font-bold text-stone-600">
+   328→                No hay progreso registrado todavía.
+   329→              </p>
+   330→            </div>
+   331→          ) : (
+   332→            <Accordion type="single" collapsible className="space-y-3">
+   333→              {reporte.progresoPorAsignatura.map((asig, i) => (
+   334→                <AccordionItem
+   335→                  key={asig.id}
+   336→                  value={asig.id}
+   337→                  className="card-premium animate-pop overflow-hidden rounded-3xl border-0 px-5"
+   338→                  style={{ animationDelay: `${i * 50}ms` }}
+   339→                >
+   340→                  <AccordionTrigger className="hover:no-underline">
+   341→                    <div className="flex w-full items-center gap-3">
+   342→                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-400 to-rose-500 text-sm font-black text-white shadow-md">
+   343→                        {asig.nombre?.charAt(0)?.toUpperCase() ?? "📚"}
+   344→                      </div>
+   345→                      <div className="flex-1 min-w-0 text-left">
+   346→                        <p className="truncate text-sm font-black text-stone-800">{asig.nombre}</p>
+   347→                        <p className="text-[11px] font-bold text-stone-500">
+   348→                          {asig.completados}/{asig.totalDesafios} desafíos ·{" "}
+   349→                          <span className="text-fuchsia-600">{Math.round(asig.porcentaje)}%</span>
+   350→                        </p>
+   351→                      </div>
+   352→                    </div>
+   353→                  </AccordionTrigger>
+   354→                  <AccordionContent>
+   355→                    <div className="mb-4 px-1">
+   356→                      <Progress
+   357→                        value={Math.round(asig.porcentaje)}
+   358→                        className="h-3 [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-fuchsia-400 [&>[data-slot=progress-indicator]]:to-rose-500"
+   359→                      />
+   360→                    </div>
+   361→                    {asig.modulos.length === 0 ? (
+   362→                      <p className="px-1 py-2 text-xs font-bold text-stone-500">
+   363→                        Sin módulos registrados.
+   364→                      </p>
+   365→                    ) : (
+   366→                      <div className="space-y-2.5">
+   367→                        {asig.modulos.map((m) => (
+   368→                          <div
+   369→                            key={m.id}
+   370→                            className="rounded-2xl bg-stone-50 p-3"
+   371→                          >
+   372→                            <div className="mb-1.5 flex items-center justify-between gap-2">
+   373→                              <p className="truncate text-xs font-black text-stone-700">
+   374→                                {m.titulo}
+   375→                              </p>
+   376→                              <span className="shrink-0 text-[11px] font-bold text-stone-500">
+   377→                                {m.completados}/{m.totalDesafios} · {Math.round(m.porcentaje)}%
+   378→                              </span>
+   379→                            </div>
+   380→                            <Progress
+   381→                              value={Math.round(m.porcentaje)}
+   382→                              className="h-2 [&>[data-slot=progress-indicator]]:bg-gradient-to-r [&>[data-slot=progress-indicator]]:from-emerald-400 [&>[data-slot=progress-indicator]]:to-teal-500"
+   383→                            />
+   384→                          </div>
+   385→                        ))}
+   386→                      </div>
+   387→                    )}
+   388→                  </AccordionContent>
+   389→                </AccordionItem>
+   390→              ))}
+   391→            </Accordion>
+   392→          )}
+   393→        </TabsContent>
+   394→
+   395→        {/* === Tab Calificaciones === */}
+   396→        <TabsContent value="calificaciones">
+   397→          <div className="card-premium animate-pop rounded-3xl p-5 sm:p-6">
+   398→            <div className="mb-4 flex items-center justify-between gap-3">
+   399→              <div className="flex items-center gap-2">
+   400→                <Star size={18} className="text-amber-500" strokeWidth={2.5} />
+   401→                <h2 className="text-lg font-black text-stone-800">Calificaciones</h2>
+   402→              </div>
+   403→              <div className="text-right">
+   404→                <p className="text-[11px] font-black uppercase tracking-wide text-stone-500">
+   405→                  Promedio
+   406→                </p>
+   407→                <p className="text-2xl font-black text-stone-800">
+   408→                  {(reporte.promedioNotas ?? 0).toFixed(1)}
+   409→                  <span className="text-sm font-bold text-stone-400"> /100</span>
+   410→                </p>
+   411→              </div>
+   412→            </div>
+   413→
+   414→            {reporte.calificaciones.length === 0 ? (
+   415→              <div className="py-6 text-center">
+   416→                <Star size={28} className="mx-auto mb-2 text-amber-300" />
+   417→                <p className="text-sm font-bold text-stone-500">
+   418→                  Aún no hay calificaciones registradas.
+   419→                </p>
+   420→              </div>
+   421→            ) : (
+   422→              <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
+   423→                {reporte.calificaciones.map((c, i) => {
+   424→                  const col = colorNota(c.nota);
+   425→                  return (
+   426→                    <div
+   427→                      key={c.id}
+   428→                      className="animate-pop flex items-start gap-3 rounded-2xl bg-stone-50 p-3"
+   429→                      style={{ animationDelay: `${i * 40}ms` }}
+   430→                    >
+   431→                      <div
+   432→                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${col.bg}`}
+   433→                      >
+   434→                        <span className={`text-lg font-black ${col.texto}`}>{c.nota}</span>
+   435→                      </div>
+   436→                      <div className="min-w-0 flex-1">
+   437→                        <p className="truncate text-sm font-black text-stone-800">{c.tarea}</p>
+   438→                        {c.seccion && (
+   439→                          <p className="truncate text-[11px] font-bold text-stone-500">
+   440→                            {c.seccion}
+   441→                          </p>
+   442→                        )}
+   443→                        {c.comentario && (
+   444→                          <p className="mt-1 line-clamp-2 text-xs font-semibold text-stone-600">
+   445→                            “{c.comentario}”
+   446→                          </p>
+   447→                        )}
+   448→                        <p className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-stone-400">
+   449→                          <CalendarDays size={10} strokeWidth={2.5} />
+   450→                          {formatearFechaCorta(c.fecha)}
+   451→                        </p>
+   452→                      </div>
+   453→                    </div>
+   454→                  );
+   455→                })}
+   456→              </div>
+   457→            )}
+   458→          </div>
+   459→        </TabsContent>
+   460→
+   461→        {/* === Tab Asistencia === */}
+   462→        <TabsContent value="asistencia">
+   463→          <div className="space-y-4">
+   464→            {/* Stat cards */}
+   465→            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+   466→              <div className="card-premium animate-pop rounded-2xl p-4 text-center" style={{ animationDelay: "0ms" }}>
+   467→                <div className="mx-auto mb-1.5 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100">
+   468→                  <Check size={18} className="text-emerald-600" strokeWidth={2.5} />
+   469→                </div>
+   470→                <p className="text-2xl font-black text-emerald-600">
+   471→                  {reporte.asistencia.presentes}
+   472→                </p>
+   473→                <p className="text-[11px] font-bold uppercase tracking-wide text-stone-500">
+   474→                  Presentes
+   475→                </p>
+   476→              </div>
+   477→              <div className="card-premium animate-pop rounded-2xl p-4 text-center" style={{ animationDelay: "50ms" }}>
+   478→                <div className="mx-auto mb-1.5 flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
+   479→                  <Hand size={18} className="text-amber-600" strokeWidth={2.5} />
+   480→                </div>
+   481→                <p className="text-2xl font-black text-amber-600">
+   482→                  {reporte.asistencia.tardanzas}
+   483→                </p>
+   484→                <p className="text-[11px] font-bold uppercase tracking-wide text-stone-500">
+   485→                  Tardanzas
+   486→                </p>
+   487→              </div>
+   488→              <div className="card-premium animate-pop rounded-2xl p-4 text-center" style={{ animationDelay: "100ms" }}>
+   489→                <div className="mx-auto mb-1.5 flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100">
+   490→                  <X size={18} className="text-rose-600" strokeWidth={2.5} />
+   491→                </div>
+   492→                <p className="text-2xl font-black text-rose-600">{reporte.asistencia.ausentes}</p>
+   493→                <p className="text-[11px] font-bold uppercase tracking-wide text-stone-500">
+   494→                  Ausentes
+   495→                </p>
+   496→              </div>
+   497→              <div className="card-premium animate-pop rounded-2xl p-4 text-center" style={{ animationDelay: "150ms" }}>
+   498→                <div className="mx-auto mb-1.5 flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100">
+   499→                  <PenLine size={18} className="text-violet-600" strokeWidth={2.5} />
+   500→                </div>
+   501→                <p className="text-2xl font-black text-violet-600">
+   502→                  {reporte.asistencia.justificados}
+   503→                </p>
+   504→                <p className="text-[11px] font-bold uppercase tracking-wide text-stone-500">
+   505→                  Justificados
+   506→                </p>
+   507→              </div>
+   508→            </div>
+   509→
+   510→            {/* % asistencia grande */}
+   511→            <div className="card-premium animate-pop rounded-3xl p-5 sm:p-6" style={{ animationDelay: "100ms" }}>
+   512→              <div className="mb-3 flex items-center justify-between gap-3">
+   513→                <div className="flex items-center gap-2">
+   514→                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-md">
+   515→                    <Check size={20} className="text-white" strokeWidth={2.5} />
+   516→                  </div>
+   517→                  <div>
+   518→                    <p className="text-xs font-black uppercase tracking-wide text-stone-500">
+   519→                      % Asistencia
+   520→                    </p>
+   521→                    <p className="text-sm font-black text-stone-800">
+   522→                      {reporte.asistencia.total} registros en total
+   523→                    </p>
+   524→                  </div>
+   525→                </div>
+   526→                <p className="text-3xl font-black text-emerald-600">
+   527→                  {Math.round(reporte.asistencia.porcentaje)}
+   528→                  <span className="text-base font-bold text-stone-400">%</span>
+   529→                </p>
+   530→              </div>
+   531→              <div className="h-4 w-full overflow-hidden rounded-full bg-stone-200">
+   532→                <div
+   533→                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all"
+   534→                  style={{
+   535→                    width: `${Math.min(100, Math.round(reporte.asistencia.porcentaje))}%`,
+   536→                  }}
+   537→                />
+   538→              </div>
+   539→            </div>
+   540→
+   541→            {/* Últimos registros */}
+   542→            <div className="card-premium animate-pop rounded-3xl p-5 sm:p-6" style={{ animationDelay: "150ms" }}>
+   543→              <div className="mb-3 flex items-center gap-2">
+   544→                <CalendarDays size={18} className="text-emerald-500" strokeWidth={2.5} />
+   545→                <h3 className="text-base font-black text-stone-800">Últimos registros</h3>
+   546→                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
+   547→                  {ultimosRegistros.length}
+   548→                </span>
+   549→              </div>
+   550→              {ultimosRegistros.length === 0 ? (
+   551→                <p className="py-4 text-center text-sm font-bold text-stone-500">
+   552→                  No hay registros de asistencia todavía.
+   553→                </p>
+   554→              ) : (
+   555→                <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+   556→                  {ultimosRegistros.map((r, i) => {
+   557→                    const cfg = configEstadoAsistencia(r.estado);
+   558→                    const EIcon = cfg.icon;
+   559→                    return (
+   560→                      <div
+   561→                        key={r.id}
+   562→                        className="flex items-center gap-3 rounded-2xl bg-stone-50 p-3"
+   563→                        style={{ animationDelay: `${i * 40}ms` }}
+   564→                      >
+   565→                        <div
+   566→                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${cfg.bg}`}
+   567→                        >
+   568→                          <EIcon size={16} className={cfg.texto} strokeWidth={2.5} />
+   569→                        </div>
+   570→                        <div className="flex-1 min-w-0">
+   571→                          <p className={`text-sm font-black ${cfg.texto}`}>{cfg.label}</p>
+   572→                          {r.observacion && (
+   573→                            <p className="truncate text-[11px] font-semibold text-stone-500">
+   574→                              {r.observacion}
+   575→                            </p>
+   576→                          )}
+   577→                        </div>
+   578→                        <span className="shrink-0 text-[11px] font-bold text-stone-400">
+   579→                          {formatearFechaCorta(r.fecha)}
+   580→                        </span>
+   581→                      </div>
+   582→                    );
+   583→                  })}
+   584→                </div>
+   585→              )}
+   586→            </div>
+   587→          </div>
+   588→        </TabsContent>
+   589→
+   590→        {/* === Tab Medallas === */}
+   591→        <TabsContent value="medallas">
+   592→          {reporte.medallas.length === 0 ? (
+   593→            <div className="card-premium rounded-3xl p-6 text-center">
+   594→              <Trophy size={32} className="mx-auto mb-2 text-amber-300" />
+   595→              <p className="text-sm font-bold text-stone-600">
+   596→                Aún no ha ganado medallas. ¡A seguir practicando!
+   597→              </p>
+   598→            </div>
+   599→          ) : (
+   600→            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+   601→              {reporte.medallas.map((m, i) => (
+   602→                <div
+   603→                  key={m.id}
+   604→                  className="card-premium animate-pop flex flex-col items-center rounded-3xl p-4 text-center"
+   605→                  style={{ animationDelay: `${i * 50}ms` }}
+   606→                >
+   607→                  <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-md">
+   608→                    <MedallaIcono iconoUrl={m.iconoUrl} size={28} />
+   609→                  </div>
+   610→                  <p className="text-sm font-black text-stone-800">{m.titulo}</p>
+   611→                  <p className="mt-0.5 text-[11px] font-semibold text-stone-500">{m.descripcion}</p>
+   612→                  <span className="mt-2 inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+   613→                    <Medal size={10} strokeWidth={2.5} />
+   614→                    {formatearFechaCorta(m.ganadaEn)}
+   615→                  </span>
+   616→                </div>
+   617→              ))}
+   618→            </div>
+   619→          )}
+   620→        </TabsContent>
+   621→      </Tabs>
+   622→    </div>
+   623→  );
+   624→}
+   625→

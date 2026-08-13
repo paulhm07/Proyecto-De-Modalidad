@@ -20,6 +20,13 @@ export type Vista =
   | "ranking"
   | "perfil"
   | "padre"
+  | "padre-calificaciones"
+  | "padre-asistencia"
+  | "padre-avisos"
+  | "padre-mensajes"
+  | "padre-mensaje-thread"
+  | "padre-notificaciones"
+  | "padre-vincular"
   | "maestro"
   | "maestro-seccion"
   | "maestro-estudiantes"
@@ -55,6 +62,8 @@ interface AppContextValue {
   rolSeleccionado: Rol;
   estudianteSeleccionadoId: string | null;
   seccionSeleccionadaId: string | null;
+  hijoSeleccionadoId: string | null;
+  conversacionSeleccionadaId: string | null;
   toasts: Toast[];
   setUsuario: (u: Usuario | null) => void;
   setVista: (v: Vista) => void;
@@ -63,6 +72,8 @@ interface AppContextValue {
   setRolSeleccionado: (r: Rol) => void;
   setEstudianteSeleccionadoId: (id: string | null) => void;
   setSeccionSeleccionadaId: (id: string | null) => void;
+  setHijoSeleccionadoId: (id: string | null) => void;
+  setConversacionSeleccionadaId: (id: string | null) => void;
   mostrarToast: (mensaje: string, tipo?: Toast["tipo"]) => void;
   cerrarSesion: () => void;
 }
@@ -80,6 +91,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [rolSeleccionado, setRolSeleccionado] = useState<Rol>("ESTUDIANTE");
   const [estudianteSeleccionadoId, setEstudianteSeleccionadoId] = useState<string | null>(null);
   const [seccionSeleccionadaId, setSeccionSeleccionadaId] = useState<string | null>(null);
+  const [hijoSeleccionadoId, setHijoSeleccionadoId] = useState<string | null>(null);
+  const [conversacionSeleccionadaId, setConversacionSeleccionadaId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [hidratado, setHidratado] = useState(false);
 
@@ -145,6 +158,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setAsignaturaId(null);
     setEstudianteSeleccionadoId(null);
     setSeccionSeleccionadaId(null);
+    setHijoSeleccionadoId(null);
+    setConversacionSeleccionadaId(null);
     setRolSeleccionado("ESTUDIANTE");
   }, []);
 
@@ -157,6 +172,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rolSeleccionado,
       estudianteSeleccionadoId,
       seccionSeleccionadaId,
+      hijoSeleccionadoId,
+      conversacionSeleccionadaId,
       toasts,
       setUsuario,
       setVista,
@@ -165,6 +182,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setRolSeleccionado,
       setEstudianteSeleccionadoId,
       setSeccionSeleccionadaId,
+      setHijoSeleccionadoId,
+      setConversacionSeleccionadaId,
       mostrarToast,
       cerrarSesion,
     }),
@@ -176,6 +195,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rolSeleccionado,
       estudianteSeleccionadoId,
       seccionSeleccionadaId,
+      hijoSeleccionadoId,
+      conversacionSeleccionadaId,
       toasts,
       setUsuario,
       mostrarToast,

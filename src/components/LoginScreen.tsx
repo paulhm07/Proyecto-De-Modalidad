@@ -69,7 +69,14 @@ export function LoginScreen() {
           : await api.crearUsuario(nombre.trim(), pin, rolSeleccionado);
       setUsuario(usuario);
       setRolSeleccionado(usuario.rol);
-      setVista("dashboard");
+      // Navegación según rol
+      if (usuario.rol === "PADRE") {
+        setVista("padre");
+      } else if (usuario.rol === "MAESTRO") {
+        setVista("maestro");
+      } else {
+        setVista("dashboard");
+      }
       mostrarToast(`¡Hola, ${usuario.nombre}!`, "exito");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error al iniciar sesión";
@@ -92,9 +99,24 @@ export function LoginScreen() {
           // El seed es opcional; si falla no bloqueamos el login
         }
       }
+      // Si es padre demo, preparar vínculo con DemoKid + avisos + conversación demo
+      if (rol === "PADRE") {
+        try {
+          await api.seedPadreDemo(usuario.id);
+        } catch {
+          // El seed es opcional; si falla no bloqueamos el login
+        }
+      }
       setUsuario(usuario);
       setRolSeleccionado(usuario.rol);
-      setVista("dashboard");
+      // Navegación según rol: maestro y padre van a sus dashboards dedicados
+      if (usuario.rol === "PADRE") {
+        setVista("padre");
+      } else if (usuario.rol === "MAESTRO") {
+        setVista("maestro");
+      } else {
+        setVista("dashboard");
+      }
       mostrarToast(`¡Modo demo! Hola, ${usuario.nombre} 🚀`, "exito");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error al entrar en modo demo";

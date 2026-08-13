@@ -14,6 +14,7 @@ const desafios_module_1 = require("./desafios/desafios.module");
 const progreso_module_1 = require("./progreso/progreso.module");
 const avatars_module_1 = require("./avatars/avatars.module");
 const maestros_module_1 = require("./maestros/maestros.module");
+const padres_module_1 = require("./padres/padres.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -26,6 +27,7 @@ exports.AppModule = AppModule = __decorate([
             progreso_module_1.ProgresoModule,
             avatars_module_1.AvatarsModule,
             maestros_module_1.MaestrosModule,
+            padres_module_1.PadresModule,
         ],
     })
 ], AppModule);

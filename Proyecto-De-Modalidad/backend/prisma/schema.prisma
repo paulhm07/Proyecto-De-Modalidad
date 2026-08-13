@@ -50,6 +50,24 @@ model Usuario {
   // Registros de asistencia del estudiante
   asistencias            Asistencia[]   @relation("AsistenciaEstudiante")
 
+  // ===== MÓDULO DE PADRES — relaciones =====
+  // Avisos publicados por un maestro a una sección
+  avisosComoMaestro      Aviso[]        @relation("AvisoMaestro")
+  // Lecturas/firmas de avisos por el padre
+  avisosLeidos           AvisoLeido[]   @relation("AvisoLector")
+  // Conversaciones donde este usuario es el padre
+  conversacionesComoPadre   Conversacion[] @relation("ConvPadre")
+  // Conversaciones donde este usuario es el maestro
+  conversacionesComoMaestro Conversacion[] @relation("ConvMaestro")
+  // Conversaciones sobre este estudiante (contexto)
+  conversacionesComoHijo    Conversacion[] @relation("ConvHijo")
+  // Mensajes enviados por este usuario
+  mensajesEnviados       Mensaje[]      @relation("MensajeRemitente")
+  // Notificaciones in-app recibidas
+  notificaciones         Notificacion[] @relation("NotifUsuario")
+  // Suscripciones push (un usuario puede tener varios dispositivos)
+  pushSubscriptions      PushSubscription[] @relation("PushSubUsuario")
+
   // Avatar personalizable + artículos comprados en la tienda
   avatarConfig  AvatarConfig?
   items         UsuarioItem[]
@@ -100,13 +118,23 @@ model UsuarioItem {
 }
 
 // Tabla puente para la relación Padre (Usuario con rol=PADRE) ↔ Hijo (Usuario con rol=ESTUDIANTE)
+// Soporta múltiples tutores por hijo con verificación de vínculo.
 model PadreHijo {
-  id        String   @id @default(uuid())
-  padreId   String
-  padre     Usuario  @relation("PadreHijos",  fields: [padreId], references: [id], onDelete: Cascade)
-  hijoId    String
-  hijo      Usuario  @relation("HijoPadres",  fields: [hijoId],  references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  padreId      String
+  padre        Usuario  @relation("PadreHijos",  fields: [padreId], references: [id], onDelete: Cascade)
+  hijoId       String
+  hijo         Usuario  @relation("HijoPadres",  fields: [hijoId],  references: [id], onDelete: Cascade)
+  // Tipo de tutor: MADRE | PADRE | TUTOR_LEGAL | ABUELO | OTRO
+  parentesco   String   @default("OTRO")
+  // Verificación del vínculo: false = pendiente de aprobación del maestro,
+  // true = verificado (el padre ve todos los datos académicos del hijo).
+  verificado   Boolean  @default(false)
+  solicitadoEn DateTime @default(now())
+  verificadoEn DateTime?
+  verificadoPor String? // maestroId o adminId que aprobó
+  activo       Boolean  @default(true) // el padre puede "pausar" el vínculo sin borrarlo
+  createdAt    DateTime @default(now())
 
   @@unique([padreId, hijoId])
 }
@@ -209,6 +237,10 @@ model Seccion {
   inscripciones Inscripcion[]
   tareas        Tarea[]
   asistencias   Asistencia[]
+  // Avisos/circulares publicados a esta sección
+  avisos        Aviso[]
+  // Conversaciones de padres con el maestro sobre esta sección
+  conversaciones Conversacion[]
 }
 
 // Inscripción: vincula un estudiante a una sección (muchos a muchos).
@@ -286,4 +318,119 @@ model Asistencia {
   createdAt    DateTime @default(now())
 
   @@unique([seccionId, estudianteId, fecha])
+}
+
+// ===================== MÓDULO DE PADRES =====================
+
+// Aviso / Circular: publicado por un maestro a una sección.
+// Todos los padres de los estudiantes inscritos lo reciben.
+model Aviso {
+  id          String   @id @default(uuid())
+  seccionId   String
+  seccion     Seccion  @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  maestroId   String
+  maestro     Usuario  @relation("AvisoMaestro", fields: [maestroId], references: [id], onDelete: Cascade)
+  // tipo ∈ { CIRCULAR, RECORDATORIO, URGENTE, EVENTO }
+  tipo        String   @default("CIRCULAR")
+  titulo      String
+  contenido   String
+  // prioridad: 1=info, 2=importante, 3=urgente (afecta color y push)
+  prioridad   Int      @default(1)
+  fechaEnvio  DateTime @default(now())
+  // Si tipo=EVENTO, la fecha del evento (para recordatorios automáticos)
+  fechaEvento DateTime?
+  // Si requiere firma/confirmación del padre (ej. autorización excursión)
+  requiereFirma Boolean @default(false)
+  activo      Boolean  @default(true)
+  lecturas    AvisoLeido[]
+
+  @@index([seccionId])
+  @@index([maestroId])
+}
+
+// Registro de lectura/firma de un aviso por un padre (1 aviso × 1 padre).
+model AvisoLeido {
+  id        String   @id @default(uuid())
+  avisoId   String
+  aviso     Aviso    @relation(fields: [avisoId], references: [id], onDelete: Cascade)
+  padreId   String
+  padre     Usuario  @relation("AvisoLector", fields: [padreId], references: [id], onDelete: Cascade)
+  leidoEn   DateTime @default(now())
+  // Si el aviso requiere firma, cuándo la confirmó el padre
+  firmado   Boolean  @default(false)
+  firmaEn   DateTime?
+
+  @@unique([avisoId, padreId])
+}
+
+// Conversación privada entre un padre y el maestro de la sección de su hijo.
+// El contexto (hijoId) fija de qué estudiante se habla en toda la conversación.
+model Conversacion {
+  id            String   @id @default(uuid())
+  padreId       String
+  padre         Usuario  @relation("ConvPadre", fields: [padreId], references: [id], onDelete: Cascade)
+  maestroId     String
+  maestro       Usuario  @relation("ConvMaestro", fields: [maestroId], references: [id], onDelete: Cascade)
+  hijoId        String   // contexto: de qué hijo se habla
+  hijo          Usuario  @relation("ConvHijo", fields: [hijoId], references: [id], onDelete: Cascade)
+  seccionId     String?  // opcional: sección específica
+  seccion       Seccion? @relation(fields: [seccionId], references: [id], onDelete: SetNull)
+  asunto        String   // "Sobre las tareas de matemáticas"
+  ultimaActividad DateTime @default(now())
+  mensajes      Mensaje[]
+
+  @@unique([padreId, maestroId, hijoId])
+  @@index([padreId])
+  @@index([maestroId])
+}
+
+// Mensaje individual dentro de una conversación.
+model Mensaje {
+  id              String   @id @default(uuid())
+  conversacionId  String
+  conversacion    Conversacion @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
+  remitenteId     String   // padreId o maestroId
+  remitente       Usuario  @relation("MensajeRemitente", fields: [remitenteId], references: [id], onDelete: Cascade)
+  cuerpo          String
+  enviadoEn       DateTime @default(now())
+  // Cuándo lo leyó el destinatario (null = no leído aún)
+  leidoEn         DateTime?
+
+  @@index([conversacionId])
+}
+
+// Notificación in-app (campana). También se intenta enviar como push si hay
+// PushSubscription activa para el usuario.
+model Notificacion {
+  id          String   @id @default(uuid())
+  usuarioId   String   // destinatario (normalmente padreId)
+  usuario     Usuario  @relation("NotifUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  // tipo ∈ { NUEVA_TAREA, TAREA_CALIFICADA, INASISTENCIA, NUEVO_AVISO,
+  //          MENSAJE_DOCENTE, LOGRO, ENTREGA_TARDIA, TAREA_POR_VENCER }
+  tipo        String
+  titulo      String
+  cuerpo      String
+  // JSON serializado con contexto para deep-link { hijoId, tareaId, avisoId, conversacionId, url }
+  data        String?
+  leida       Boolean  @default(false)
+  enviadaPush Boolean  @default(false)
+  creadaEn    DateTime @default(now())
+
+  @@index([usuarioId, leida])
+}
+
+// Suscripción Web Push de un usuario (un dispositivo = una suscripción).
+// El backend usa web-push para enviar notificaciones al endpoint VAPID.
+model PushSubscription {
+  id          String   @id @default(uuid())
+  usuarioId   String
+  usuario     Usuario  @relation("PushSubUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  endpoint    String   @unique // URL del push service del navegador
+  p256dh      String   // clave pública ECDH
+  auth        String   // secreto de autenticación
+  dispositivo String?  // etiqueta legible: "iPhone de María"
+  activa      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([usuarioId])
 }

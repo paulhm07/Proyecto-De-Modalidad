@@ -1,18 +1,28 @@
 import type {
   AlertasMaestro,
   Asignatura,
+  Aviso,
   Calificacion,
   ComprarResponse,
+  Conversacion,
+  ConversacionDetalle,
   Desafio,
   EntregaTarea,
   EquiparResponse,
   EstadoAsistencia,
+  HijoVinculado,
   ItemTienda,
   MedallaEstudiante,
+  MedallasHijo,
+  Mensaje,
   MiAvatarResponse,
   Modulo,
+  Notificacion,
   RegistroAsistencia,
   ReporteEstudiante,
+  ResumenAsistencia,
+  ResumenCalificaciones,
+  ResumenPadre,
   ResumenSeccion,
   RespuestaProgreso,
   Rol,
@@ -282,5 +292,113 @@ export const api = {
   // Seed
   seedMaestroDemo(maestroId: string): Promise<any> {
     return post(`/api/maestros/seed/${maestroId}`);
+  },
+
+  // ===================== MÓDULO DE PADRES =====================
+
+  seedPadreDemo(padreId: string): Promise<{ ok: boolean; mensaje: string }> {
+    return post(`/api/padres/${padreId}/seed-demo`);
+  },
+
+  obtenerHijosPadre(padreId: string): Promise<HijoVinculado[]> {
+    return get<HijoVinculado[]>(`/api/padres/${padreId}/hijos`);
+  },
+
+  solicitarVinculoHijo(padreId: string, data: { nombre: string; pin: string; parentesco?: string }): Promise<any> {
+    return post(`/api/padres/${padreId}/hijos`, data);
+  },
+
+  vincularHijoPorId(padreId: string, hijoId: string, parentesco?: string): Promise<any> {
+    return post(`/api/padres/${padreId}/hijos/${hijoId}/vincular`, { parentesco });
+  },
+
+  desvincularHijoPadre(padreId: string, hijoId: string): Promise<any> {
+    return del(`/api/padres/${padreId}/hijos/${hijoId}`);
+  },
+
+  obtenerResumenPadre(padreId: string, hijoId: string): Promise<ResumenPadre> {
+    return get<ResumenPadre>(`/api/padres/${padreId}/hijos/${hijoId}/resumen`);
+  },
+
+  obtenerCalificacionesHijo(
+    padreId: string,
+    hijoId: string,
+    opts?: { asignaturaId?: string; desde?: string; hasta?: string }
+  ): Promise<ResumenCalificaciones> {
+    const params = new URLSearchParams();
+    if (opts?.asignaturaId) params.set('asignaturaId', opts.asignaturaId);
+    if (opts?.desde) params.set('desde', opts.desde);
+    if (opts?.hasta) params.set('hasta', opts.hasta);
+    const q = params.toString() ? `?${params.toString()}` : '';
+    return get<ResumenCalificaciones>(`/api/padres/${padreId}/hijos/${hijoId}/calificaciones${q}`);
+  },
+
+  obtenerAsistenciaHijo(
+    padreId: string,
+    hijoId: string,
+    opts?: { mes?: number; anio?: number }
+  ): Promise<ResumenAsistencia> {
+    const params = new URLSearchParams();
+    if (opts?.mes !== undefined) params.set('mes', String(opts.mes));
+    if (opts?.anio !== undefined) params.set('anio', String(opts.anio));
+    const q = params.toString() ? `?${params.toString()}` : '';
+    return get<ResumenAsistencia>(`/api/padres/${padreId}/hijos/${hijoId}/asistencia${q}`);
+  },
+
+  obtenerTareasHijo(padreId: string, hijoId: string, estado?: string): Promise<any[]> {
+    const q = estado ? `?estado=${estado}` : '';
+    return get<any[]>(`/api/padres/${padreId}/hijos/${hijoId}/tareas${q}`);
+  },
+
+  obtenerMedallasHijo(padreId: string, hijoId: string): Promise<MedallasHijo> {
+    return get<MedallasHijo>(`/api/padres/${padreId}/hijos/${hijoId}/medallas`);
+  },
+
+  obtenerAvisosPadre(padreId: string, opts?: { tipo?: string; soloNoLeidos?: boolean }): Promise<Aviso[]> {
+    const params = new URLSearchParams();
+    if (opts?.tipo) params.set('tipo', opts.tipo);
+    if (opts?.soloNoLeidos) params.set('soloNoLeidos', 'true');
+    const q = params.toString() ? `?${params.toString()}` : '';
+    return get<Aviso[]>(`/api/padres/${padreId}/avisos${q}`);
+  },
+
+  marcarAvisoLeido(padreId: string, avisoId: string): Promise<any> {
+    return post(`/api/padres/${padreId}/avisos/${avisoId}/leer`);
+  },
+
+  firmarAviso(padreId: string, avisoId: string): Promise<any> {
+    return post(`/api/padres/${padreId}/avisos/${avisoId}/firmar`);
+  },
+
+  obtenerConversaciones(padreId: string): Promise<Conversacion[]> {
+    return get<Conversacion[]>(`/api/padres/${padreId}/conversaciones`);
+  },
+
+  obtenerConversacion(padreId: string, conversacionId: string): Promise<ConversacionDetalle> {
+    return get<ConversacionDetalle>(`/api/padres/${padreId}/conversaciones/${conversacionId}`);
+  },
+
+  enviarMensajePadre(padreId: string, conversacionId: string, cuerpo: string): Promise<Mensaje> {
+    return post<Mensaje>(`/api/padres/${padreId}/conversaciones/${conversacionId}/mensajes`, { cuerpo });
+  },
+
+  iniciarConversacion(
+    padreId: string,
+    data: { maestroId: string; hijoId: string; asunto: string; seccionId?: string; mensajeInicial?: string }
+  ): Promise<ConversacionDetalle> {
+    return post<ConversacionDetalle>(`/api/padres/${padreId}/conversaciones`, data);
+  },
+
+  obtenerNotificaciones(padreId: string, soloNoLeidos?: boolean): Promise<Notificacion[]> {
+    const q = soloNoLeidos ? '?soloNoLeidos=true' : '';
+    return get<Notificacion[]>(`/api/padres/${padreId}/notificaciones${q}`);
+  },
+
+  marcarNotificacionLeida(padreId: string, notificacionId: string): Promise<any> {
+    return post(`/api/padres/${padreId}/notificaciones/${notificacionId}/leer`);
+  },
+
+  marcarTodasNotificacionesLeidas(padreId: string): Promise<{ actualizadas: number }> {
+    return post(`/api/padres/${padreId}/notificaciones/leer-todas`);
   },
 };
