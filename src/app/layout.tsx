@@ -1,16 +1,40 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import PWARegister from "@/components/PWARegister";
+import OfflineIndicator from "@/components/OfflineIndicator";
+import InstallPrompt from "@/components/InstallPrompt";
 
 export const metadata: Metadata = {
   title: "Mundilex — Aprende jugando",
   description:
     "Mundilex: plataforma educativa gamificada para estudiantes de 3er grado. Aprende jugando con desafíos, medallas y avatares.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "Mundilex",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Mundilex",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/pwa/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/pwa/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/pwa/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon-32.png"],
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
   themeColor: "#07061f",
+  viewportFit: "cover",
 };
 
 // Floating runes — math & literary symbols drifting in the blurred background
@@ -63,6 +87,20 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* PWA — iOS / Safari meta tags (la API de Metadata de Next no cubre todo) */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Mundilex" />
+        <meta name="application-name" content="Mundilex" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-TileColor" content="#07061f" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png" />
+        <link rel="mask-icon" href="/logo.svg" color="#fbbf24" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/pwa/icon-192.png" />
+        <link rel="manifest" href="/manifest.webmanifest" />
       </head>
       <body className="min-h-screen flex flex-col">
         {/* ===== Deep-space background layers ===== */}
@@ -150,6 +188,11 @@ export default function RootLayout({
         </div>
 
         <main className="flex-1 relative z-0">{children}</main>
+
+        {/* PWA — registro del Service Worker, banner offline y prompt de instalación */}
+        <PWARegister />
+        <OfflineIndicator />
+        <InstallPrompt />
 
         <footer className="mt-auto border-t border-cyan-400/25 bg-violet-950/40 py-4 backdrop-blur-md">
           <div className="mx-auto max-w-6xl px-4 text-center text-xs font-semibold text-cyan-200/80">

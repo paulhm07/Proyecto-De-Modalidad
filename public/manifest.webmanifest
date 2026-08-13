@@ -1,0 +1,70 @@
+{
+  "name": "Mundilex — Cristal del Saber",
+  "short_name": "Mundilex",
+  "description": "Plataforma educativa gamificada para estudiantes de 3er grado. Aprende matemáticas y lenguaje jugando con desafíos, medallas y avatares.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#07061f",
+  "theme_color": "#07061f",
+  "lang": "es-NI",
+  "dir": "ltr",
+  "categories": ["education", "kids", "games"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Juegos de Matemáticas",
+      "short_name": "Matemáticas",
+      "description": "Pulpería de Fracciones, Camión de Multiplicaciones, Alimenta al Monstruo",
+      "url": "/?source=pwa&subject=matematicas",
+      "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Juegos de Lenguaje",
+      "short_name": "Lenguaje",
+      "description": "Bus de Letras, Carta Mal Enviada, Atrapa el Acento, Cazador de Sílabas",
+      "url": "/?source=pwa&subject=lenguaje",
+      "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mis Medallas",
+      "short_name": "Medallas",
+      "description": "Colección de logros desbloqueados",
+      "url": "/?source=pwa&view=medallas",
+      "icons": [{ "src": "/pwa/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}

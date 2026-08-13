@@ -1,0 +1,1444 @@
+     1→@import "tailwindcss";
+     2→
+     3→@theme {
+     4→  /* Cosmic Nebula palette */
+     5→  --color-background: #07061f;
+     6→  --color-foreground: #eaf2ff;
+     7→  --color-card: rgba(255, 255, 255, 0.06);
+     8→  --color-primary: #22d3ee; /* neon cyan — math / logic */
+     9→  --color-primary-foreground: #04121a;
+    10→  --color-secondary: #8b5cf6; /* deep violet */
+    11→  --color-accent: #fb7185; /* coral gold — language / creativity */
+    12→  --color-gold: #fbbf24;
+    13→  --color-muted: rgba(255, 255, 255, 0.08);
+    14→  --color-border: rgba(34, 211, 238, 0.35);
+    15→
+    16→  --font-display: "Fredoka", "Baloo 2", ui-sans-serif, system-ui, sans-serif;
+    17→}
+    18→
+    19→@layer base {
+    20→  html,
+    21→  body {
+    22→    min-height: 100%;
+    23→  }
+    24→
+    25→  body {
+    26→    color: var(--color-foreground);
+    27→    /* Deep space nebula: midnight blue -> violet, with cyan/coral nebula clouds */
+    28→    background-color: #050414;
+    29→    background-image:
+    30→      radial-gradient(ellipse at 18% 12%, rgba(139, 92, 246, 0.28) 0px, transparent 45%),
+    31→      radial-gradient(ellipse at 85% 18%, rgba(34, 211, 238, 0.18) 0px, transparent 42%),
+    32→      radial-gradient(ellipse at 75% 80%, rgba(251, 113, 133, 0.16) 0px, transparent 48%),
+    33→      radial-gradient(ellipse at 20% 85%, rgba(99, 102, 241, 0.22) 0px, transparent 45%),
+    34→      radial-gradient(ellipse at 50% 50%, rgba(76, 29, 149, 0.30) 0px, transparent 70%),
+    35→      linear-gradient(160deg, #07061f 0%, #0d0830 45%, #160a3a 100%);
+    36→    background-attachment: fixed;
+    37→    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    38→    -webkit-font-smoothing: antialiased;
+    39→  }
+    40→
+    41→  h1, h2, h3, h4 {
+    42→    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    43→    letter-spacing: -0.01em;
+    44→  }
+    45→}
+    46→
+    47→/* ===========================================================
+    48→   GLASS PANELS — translucent crystal with cyan neon edge + refraction
+    49→   =========================================================== */
+    50→.glass-panel {
+    51→  position: relative;
+    52→  background: linear-gradient(
+    53→    135deg,
+    54→    rgba(255, 255, 255, 0.10) 0%,
+    55→    rgba(255, 255, 255, 0.04) 45%,
+    56→    rgba(34, 211, 238, 0.05) 100%
+    57→  );
+    58→  backdrop-filter: blur(16px) saturate(140%);
+    59→  -webkit-backdrop-filter: blur(16px) saturate(140%);
+    60→  border: 1px solid rgba(34, 211, 238, 0.35);
+    61→  box-shadow:
+    62→    0 0 22px rgba(34, 211, 238, 0.18),
+    63→    0 18px 50px -20px rgba(0, 0, 0, 0.7),
+    64→    inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
+    65→    inset 0 -1px 0 0 rgba(139, 92, 246, 0.18);
+    66→  overflow: hidden;
+    67→}
+    68→/* Light refraction sheen sweeping across the crystal surface */
+    69→.glass-panel::before {
+    70→  content: "";
+    71→  position: absolute;
+    72→  inset: 0;
+    73→  pointer-events: none;
+    74→  background: linear-gradient(
+    75→    115deg,
+    76→    transparent 0%,
+    77→    rgba(255, 255, 255, 0.08) 38%,
+    78→    rgba(34, 211, 238, 0.10) 50%,
+    79→    rgba(255, 255, 255, 0.05) 62%,
+    80→    transparent 100%
+    81→  );
+    82→  mix-blend-mode: screen;
+    83→  opacity: 0.9;
+    84→}
+    85→/* Soft inner rainbow refraction at the edge */
+    86→.glass-panel::after {
+    87→  content: "";
+    88→  position: absolute;
+    89→  inset: 0;
+    90→  pointer-events: none;
+    91→  border-radius: inherit;
+    92→  padding: 1px;
+    93→  background: linear-gradient(
+    94→    130deg,
+    95→    rgba(34, 211, 238, 0.6),
+    96→    rgba(139, 92, 246, 0.35) 40%,
+    97→    rgba(251, 113, 133, 0.4) 70%,
+    98→    rgba(34, 211, 238, 0.55)
+    99→  );
+   100→  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+   101→  -webkit-mask-composite: xor;
+   102→  mask-composite: exclude;
+   103→  opacity: 0.7;
+   104→}
+   105→
+   106→.glass-soft {
+   107→  background: rgba(255, 255, 255, 0.05);
+   108→  backdrop-filter: blur(10px);
+   109→  -webkit-backdrop-filter: blur(10px);
+   110→  border: 1px solid rgba(255, 255, 255, 0.12);
+   111→  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+   112→}
+   113→
+   114→/* Legacy alias — keeps older components (login, profile, etc.) looking
+   115→   right on the cosmic background: a slightly more opaque crystal panel
+   116→   suitable for forms and text-heavy content. */
+   117→.card-premium {
+   118→  position: relative;
+   119→  background: linear-gradient(
+   120→    135deg,
+   121→    rgba(20, 16, 50, 0.72) 0%,
+   122→    rgba(30, 20, 70, 0.62) 50%,
+   123→    rgba(20, 30, 70, 0.6) 100%
+   124→  );
+   125→  backdrop-filter: blur(18px) saturate(140%);
+   126→  -webkit-backdrop-filter: blur(18px) saturate(140%);
+   127→  border: 1px solid rgba(34, 211, 238, 0.35);
+   128→  box-shadow:
+   129→    0 0 22px rgba(34, 211, 238, 0.18),
+   130→    0 18px 50px -20px rgba(0, 0, 0, 0.7),
+   131→    inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+   132→}
+   133→
+   134→/* Neon text glow helpers */
+   135→.text-glow-cyan {
+   136→  text-shadow: 0 0 12px rgba(34, 211, 238, 0.7), 0 0 24px rgba(34, 211, 238, 0.35);
+   137→}
+   138→.text-glow-coral {
+   139→  text-shadow: 0 0 12px rgba(251, 113, 133, 0.7), 0 0 24px rgba(251, 113, 133, 0.35);
+   140→}
+   141→.text-glow-gold {
+   142→  text-shadow: 0 0 12px rgba(251, 191, 36, 0.7), 0 0 22px rgba(251, 191, 36, 0.35);
+   143→}
+   144→
+   145→/* ===========================================================
+   146→   FUEL TUBE XP — energy fuel tube filling with incandescent cyan liquid
+   147→   =========================================================== */
+   148→.fuel-tube {
+   149→  position: relative;
+   150→  height: 30px;
+   151→  border-radius: 9999px;
+   152→  padding: 3px;
+   153→  background: linear-gradient(180deg, rgba(8, 6, 30, 0.9), rgba(20, 12, 50, 0.7));
+   154→  border: 1px solid rgba(34, 211, 238, 0.45);
+   155→  box-shadow:
+   156→    0 0 18px rgba(34, 211, 238, 0.28),
+   157→    inset 0 2px 8px rgba(0, 0, 0, 0.6),
+   158→    inset 0 0 2px rgba(34, 211, 238, 0.5);
+   159→  overflow: hidden;
+   160→}
+   161→.fuel-tube-track {
+   162→  position: relative;
+   163→  height: 100%;
+   164→  border-radius: 9999px;
+   165→  background: radial-gradient(ellipse at 50% 30%, rgba(20, 20, 60, 0.6), rgba(5, 4, 20, 0.9));
+   166→  overflow: hidden;
+   167→}
+   168→.fuel-liquid {
+   169→  position: absolute;
+   170→  left: 0;
+   171→  top: 0;
+   172→  bottom: 0;
+   173→  border-radius: 9999px;
+   174→  background: linear-gradient(180deg, #a5f3ff 0%, #22d3ee 45%, #06b6d4 75%, #0e7490 100%);
+   175→  box-shadow:
+   176→    0 0 16px rgba(34, 211, 238, 0.9),
+   177→    0 0 30px rgba(34, 211, 238, 0.5),
+   178→    inset 0 2px 4px rgba(255, 255, 255, 0.55),
+   179→    inset 0 -3px 6px rgba(8, 145, 178, 0.6);
+   180→  transition: width 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+   181→  overflow: hidden;
+   182→  min-width: 0;
+   183→}
+   184→/* Wavy meniscus on top of the liquid */
+   185→.fuel-liquid::before {
+   186→  content: "";
+   187→  position: absolute;
+   188→  top: -4px;
+   189→  left: -10%;
+   190→  right: -10%;
+   191→  height: 8px;
+   192→  border-radius: 50%;
+   193→  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(165, 243, 255, 0.6));
+   194→  filter: blur(1px);
+   195→  animation: fuelWave 2.4s ease-in-out infinite;
+   196→}
+   197→/* Moving caustics shimmer inside the liquid */
+   198→.fuel-liquid::after {
+   199→  content: "";
+   200→  position: absolute;
+   201→  inset: 0;
+   202→  background: linear-gradient(
+   203→    90deg,
+   204→    transparent 0%,
+   205→    rgba(255, 255, 255, 0.35) 50%,
+   206→    transparent 100%
+   207→  );
+   208→  background-size: 200% 100%;
+   209→  animation: fuelShimmer 2.2s linear infinite;
+   210→}
+   211→@keyframes fuelWave {
+   212→  0%, 100% { transform: translateX(-6%) scaleY(0.8); }
+   213→  50% { transform: translateX(6%) scaleY(1.2); }
+   214→}
+   215→@keyframes fuelShimmer {
+   216→  0% { background-position: 200% 0; }
+   217→  100% { background-position: -200% 0; }
+   218→}
+   219→/* Rising bubbles */
+   220→.fuel-bubble {
+   221→  position: absolute;
+   222→  bottom: 4px;
+   223→  width: 5px;
+   224→  height: 5px;
+   225→  border-radius: 50%;
+   226→  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(165, 243, 255, 0.4));
+   227→  opacity: 0;
+   228→  animation: bubbleRise 2.8s ease-in infinite;
+   229→}
+   230→@keyframes bubbleRise {
+   231→  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+   232→  20% { opacity: 0.9; }
+   233→  100% { transform: translateY(-26px) scale(1); opacity: 0; }
+   234→}
+   235→/* Top gloss reflection on the glass casing */
+   236→.fuel-tube-shine {
+   237→  position: absolute;
+   238→  left: 6px;
+   239→  right: 6px;
+   240→  top: 3px;
+   241→  height: 8px;
+   242→  border-radius: 9999px;
+   243→  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent);
+   244→  pointer-events: none;
+   245→}
+   246→
+   247→/* ===========================================================
+   248→   3D-ish buttons
+   249→   =========================================================== */
+   250→.btn-cosmic {
+   251→  position: relative;
+   252→  box-shadow:
+   253→    0 4px 0 0 rgba(6, 182, 212, 0.5),
+   254→    0 0 18px rgba(34, 211, 238, 0.4);
+   255→  transition: all 0.15s ease;
+   256→}
+   257→.btn-cosmic:active {
+   258→  transform: translateY(2px);
+   259→  box-shadow:
+   260→    0 2px 0 0 rgba(6, 182, 212, 0.5),
+   261→    0 0 12px rgba(34, 211, 238, 0.35);
+   262→}
+   263→
+   264→/* ===========================================================
+   265→   Animations
+   266→   =========================================================== */
+   267→.animate-float {
+   268→  animation: float 4s ease-in-out infinite;
+   269→}
+   270→@keyframes float {
+   271→  0%, 100% { transform: translateY(0); }
+   272→  50% { transform: translateY(-10px); }
+   273→}
+   274→
+   275→.animate-pop {
+   276→  animation: pop 0.35s ease-out both;
+   277→}
+   278→@keyframes pop {
+   279→  0% { transform: scale(0.94); opacity: 0; }
+   280→  100% { transform: scale(1); opacity: 1; }
+   281→}
+   282→
+   283→.animate-bounce-in {
+   284→  animation: bounceIn 0.55s cubic-bezier(0.68, -0.55, 0.27, 1.55) both;
+   285→}
+   286→@keyframes bounceIn {
+   287→  0% { transform: scale(0.3); opacity: 0; }
+   288→  100% { transform: scale(1); opacity: 1; }
+   289→}
+   290→
+   291→/* Twinkling stardust */
+   292→.animate-twinkle {
+   293→  animation: twinkle 3.5s ease-in-out infinite;
+   294→}
+   295→@keyframes twinkle {
+   296→  0%, 100% { opacity: 0.25; transform: scale(0.9); }
+   297→  50% { opacity: 1; transform: scale(1.15); }
+   298→}
+   299→
+   300→/* Slow drifting runes */
+   301→.animate-drift {
+   302→  animation: drift 22s linear infinite;
+   303→}
+   304→@keyframes drift {
+   305→  0% { transform: translate(0, 0) rotate(0deg); }
+   306→  50% { transform: translate(14px, -18px) rotate(8deg); }
+   307→  100% { transform: translate(0, 0) rotate(0deg); }
+   308→}
+   309→
+   310→.animate-glow {
+   311→  animation: glowPulse 2.4s ease-in-out infinite;
+   312→}
+   313→@keyframes glowPulse {
+   314→  0%, 100% { box-shadow: 0 0 8px rgba(34, 211, 238, 0.4); }
+   315→  50% { box-shadow: 0 0 24px rgba(34, 211, 238, 0.8); }
+   316→}
+   317→
+   318→.animate-confetti-fall {
+   319→  animation: confettiFall linear forwards;
+   320→}
+   321→@keyframes confettiFall {
+   322→  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+   323→  100% { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+   324→}
+   325→
+   326→/* ===========================================================
+   327→   Custom scrollbar (cosmic cyan/violet)
+   328→   =========================================================== */
+   329→* {
+   330→  scrollbar-width: thin;
+   331→  scrollbar-color: #22d3ee rgba(139, 92, 246, 0.25);
+   332→}
+   333→*::-webkit-scrollbar {
+   334→  width: 10px;
+   335→  height: 10px;
+   336→}
+   337→*::-webkit-scrollbar-track {
+   338→  background: rgba(20, 12, 50, 0.5);
+   339→  border-radius: 9999px;
+   340→}
+   341→*::-webkit-scrollbar-thumb {
+   342→  background: linear-gradient(180deg, #22d3ee, #8b5cf6);
+   343→  border-radius: 9999px;
+   344→  border: 2px solid rgba(20, 12, 50, 0.5);
+   345→}
+   346→*::-webkit-scrollbar-thumb:hover {
+   347→  background: linear-gradient(180deg, #67e8f9, #a78bfa);
+   348→}
+   349→
+   350→::selection {
+   351→  background: rgba(34, 211, 238, 0.35);
+   352→  color: #ffffff;
+   353→}
+   354→
+   355→/* ===========================================================
+   356→   NEUMORPHISM — "Cámara de Personalización" tactile soft UI
+   357→   Used by the avatar shop. Requires a soft gray uniform background
+   358→   (.neu-room) so the dual shadows read correctly.
+   359→   =========================================================== */
+   360→.neu-room {
+   361→  /* Soft technological gray workshop gradient */
+   362→  background:
+   363→    radial-gradient(ellipse at 18% 12%, rgba(34, 211, 238, 0.10) 0px, transparent 40%),
+   364→    radial-gradient(ellipse at 85% 85%, rgba(251, 113, 133, 0.10) 0px, transparent 42%),
+   365→    linear-gradient(160deg, #e8ebf2 0%, #dde2ec 45%, #d3d9e6 100%);
+   366→  background-attachment: fixed;
+   367→}
+   368→
+   369→/* Raised tactile block (soft gummy button / card) */
+   370→.neu-raised {
+   371→  background: linear-gradient(145deg, #eef1f7, #d2d8e4);
+   372→  box-shadow:
+   373→    10px 10px 22px rgba(150, 158, 180, 0.65),
+   374→    -10px -10px 22px rgba(255, 255, 255, 1),
+   375→    inset 1px 1px 1px rgba(255, 255, 255, 0.8);
+   376→  border: 1px solid rgba(255, 255, 255, 0.5);
+   377→}
+   378→.neu-raised-sm {
+   379→  background: linear-gradient(145deg, #eef1f7, #d6dbe7);
+   380→  box-shadow:
+   381→    6px 6px 14px rgba(150, 158, 180, 0.6),
+   382→    -6px -6px 14px rgba(255, 255, 255, 0.98),
+   383→    inset 1px 1px 1px rgba(255, 255, 255, 0.7);
+   384→  border: 1px solid rgba(255, 255, 255, 0.45);
+   385→}
+   386→/* Chunky building-block card — strong gummy relief for shop items */
+   387→.neu-block {
+   388→  background: linear-gradient(145deg, #f5f7fb 0%, #e4e9f2 55%, #d4dae6 100%);
+   389→  box-shadow:
+   390→    9px 9px 18px rgba(130, 140, 165, 0.78),
+   391→    -9px -9px 18px rgba(255, 255, 255, 1),
+   392→    inset 2px 2px 4px rgba(255, 255, 255, 0.95),
+   393→    inset -3px -3px 6px rgba(130, 140, 165, 0.4),
+   394→    inset 0 -6px 10px rgba(251, 113, 133, 0.06);
+   395→  border: 1px solid rgba(255, 255, 255, 0.65);
+   396→}
+   397→
+   398→/* Inset / pressed surface */
+   399→.neu-inset {
+   400→  background: linear-gradient(145deg, #d6dbe6, #eef1f7);
+   401→  box-shadow:
+   402→    inset 6px 6px 12px rgba(163, 170, 192, 0.55),
+   403→    inset -6px -6px 12px rgba(255, 255, 255, 0.9);
+   404→}
+   405→.neu-inset-sm {
+   406→  background: linear-gradient(145deg, #dadee9, #eef1f7);
+   407→  box-shadow:
+   408→    inset 3px 3px 6px rgba(163, 170, 192, 0.5),
+   409→    inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+   410→}
+   411→
+   412→/* Pressed interaction (active state for raised elements) */
+   413→.neu-pressed {
+   414→  background: linear-gradient(145deg, #d6dbe6, #eef1f7);
+   415→  box-shadow:
+   416→    inset 5px 5px 10px rgba(163, 170, 192, 0.6),
+   417→    inset -5px -5px 10px rgba(255, 255, 255, 0.85);
+   418→}
+   419→
+   420→/* Oval pill button with deep neumorphic relief */
+   421→.neu-pill {
+   422→  border-radius: 9999px;
+   423→  background: linear-gradient(145deg, #f0f3f8, #d2d8e4);
+   424→  box-shadow:
+   425→    5px 5px 11px rgba(150, 158, 180, 0.65),
+   426→    -5px -5px 11px rgba(255, 255, 255, 1),
+   427→    inset 1px 1px 2px rgba(255, 255, 255, 0.85);
+   428→  transition: all 0.15s ease;
+   429→}
+   430→.neu-pill:active {
+   431→  box-shadow:
+   432→    inset 4px 4px 8px rgba(150, 158, 180, 0.6),
+   433→    inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+   434→  transform: translateY(1px);
+   435→}
+   436→
+   437→/* Emerald "Equipado" pill — bright emerald with glow */
+   438→.neu-pill-emerald {
+   439→  border-radius: 9999px;
+   440→  background: linear-gradient(145deg, #34d399, #059669);
+   441→  box-shadow:
+   442→    5px 5px 14px rgba(5, 150, 105, 0.55),
+   443→    -4px -4px 11px rgba(255, 255, 255, 0.5),
+   444→    inset 2px 2px 3px rgba(255, 255, 255, 0.55),
+   445→    inset -2px -2px 4px rgba(4, 120, 87, 0.5),
+   446→    0 0 22px rgba(16, 185, 129, 0.6);
+   447→  color: #ffffff;
+   448→}
+   449→.neu-pill-cyan {
+   450→  border-radius: 9999px;
+   451→  background: linear-gradient(145deg, #67e8f9, #0891b2);
+   452→  box-shadow:
+   453→    5px 5px 14px rgba(8, 145, 178, 0.5),
+   454→    -4px -4px 11px rgba(255, 255, 255, 0.5),
+   455→    inset 2px 2px 3px rgba(255, 255, 255, 0.5),
+   456→    inset -2px -2px 4px rgba(14, 116, 144, 0.5),
+   457→    0 0 20px rgba(34, 211, 238, 0.55);
+   458→  color: #ffffff;
+   459→}
+   460→.neu-pill-coral {
+   461→  border-radius: 9999px;
+   462→  background: linear-gradient(145deg, #fdba74, #f97316);
+   463→  box-shadow:
+   464→    5px 5px 14px rgba(249, 115, 22, 0.5),
+   465→    -4px -4px 11px rgba(255, 255, 255, 0.5),
+   466→    inset 2px 2px 3px rgba(255, 255, 255, 0.5),
+   467→    inset -2px -2px 4px rgba(194, 65, 12, 0.5),
+   468→    0 0 20px rgba(251, 113, 133, 0.5);
+   469→  color: #ffffff;
+   470→}
+   471→
+   472→/* Crystal capsule glow for the avatar stage */
+   473→.crystal-capsule {
+   474→  position: relative;
+   475→  background:
+   476→    linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(34, 211, 238, 0.10) 100%);
+   477→  box-shadow:
+   478→    inset 0 3px 8px rgba(255, 255, 255, 0.8),
+   479→    inset 0 -3px 14px rgba(34, 211, 238, 0.35),
+   480→    0 0 30px rgba(34, 211, 238, 0.35),
+   481→    0 10px 30px rgba(0, 0, 0, 0.15);
+   482→  border: 1px solid rgba(255, 255, 255, 0.6);
+   483→}
+   484→.crystal-capsule::after {
+   485→  content: "";
+   486→  position: absolute;
+   487→  top: 8%;
+   488→  left: 18%;
+   489→  width: 22%;
+   490→  height: 45%;
+   491→  border-radius: 50%;
+   492→  background: linear-gradient(160deg, rgba(255, 255, 255, 0.7), transparent 70%);
+   493→  filter: blur(2px);
+   494→  pointer-events: none;
+   495→}
+   496→
+   497→/* Soft cyan under-lighting plate beneath the capsule */
+   498→.cyan-base-plate {
+   499→  background: radial-gradient(ellipse at 50% 40%, rgba(34, 211, 238, 0.55), rgba(34, 211, 238, 0.12) 60%, transparent 80%);
+   500→  box-shadow:
+   501→    0 0 40px rgba(34, 211, 238, 0.55),
+   502→    inset 0 0 14px rgba(255, 255, 255, 0.4);
+   503→}
+   504→
+   505→/* Slow pulse for the under-light */
+   506→.animate-cyan-pulse {
+   507→  animation: cyanPulse 3s ease-in-out infinite;
+   508→}
+   509→@keyframes cyanPulse {
+   510→  0%, 100% { opacity: 0.75; transform: scale(1); }
+   511→  50% { opacity: 1; transform: scale(1.04); }
+   512→}
+   513→
+   514→/* Soft floating for the capsule avatar */
+   515→.animate-capsule-float {
+   516→  animation: capsuleFloat 4.5s ease-in-out infinite;
+   517→}
+   518→@keyframes capsuleFloat {
+   519→  0%, 100% { transform: translateY(0); }
+   520→  50% { transform: translateY(-8px); }
+   521→}
+   522→
+   523→/* ===========================================================
+   524→   MARMOREAL-TECH — "Podio de la Victoria" digitized temple
+   525→   Ancient marble with neon inlays (orange + cyan).
+   526→   =========================================================== */
+   527→
+   528→/* Hero hall background — grand temple of sages */
+   529→.hero-hall {
+   530→  background:
+   531→    radial-gradient(ellipse at 50% 0%, rgba(251, 113, 133, 0.12) 0px, transparent 55%),
+   532→    radial-gradient(ellipse at 50% 100%, rgba(34, 211, 238, 0.10) 0px, transparent 55%),
+   533→    linear-gradient(180deg, #f7f4ef 0%, #efe9e0 45%, #e6dfd3 100%);
+   534→}
+   535→
+   536→/* Marble slab — white marble with veins + neon orange inlay border */
+   537→.marble-slab {
+   538→  position: relative;
+   539→  background:
+   540→    /* subtle vein network */
+   541→    linear-gradient(125deg, transparent 38%, rgba(180, 160, 140, 0.08) 42%, transparent 46%),
+   542→    linear-gradient(65deg, transparent 22%, rgba(160, 140, 120, 0.07) 28%, transparent 34%),
+   543→    linear-gradient(145deg, transparent 60%, rgba(200, 180, 160, 0.09) 65%, transparent 70%),
+   544→    linear-gradient(160deg, #fdfcfa 0%, #f4f0e9 50%, #ebe5db 100%);
+   545→  border: 1px solid rgba(251, 113, 133, 0.45);
+   546→  box-shadow:
+   547→    0 0 0 1px rgba(251, 113, 133, 0.25),
+   548→    0 0 26px rgba(251, 113, 133, 0.28),
+   549→    0 24px 60px -22px rgba(80, 50, 30, 0.5),
+   550→    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+   551→    inset 0 0 40px rgba(251, 113, 133, 0.04);
+   552→  overflow: hidden;
+   553→}
+   554→/* Neon orange inlay border line that runs around the slab */
+   555→.marble-slab::before {
+   556→  content: "";
+   557→  position: absolute;
+   558→  inset: 6px;
+   559→  border-radius: inherit;
+   560→  border: 1px solid rgba(251, 113, 133, 0.4);
+   561→  pointer-events: none;
+   562→  box-shadow: 0 0 12px rgba(251, 113, 133, 0.35);
+   563→}
+   564→/* Subtle neon corner glyphs */
+   565→.marble-slab::after {
+   566→  content: "";
+   567→  position: absolute;
+   568→  inset: 0;
+   569→  pointer-events: none;
+   570→  background:
+   571→    radial-gradient(circle at 12px 12px, rgba(34, 211, 238, 0.5) 1.5px, transparent 2.5px),
+   572→    radial-gradient(circle at calc(100% - 12px) 12px, rgba(34, 211, 238, 0.5) 1.5px, transparent 2.5px),
+   573→    radial-gradient(circle at 12px calc(100% - 12px), rgba(34, 211, 238, 0.5) 1.5px, transparent 2.5px),
+   574→    radial-gradient(circle at calc(100% - 12px) calc(100% - 12px), rgba(34, 211, 238, 0.5) 1.5px, transparent 2.5px);
+   575→}
+   576→
+   577→/* Smaller marble card for rank rows */
+   578→.marble-card {
+   579→  position: relative;
+   580→  background:
+   581→    linear-gradient(125deg, transparent 40%, rgba(180, 160, 140, 0.06) 44%, transparent 48%),
+   582→    linear-gradient(160deg, #fdfcfa 0%, #f1ece3 100%);
+   583→  border: 1px solid rgba(180, 160, 140, 0.25);
+   584→  box-shadow:
+   585→    0 8px 22px -10px rgba(80, 50, 30, 0.4),
+   586→    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+   587→}
+   588→
+   589→/* Amber crystal card — for the current user's highlighted entry */
+   590→.amber-crystal {
+   591→  position: relative;
+   592→  background:
+   593→    linear-gradient(135deg, rgba(255, 251, 235, 0.92) 0%, rgba(254, 240, 138, 0.5) 50%, rgba(251, 191, 36, 0.35) 100%);
+   594→  backdrop-filter: blur(8px) saturate(140%);
+   595→  -webkit-backdrop-filter: blur(8px) saturate(140%);
+   596→  border: 1.5px solid rgba(251, 191, 36, 0.7);
+   597→  box-shadow:
+   598→    0 0 0 1px rgba(251, 191, 36, 0.35),
+   599→    0 0 28px rgba(251, 191, 36, 0.5),
+   600→    0 12px 30px -10px rgba(180, 100, 20, 0.45),
+   601→    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+   602→    inset 0 0 24px rgba(251, 191, 36, 0.18);
+   603→  animation: amberGlow 3s ease-in-out infinite;
+   604→}
+   605→@keyframes amberGlow {
+   606→  0%, 100% { box-shadow: 0 0 0 1px rgba(251,191,36,0.35), 0 0 28px rgba(251,191,36,0.5), 0 12px 30px -10px rgba(180,100,20,0.45), inset 0 1px 0 rgba(255,255,255,0.85), inset 0 0 24px rgba(251,191,36,0.18); }
+   607→  50% { box-shadow: 0 0 0 1px rgba(251,191,36,0.5), 0 0 40px rgba(251,191,36,0.7), 0 12px 34px -10px rgba(180,100,20,0.5), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 0 30px rgba(251,191,36,0.28); }
+   608→}
+   609→
+   610→/* Neon orange engraved text / number */
+   611→.neon-engrave-orange {
+   612→  color: #fb7185;
+   613→  text-shadow: 0 0 8px rgba(251, 113, 133, 0.7), 0 0 16px rgba(251, 113, 133, 0.4);
+   614→}
+   615→.neon-engrave-cyan {
+   616→  color: #22d3ee;
+   617→  text-shadow: 0 0 8px rgba(34, 211, 238, 0.7), 0 0 16px rgba(34, 211, 238, 0.4);
+   618→}
+   619→.neon-engrave-gold {
+   620→  color: #fbbf24;
+   621→  text-shadow: 0 0 8px rgba(251, 191, 36, 0.8), 0 0 16px rgba(251, 191, 36, 0.45);
+   622→}
+   623→
+   624→/* Sparkle for the honor medal */
+   625→.animate-sparkle {
+   626→  animation: medalSparkle 1.6s ease-in-out infinite;
+   627→}
+   628→@keyframes medalSparkle {
+   629→  0%, 100% { filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.7)); transform: scale(1); opacity: 0.95; }
+   630→  50% { filter: drop-shadow(0 0 10px rgba(251, 191, 36, 1)); transform: scale(1.12); opacity: 1; }
+   631→}
+   632→
+   633→/* Slow spin for the honor medal ribbon */
+   634→.animate-medal-sway {
+   635→  animation: medalSway 4s ease-in-out infinite;
+   636→  transform-origin: top center;
+   637→}
+   638→@keyframes medalSway {
+   639→  0%, 100% { transform: rotate(-6deg); }
+   640→  50% { transform: rotate(6deg); }
+   641→}
+   642→
+   643→/* Floating for the hero trophy */
+   644→.animate-trophy-float {
+   645→  animation: trophyFloat 5s ease-in-out infinite;
+   646→}
+   647→@keyframes trophyFloat {
+   648→  0%, 100% { transform: translateY(0) rotate(-1deg); }
+   649→  50% { transform: translateY(-6px) rotate(1deg); }
+   650→}
+   651→
+   652→/* ===========================================================
+   653→   HERO CHAMBER — "Cámara de Logros de Héroe" profile screen
+   654→   Cosmic soft-3D with holographic avatar frame, gummy bubble
+   655→   buttons, translucent power capsules, multicolor XP
+   656→   thermometer, and a satin space-metal collectibles shelf.
+   657→   =========================================================== */
+   658→
+   659→/* Holographic circular frame around the avatar — rotating cyan/violet ring */
+   660→.holographic-frame {
+   661→  position: relative;
+   662→  border-radius: 9999px;
+   663→  padding: 6px;
+   664→  background: conic-gradient(
+   665→    from 0deg,
+   666→    #22d3ee 0%,
+   667→    #67e8f9 15%,
+   668→    #a78bfa 35%,
+   669→    #f472b6 50%,
+   670→    #a78bfa 65%,
+   671→    #67e8f9 85%,
+   672→    #22d3ee 100%
+   673→  );
+   674→  box-shadow:
+   675→    0 0 30px rgba(34, 211, 238, 0.65),
+   676→    0 0 70px rgba(139, 92, 246, 0.45),
+   677→    inset 0 0 14px rgba(255, 255, 255, 0.55);
+   678→  animation: holoRotate 10s linear infinite;
+   679→}
+   680→.holographic-frame::before {
+   681→  content: "";
+   682→  position: absolute;
+   683→  inset: 4px;
+   684→  border-radius: 9999px;
+   685→  background: radial-gradient(
+   686→    circle at 30% 30%,
+   687→    rgba(34, 211, 238, 0.28),
+   688→    rgba(139, 92, 246, 0.22) 55%,
+   689→    rgba(8, 8, 35, 0.9) 100%
+   690→  );
+   691→  z-index: 0;
+   692→}
+   693→.holographic-frame::after {
+   694→  content: "";
+   695→  position: absolute;
+   696→  inset: -8px;
+   697→  border-radius: 9999px;
+   698→  border: 1.5px solid rgba(34, 211, 238, 0.5);
+   699→  pointer-events: none;
+   700→  animation: holoRingPulse 3s ease-in-out infinite;
+   701→}
+   702→@keyframes holoRotate {
+   703→  to { transform: rotate(360deg); }
+   704→}
+   705→@keyframes holoRingPulse {
+   706→  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.5); opacity: 0.85; }
+   707→  50% { box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); opacity: 1; }
+   708→}
+   709→
+   710→/* Comic / gamer style name with thick yellow + white stroke + cyan glow */
+   711→.comic-name {
+   712→  font-family: 'Fredoka', system-ui, sans-serif;
+   713→  font-weight: 700;
+   714→  color: #fefce8;
+   715→  letter-spacing: 0.5px;
+   716→  text-shadow:
+   717→    -2px -2px 0 #fde047,
+   718→    2px -2px 0 #fde047,
+   719→    -2px 2px 0 #fde047,
+   720→    2px 2px 0 #fde047,
+   721→    -3px 0 0 #fde047,
+   722→    3px 0 0 #fde047,
+   723→    0 -3px 0 #fde047,
+   724→    0 3px 0 #fde047,
+   725→    -2px -2px 0 #ffffff,
+   726→    2px 2px 0 #ffffff,
+   727→    4px 4px 0 rgba(139, 92, 246, 0.85),
+   728→    0 0 22px rgba(34, 211, 238, 0.75);
+   729→}
+   730→
+   731→/* Dynamic role label (e.g. "Explorador Novato") — cyan→violet gradient text */
+   732→.role-dynamic {
+   733→  font-family: 'Fredoka', system-ui, sans-serif;
+   734→  font-weight: 600;
+   735→  background: linear-gradient(90deg, #22d3ee, #a78bfa, #f472b6);
+   736→  -webkit-background-clip: text;
+   737→  background-clip: text;
+   738→  color: transparent;
+   739→  letter-spacing: 0.3px;
+   740→  filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.5));
+   741→}
+   742→
+   743→/* Gummy coin button — gold bubble with 3D specular reflection + bottom rim */
+   744→.gummy-coin {
+   745→  position: relative;
+   746→  border-radius: 9999px;
+   747→  background: radial-gradient(
+   748→    circle at 32% 28%,
+   749→    #fef9c3 0%,
+   750→    #fde047 28%,
+   751→    #f59e0b 70%,
+   752→    #b45309 100%
+   753→  );
+   754→  box-shadow:
+   755→    0 6px 0 #92400e,
+   756→    0 9px 18px rgba(0, 0, 0, 0.45),
+   757→    inset 0 2px 4px rgba(255, 255, 255, 0.75),
+   758→    inset 0 -4px 8px rgba(180, 83, 9, 0.55),
+   759→    0 0 18px rgba(251, 191, 36, 0.4);
+   760→  color: #78350f;
+   761→  border: 2px solid #fcd34d;
+   762→  transition: transform 0.15s ease, box-shadow 0.15s ease;
+   763→}
+   764→.gummy-coin::before {
+   765→  content: "";
+   766→  position: absolute;
+   767→  top: 10%;
+   768→  left: 18%;
+   769→  width: 38%;
+   770→  height: 32%;
+   771→  border-radius: 50%;
+   772→  background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), transparent 70%);
+   773→  pointer-events: none;
+   774→}
+   775→.gummy-coin:active {
+   776→  transform: translateY(3px);
+   777→  box-shadow:
+   778→    0 3px 0 #92400e,
+   779→    0 4px 8px rgba(0, 0, 0, 0.45),
+   780→    inset 0 2px 4px rgba(255, 255, 255, 0.75),
+   781→    inset 0 -4px 8px rgba(180, 83, 9, 0.55),
+   782→    0 0 18px rgba(251, 191, 36, 0.4);
+   783→}
+   784→
+   785→/* Gummy gem button — fuchsia/purple bubble with 3D reflection */
+   786→.gummy-gem {
+   787→  position: relative;
+   788→  border-radius: 9999px;
+   789→  background: radial-gradient(
+   790→    circle at 32% 28%,
+   791→    #fce7f3 0%,
+   792→    #f472b6 28%,
+   793→    #c026d3 70%,
+   794→    #6b21a8 100%
+   795→  );
+   796→  box-shadow:
+   797→    0 6px 0 #581c87,
+   798→    0 9px 18px rgba(0, 0, 0, 0.45),
+   799→    inset 0 2px 4px rgba(255, 255, 255, 0.7),
+   800→    inset 0 -4px 8px rgba(88, 28, 135, 0.55),
+   801→    0 0 18px rgba(192, 38, 211, 0.45);
+   802→  color: #fdf4ff;
+   803→  border: 2px solid #f0abfc;
+   804→  transition: transform 0.15s ease, box-shadow 0.15s ease;
+   805→}
+   806→.gummy-gem::before {
+   807→  content: "";
+   808→  position: absolute;
+   809→  top: 10%;
+   810→  left: 18%;
+   811→  width: 38%;
+   812→  height: 32%;
+   813→  border-radius: 50%;
+   814→  background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), transparent 70%);
+   815→  pointer-events: none;
+   816→}
+   817→.gummy-gem:active {
+   818→  transform: translateY(3px);
+   819→  box-shadow:
+   820→    0 3px 0 #581c87,
+   821→    0 4px 8px rgba(0, 0, 0, 0.45),
+   822→    inset 0 2px 4px rgba(255, 255, 255, 0.7),
+   823→    inset 0 -4px 8px rgba(88, 28, 135, 0.55),
+   824→    0 0 18px rgba(192, 38, 211, 0.45);
+   825→}
+   826→
+   827→/* Power capsule — translucent glass stat card with top sheen */
+   828→.power-capsule {
+   829→  position: relative;
+   830→  border-radius: 1.75rem;
+   831→  background:
+   832→    linear-gradient(160deg, rgba(34, 211, 238, 0.20) 0%, rgba(139, 92, 246, 0.16) 50%, rgba(244, 114, 182, 0.14) 100%);
+   833→  backdrop-filter: blur(14px) saturate(140%);
+   834→  -webkit-backdrop-filter: blur(14px) saturate(140%);
+   835→  border: 1.5px solid rgba(255, 255, 255, 0.32);
+   836→  box-shadow:
+   837→    0 0 26px rgba(34, 211, 238, 0.28),
+   838→    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+   839→    inset 0 0 32px rgba(255, 255, 255, 0.07),
+   840→    0 14px 30px -10px rgba(8, 8, 35, 0.65);
+   841→  overflow: hidden;
+   842→}
+   843→.power-capsule::before {
+   844→  content: "";
+   845→  position: absolute;
+   846→  top: 0;
+   847→  left: 10%;
+   848→  width: 80%;
+   849→  height: 38%;
+   850→  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), transparent);
+   851→  border-radius: 0 0 50% 50%;
+   852→  pointer-events: none;
+   853→}
+   854→
+   855→/* XP thermometer — futuristic transparent energy tube */
+   856→.xp-thermometer-tube {
+   857→  position: relative;
+   858→  height: 30px;
+   859→  border-radius: 9999px;
+   860→  background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02));
+   861→  border: 1.5px solid rgba(255, 255, 255, 0.28);
+   862→  box-shadow:
+   863→    inset 0 2px 7px rgba(8, 8, 35, 0.75),
+   864→    inset 0 -1px 2px rgba(255, 255, 255, 0.22),
+   865→    0 0 22px rgba(34, 211, 238, 0.18);
+   866→  overflow: hidden;
+   867→}
+   868→.xp-thermometer-liquid {
+   869→  position: relative;
+   870→  height: 100%;
+   871→  border-radius: 9999px;
+   872→  background: linear-gradient(90deg, #f472b6 0%, #c084fc 32%, #818cf8 62%, #22d3ee 100%);
+   873→  box-shadow:
+   874→    0 0 16px rgba(244, 114, 182, 0.75),
+   875→    0 0 26px rgba(34, 211, 238, 0.55),
+   876→    inset 0 1px 2px rgba(255, 255, 255, 0.65),
+   877→    inset 0 -2px 5px rgba(139, 92, 246, 0.5);
+   878→  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+   879→}
+   880→.xp-thermometer-liquid::before {
+   881→  content: "";
+   882→  position: absolute;
+   883→  top: 2px;
+   884→  left: 0;
+   885→  right: 0;
+   886→  height: 38%;
+   887→  border-radius: 9999px;
+   888→  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent);
+   889→  animation: liquidFlow 2.5s ease-in-out infinite;
+   890→}
+   891→@keyframes liquidFlow {
+   892→  0%, 100% { opacity: 0.55; transform: translateX(0); }
+   893→  50% { opacity: 1; transform: translateX(6px); }
+   894→}
+   895→
+   896→/* Medal shelf — satin space metal collectibles panel */
+   897→.medal-shelf {
+   898→  position: relative;
+   899→  border-radius: 1.75rem;
+   900→  background:
+   901→    linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0%, rgba(139, 92, 246, 0.07) 50%, rgba(34, 211, 238, 0.06) 100%),
+   902→    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0px, rgba(255, 255, 255, 0.045) 1px, transparent 1px, transparent 5px),
+   903→    linear-gradient(160deg, #1e1b4b 0%, #312e81 45%, #1e1b4b 100%);
+   904→  backdrop-filter: blur(14px);
+   905→  -webkit-backdrop-filter: blur(14px);
+   906→  border: 1.5px solid rgba(167, 139, 250, 0.45);
+   907→  box-shadow:
+   908→    0 0 30px rgba(139, 92, 246, 0.32),
+   909→    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+   910→    inset 0 0 42px rgba(34, 211, 238, 0.07),
+   911→    0 18px 38px -12px rgba(8, 8, 35, 0.72);
+   912→}
+   913→
+   914→/* Locked medal slot — dark silhouette with bright question mark */
+   915→.locked-medal {
+   916→  position: relative;
+   917→  border-radius: 1rem;
+   918→  aspect-ratio: 1 / 1;
+   919→  background:
+   920→    radial-gradient(circle at 50% 42%, rgba(100, 100, 130, 0.38) 0%, rgba(30, 27, 75, 0.75) 72%);
+   921→  border: 1.5px dashed rgba(167, 139, 250, 0.5);
+   922→  box-shadow:
+   923→    inset 0 2px 8px rgba(8, 8, 35, 0.82),
+   924→    inset 0 -1px 2px rgba(255, 255, 255, 0.09);
+   925→  display: flex;
+   926→  align-items: center;
+   927→  justify-content: center;
+   928→}
+   929→.locked-medal::before {
+   930→  content: "";
+   931→  position: absolute;
+   932→  inset: 10%;
+   933→  border-radius: 50%;
+   934→  background: radial-gradient(circle at 40% 30%, rgba(60, 60, 90, 0.65), rgba(15, 12, 40, 0.88));
+   935→  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.65);
+   936→}
+   937→.locked-q {
+   938→  position: relative;
+   939→  z-index: 1;
+   940→  font-family: 'Fredoka', system-ui, sans-serif;
+   941→  font-weight: 700;
+   942→  color: #c4b5fd;
+   943→  text-shadow:
+   944→    0 0 8px rgba(167, 139, 250, 0.95),
+   945→    0 0 16px rgba(167, 139, 250, 0.65),
+   946→    0 0 26px rgba(34, 211, 238, 0.42);
+   947→  animation: lockGlow 2.2s ease-in-out infinite;
+   948→}
+   949→@keyframes lockGlow {
+   950→  0%, 100% { opacity: 0.72; text-shadow: 0 0 8px rgba(167, 139, 250, 0.9), 0 0 16px rgba(167, 139, 250, 0.6); }
+   951→  50% { opacity: 1; text-shadow: 0 0 12px rgba(167, 139, 250, 1), 0 0 24px rgba(167, 139, 250, 0.85), 0 0 38px rgba(34, 211, 238, 0.65); }
+   952→}
+   953→
+   954→/* Floating 3D icon animations */
+   955→.animate-star-float {
+   956→  animation: starFloat 3.5s ease-in-out infinite;
+   957→}
+   958→@keyframes starFloat {
+   959→  0%, 100% { transform: translateY(0) rotate(-8deg); }
+   960→  50% { transform: translateY(-7px) rotate(8deg); }
+   961→}
+   962→.animate-metal-shine {
+   963→  animation: metalShine 4s ease-in-out infinite;
+   964→}
+   965→@keyframes metalShine {
+   966→  0%, 100% { filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
+   967→  50% { filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 12px rgba(251, 191, 36, 0.65)); }
+   968→}
+   969→.animate-sparkle-pulse {
+   970→  animation: sparklePulse 2.4s ease-in-out infinite;
+   971→}
+   972→@keyframes sparklePulse {
+   973→  0%, 100% { filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.7)); transform: scale(1); }
+   974→  50% { filter: drop-shadow(0 0 14px rgba(16, 185, 129, 1)); transform: scale(1.08); }
+   975→}
+   976→
+   977→/* Drifting math/letter backdrop icons */
+   978→.animate-drift-slow {
+   979→  animation: driftSlow 14s ease-in-out infinite;
+   980→}
+   981→@keyframes driftSlow {
+   982→  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+   983→  50% { transform: translate(8px, -10px) rotate(8deg); }
+   984→}
+   985→
+   986→/* ===========================================================
+   987→   CHALLENGE ACCESSIBILITY — high-contrast readability for kids 8-9
+   988→   Strict rules: pure-white / bright-yellow stroked text on a SOLID
+   989→   dark blue→violet "cartel"; answer options are light luminous
+   990→   capsules with dark-blue/near-black text (inverse contrast).
+   991→   =========================================================== */
+   992→
+   993→/* Solid (non-translucent) deep-blue → violet billboard for the question.
+   994→   Replaces the translucent card-premium so the enunciado never floats
+   995→   loose over the nebula. */
+   996→.challenge-board {
+   997→  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 48%, #3730a3 100%);
+   998→  border: 2px solid rgba(99, 179, 237, 0.65);
+   999→  box-shadow:
+  1000→    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+  1001→    inset 0 0 0 1px rgba(15, 23, 42, 0.45),
+  1002→    0 0 28px rgba(56, 189, 248, 0.28),
+  1003→    0 22px 50px -22px rgba(0, 0, 0, 0.85);
+  1004→}
+  1005→
+  1006→/* Slimmer variant for inline challenge cards (bank viewer) */
+  1007→.challenge-board-sm {
+  1008→  background: linear-gradient(140deg, #1e1b4b 0%, #312e81 55%, #3730a3 100%);
+  1009→  border: 1.5px solid rgba(99, 179, 237, 0.55);
+  1010→  box-shadow:
+  1011→    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+  1012→    0 0 18px rgba(56, 189, 248, 0.22),
+  1013→    0 14px 30px -16px rgba(0, 0, 0, 0.8);
+  1014→}
+  1015→
+  1016→/* Question / enunciado text: pure white, bold, flat sans-serif, with a
+  1017→   full 8-direction midnight-navy stroke so it pops 100% off the dark board. */
+  1018→.challenge-text {
+  1019→  color: #ffffff;
+  1020→  font-family: var(--font-display);
+  1021→  font-weight: 700;
+  1022→  letter-spacing: 0.01em;
+  1023→  -webkit-text-stroke: 1.5px #000000;
+  1024→  paint-order: stroke fill;
+  1025→  text-shadow:
+  1026→    -2px -2px 0 #0b1027,
+  1027→     2px -2px 0 #0b1027,
+  1028→    -2px  2px 0 #0b1027,
+  1029→     2px  2px 0 #0b1027,
+  1030→    -2px  0   0 #0b1027,
+  1031→     2px  0   0 #0b1027,
+  1032→     0   -2px 0 #0b1027,
+  1033→     0    2px 0 #0b1027,
+  1034→     0 3px 6px rgba(0, 0, 0, 0.7),
+  1035→     0 0 18px rgba(56, 189, 248, 0.3);
+  1036→}
+  1037→
+  1038→/* Bright-yellow emphasis variant (for key numbers, highlights) */
+  1039→.challenge-text-gold {
+  1040→  color: #ffd700;
+  1041→  font-family: var(--font-display);
+  1042→  font-weight: 700;
+  1043→  letter-spacing: 0.01em;
+  1044→  -webkit-text-stroke: 1.5px #000000;
+  1045→  paint-order: stroke fill;
+  1046→  text-shadow:
+  1047→    -2px -2px 0 #0b1027,
+  1048→     2px -2px 0 #0b1027,
+  1049→    -2px  2px 0 #0b1027,
+  1050→     2px  2px 0 #0b1027,
+  1051→    -2px  0   0 #0b1027,
+  1052→     2px  0   0 #0b1027,
+  1053→     0   -2px 0 #0b1027,
+  1054→     0    2px 0 #0b1027,
+  1055→     0 3px 6px rgba(0, 0, 0, 0.75),
+  1056→     0 0 16px rgba(255, 215, 0, 0.45);
+  1057→}
+  1058→
+  1059→/* Generic light-on-dark label (headers, counters) — white + navy stroke */
+  1060→.label-on-dark {
+  1061→  color: #ffffff;
+  1062→  font-weight: 700;
+  1063→  -webkit-text-stroke: 0.8px #000000;
+  1064→  paint-order: stroke fill;
+  1065→  text-shadow:
+  1066→    -1.2px -1.2px 0 #0b1027,
+  1067→     1.2px -1.2px 0 #0b1027,
+  1068→    -1.2px  1.2px 0 #0b1027,
+  1069→     1.2px  1.2px 0 #0b1027,
+  1070→     0 1px 3px rgba(0, 0, 0, 0.6);
+  1071→}
+  1072→
+  1073→/* ---- Answer option capsules (inverse contrast) ----
+  1074→   Light luminous background + dark-blue / near-black bold text. */
+  1075→
+  1076→/* Default (idle) state — bone-white → soft pastel cyan */
+  1077→.challenge-option {
+  1078→  background: linear-gradient(180deg, #ffffff 0%, #ecfeff 100%);
+  1079→  border: 2px solid #67e8f9;
+  1080→  color: #0f172a;
+  1081→  font-family: var(--font-display);
+  1082→  font-weight: 700;
+  1083→  box-shadow:
+  1084→    0 5px 0 #0e7490,
+  1085→    0 10px 18px -8px rgba(0, 0, 0, 0.55),
+  1086→    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  1087→  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  1088→}
+  1089→.challenge-option:hover:not(:disabled) {
+  1090→  transform: translateY(-2px);
+  1091→  box-shadow:
+  1092→    0 7px 0 #0e7490,
+  1093→    0 14px 22px -8px rgba(0, 0, 0, 0.55),
+  1094→    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  1095→}
+  1096→.challenge-option:active:not(:disabled) {
+  1097→  transform: translateY(3px);
+  1098→  box-shadow:
+  1099→    0 2px 0 #0e7490,
+  1100→    0 5px 10px -4px rgba(0, 0, 0, 0.55),
+  1101→    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  1102→}
+  1103→
+  1104→/* Selected (pre-confirm) — warm luminous gold */
+  1105→.challenge-option-selected {
+  1106→  background: linear-gradient(180deg, #fef9c3 0%, #fde68a 100%);
+  1107→  border-color: #fbbf24;
+  1108→  color: #422006;
+  1109→  box-shadow:
+  1110→    0 5px 0 #b45309,
+  1111→    0 10px 18px -8px rgba(0, 0, 0, 0.55),
+  1112→    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  1113→}
+  1114→
+  1115→/* Correct (after confirm) — luminous mint */
+  1116→.challenge-option-correct {
+  1117→  background: linear-gradient(180deg, #d1fae5 0%, #a7f3d0 100%);
+  1118→  border-color: #34d399;
+  1119→  color: #064e3b;
+  1120→  box-shadow:
+  1121→    0 5px 0 #047857,
+  1122→    0 10px 18px -8px rgba(0, 0, 0, 0.55),
+  1123→    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  1124→}
+  1125→
+  1126→/* Incorrect (after confirm) — luminous rose */
+  1127→.challenge-option-wrong {
+  1128→  background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+  1129→  border-color: #f87171;
+  1130→  color: #7f1d1d;
+  1131→  box-shadow:
+  1132→    0 5px 0 #b91c1c,
+  1133→    0 10px 18px -8px rgba(0, 0, 0, 0.55),
+  1134→    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  1135→}
+  1136→
+  1137→/* Dimmed non-chosen option after answering */
+  1138→.challenge-option-dim {
+  1139→  opacity: 0.55;
+  1140→  filter: saturate(0.8);
+  1141→}
+  1142→
+  1143→/* Compact option chip for the bank viewer cards (light bg + dark text) */
+  1144→.challenge-chip {
+  1145→  background: #ffffff;
+  1146→  border: 1.5px solid #cbd5e1;
+  1147→  color: #0f172a;
+  1148→  font-weight: 700;
+  1149→}
+  1150→.challenge-chip-correct {
+  1151→  background: #d1fae5;
+  1152→  border-color: #34d399;
+  1153→  color: #064e3b;
+  1154→}
+  1155→
+  1156→/* Feedback callout (after answering) — solid tinted board, dark text */
+  1157→.challenge-feedback-correct {
+  1158→  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  1159→  border: 2px solid #10b981;
+  1160→  color: #064e3b;
+  1161→}
+  1162→.challenge-feedback-wrong {
+  1163→  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  1164→  border: 2px solid #f59e0b;
+  1165→  color: #78350f;
+  1166→}
+  1167→
+  1168→/* Progress bar track that reads on the dark cosmic background */
+  1169→.challenge-progress-track {
+  1170→  background: rgba(15, 23, 42, 0.7);
+  1171→  border: 1px solid rgba(99, 179, 237, 0.45);
+  1172→  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.55);
+  1173→}
+  1174→
+  1175→/* ===========================================================
+  1176→   SUBJECT VIEW — Mission cards (ultra-legible for kids 8-9)
+  1177→   Strict rules: module titles in pure white #FFFFFF or bright
+  1178→   yellow #FFD700 with a 2px midnight-navy stroke; subject
+  1179→   subtitle in luminous ivory/cyan; "Jugar" button is a vivid
+  1180→   cyan→fuchsia gradient with pure-white text + Play icon.
+  1181→   =========================================================== */
+  1182→
+  1183→/* Subject hero card — solid dark blue→violet billboard (reuses
+  1184→   challenge-board for guaranteed contrast, adds a subtle inner
+  1185→   glow ring so it reads as a "stage" header). */
+  1186→.subject-hero {
+  1187→  position: relative;
+  1188→  overflow: hidden;
+  1189→}
+  1190→.subject-hero::before {
+  1191→  content: "";
+  1192→  position: absolute;
+  1193→  inset: 0;
+  1194→  border-radius: inherit;
+  1195→  background: radial-gradient(ellipse at 15% 0%, rgba(56, 189, 248, 0.18), transparent 55%),
+  1196→              radial-gradient(ellipse at 85% 100%, rgba(251, 113, 133, 0.16), transparent 55%);
+  1197→  pointer-events: none;
+  1198→}
+  1199→
+  1200→/* Subject hero title — pure white #FFFFFF, bold display font,
+  1201→   2px midnight-navy stroke on all 8 directions. */
+  1202→.subject-hero-title {
+  1203→  color: #ffffff;
+  1204→  font-family: var(--font-display);
+  1205→  font-weight: 800;
+  1206→  letter-spacing: 0.01em;
+  1207→  -webkit-text-stroke: 2px #0b1027;
+  1208→  paint-order: stroke fill;
+  1209→  text-shadow:
+  1210→    -2px -2px 0 #0b1027,
+  1211→     2px -2px 0 #0b1027,
+  1212→    -2px  2px 0 #0b1027,
+  1213→     2px  2px 0 #0b1027,
+  1214→    -2px  0   0 #0b1027,
+  1215→     2px  0   0 #0b1027,
+  1216→     0   -2px 0 #0b1027,
+  1217→     0    2px 0 #0b1027,
+  1218→     0 4px 10px rgba(0, 0, 0, 0.75),
+  1219→     0 0 22px rgba(56, 189, 248, 0.35);
+  1220→}
+  1221→
+  1222→/* Subject hero subtitle — luminous ivory/cyan so the descriptive
+  1223→   text ("Operaciones básicas, figuras...") pops off the dark board. */
+  1224→.subject-hero-subtitle {
+  1225→  color: #cffafe;
+  1226→  font-family: var(--font-display);
+  1227→  font-weight: 600;
+  1228→  -webkit-text-stroke: 0.4px #0b1027;
+  1229→  paint-order: stroke fill;
+  1230→  text-shadow:
+  1231→    0 1px 2px rgba(0, 0, 0, 0.7),
+  1232→    0 0 10px rgba(34, 211, 238, 0.25);
+  1233→}
+  1234→
+  1235→/* Subject icon — Math = cyan gradient circle, Language = bright
+  1236→   orange gradient circle. Both with a thick white inner ring so
+  1237→   the letter (M / L) reads instantly. */
+  1238→.subject-icon {
+  1239→  display: flex;
+  1240→  align-items: center;
+  1241→  justify-content: center;
+  1242→  font-family: var(--font-display);
+  1243→  font-weight: 900;
+  1244→  color: #ffffff;
+  1245→  border: 3px solid rgba(255, 255, 255, 0.85);
+  1246→  -webkit-text-stroke: 1.5px #0b1027;
+  1247→  paint-order: stroke fill;
+  1248→  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  1249→}
+  1250→.subject-icon-math {
+  1251→  background: linear-gradient(135deg, #67e8f9 0%, #22d3ee 45%, #0891b2 100%);
+  1252→  box-shadow:
+  1253→    0 0 22px rgba(34, 211, 238, 0.55),
+  1254→    inset 0 2px 4px rgba(255, 255, 255, 0.55),
+  1255→    inset 0 -3px 6px rgba(8, 145, 178, 0.55);
+  1256→}
+  1257→.subject-icon-lang {
+  1258→  background: linear-gradient(135deg, #fdba74 0%, #fb923c 45%, #ea580c 100%);
+  1259→  box-shadow:
+  1260→    0 0 22px rgba(251, 146, 60, 0.6),
+  1261→    inset 0 2px 4px rgba(255, 255, 255, 0.55),
+  1262→    inset 0 -3px 6px rgba(194, 65, 12, 0.55);
+  1263→}
+  1264→
+  1265→/* Back button — high-contrast capsule that reads on the cosmic bg */
+  1266→.subject-back-btn {
+  1267→  color: #ffffff;
+  1268→  font-family: var(--font-display);
+  1269→  font-weight: 700;
+  1270→  -webkit-text-stroke: 0.5px #0b1027;
+  1271→  paint-order: stroke fill;
+  1272→  background: rgba(15, 23, 42, 0.55);
+  1273→  border: 1.5px solid rgba(99, 179, 237, 0.55);
+  1274→  backdrop-filter: blur(8px);
+  1275→  -webkit-backdrop-filter: blur(8px);
+  1276→  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  1277→  transition: all 0.15s ease;
+  1278→}
+  1279→.subject-back-btn:hover {
+  1280→  background: rgba(34, 211, 238, 0.18);
+  1281→  border-color: rgba(99, 179, 237, 0.85);
+  1282→  transform: translateX(-2px);
+  1283→}
+  1284→
+  1285→/* ---- Mission cards (module rows) ----
+  1286→   Each module is a SOLID dark blue→violet card (not a floating
+  1287→   translucent bar) so the child sees a clear "Mission" tile. */
+  1288→
+  1289→.mission-card {
+  1290→  position: relative;
+  1291→  overflow: hidden;
+  1292→  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  1293→}
+  1294→.mission-card::before {
+  1295→  content: "";
+  1296→  position: absolute;
+  1297→  inset: 0;
+  1298→  border-radius: inherit;
+  1299→  background: linear-gradient(120deg, rgba(56, 189, 248, 0.08), transparent 45%, rgba(251, 113, 133, 0.08));
+  1300→  pointer-events: none;
+  1301→}
+  1302→.mission-card:hover {
+  1303→  transform: translateY(-2px);
+  1304→  box-shadow:
+  1305→    0 0 30px rgba(56, 189, 248, 0.35),
+  1306→    0 26px 55px -22px rgba(0, 0, 0, 0.85);
+  1307→}
+  1308→
+  1309→/* Mission title — pure white #FFFFFF, bold display, 2px navy stroke */
+  1310→.mission-title {
+  1311→  color: #ffffff;
+  1312→  font-family: var(--font-display);
+  1313→  font-weight: 800;
+  1314→  letter-spacing: 0.005em;
+  1315→  -webkit-text-stroke: 2px #0b1027;
+  1316→  paint-order: stroke fill;
+  1317→  text-shadow:
+  1318→    -2px -2px 0 #0b1027,
+  1319→     2px -2px 0 #0b1027,
+  1320→    -2px  2px 0 #0b1027,
+  1321→     2px  2px 0 #0b1027,
+  1322→    -2px  0   0 #0b1027,
+  1323→     2px  0   0 #0b1027,
+  1324→     0   -2px 0 #0b1027,
+  1325→     0    2px 0 #0b1027,
+  1326→     0 3px 6px rgba(0, 0, 0, 0.7),
+  1327→     0 0 16px rgba(56, 189, 248, 0.28);
+  1328→}
+  1329→
+  1330→/* Mission description — luminous ivory, smaller, easy to scan */
+  1331→.mission-desc {
+  1332→  color: #fef9c3;
+  1333→  font-family: var(--font-display);
+  1334→  font-weight: 600;
+  1335→  -webkit-text-stroke: 0.3px #0b1027;
+  1336→  paint-order: stroke fill;
+  1337→  text-shadow:
+  1338→    0 1px 2px rgba(0, 0, 0, 0.7),
+  1339→    0 0 10px rgba(251, 191, 36, 0.22);
+  1340→}
+  1341→
+  1342→/* Mission number badge — cyan for Math, orange for Language */
+  1343→.mission-num {
+  1344→  display: flex;
+  1345→  align-items: center;
+  1346→  justify-content: center;
+  1347→  font-family: var(--font-display);
+  1348→  font-weight: 900;
+  1349→  color: #ffffff;
+  1350→  border: 2px solid rgba(255, 255, 255, 0.7);
+  1351→  -webkit-text-stroke: 1px #0b1027;
+  1352→  paint-order: stroke fill;
+  1353→  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
+  1354→}
+  1355→.mission-num-math {
+  1356→  background: linear-gradient(135deg, #67e8f9 0%, #06b6d4 100%);
+  1357→  box-shadow: 0 4px 12px rgba(34, 211, 238, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  1358→}
+  1359→.mission-num-lang {
+  1360→  background: linear-gradient(135deg, #fdba74 0%, #f97316 100%);
+  1361→  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  1362→}
+  1363→.mission-num-locked {
+  1364→  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  1365→  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  1366→}
+  1367→
+  1368→/* Mission tags — bright readable pills (Nivel / Módulo X / desafíos) */
+  1369→.mission-tag {
+  1370→  display: inline-flex;
+  1371→  align-items: center;
+  1372→  gap: 0.25rem;
+  1373→  font-family: var(--font-display);
+  1374→  font-weight: 700;
+  1375→  font-size: 0.7rem;
+  1376→  padding: 0.15rem 0.55rem;
+  1377→  border-radius: 9999px;
+  1378→  border: 1px solid;
+  1379→  -webkit-text-stroke: 0.2px #0b1027;
+  1380→  paint-order: stroke fill;
+  1381→}
+  1382→.mission-tag-cyan {
+  1383→  color: #ecfeff;
+  1384→  background: rgba(34, 211, 238, 0.18);
+  1385→  border-color: rgba(34, 211, 238, 0.5);
+  1386→  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  1387→}
+  1388→.mission-tag-amber {
+  1389→  color: #fef3c7;
+  1390→  background: rgba(251, 191, 36, 0.18);
+  1391→  border-color: rgba(251, 191, 36, 0.5);
+  1392→  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  1393→}
+  1394→.mission-tag-fuchsia {
+  1395→  color: #fae8ff;
+  1396→  background: rgba(232, 121, 249, 0.18);
+  1397→  border-color: rgba(232, 121, 249, 0.5);
+  1398→  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  1399→}
+  1400→
+  1401→/* Mission "Jugar" button — vivid cyan→fuchsia gradient, pure-white text */
+  1402→.mission-jugar-btn {
+  1403→  display: inline-flex;
+  1404→  align-items: center;
+  1405→  justify-content: center;
+  1406→  gap: 0.4rem;
+  1407→  font-family: var(--font-display);
+  1408→  font-weight: 800;
+  1409→  color: #ffffff;
+  1410→  background: linear-gradient(135deg, #22d3ee 0%, #d946ef 100%);
+  1411→  border: 2px solid rgba(255, 255, 255, 0.45);
+  1412→  -webkit-text-stroke: 0.6px #0b1027;
+  1413→  paint-order: stroke fill;
+  1414→  text-shadow:
+  1415→    0 1px 2px rgba(0, 0, 0, 0.7),
+  1416→    0 0 10px rgba(255, 255, 255, 0.4);
+  1417→  box-shadow:
+  1418→    0 5px 0 #0e7490,
+  1419→    0 10px 22px -6px rgba(217, 70, 239, 0.55),
+  1420→    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  1421→  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  1422→}
+  1423→.mission-jugar-btn:hover:not(:disabled) {
+  1424→  transform: translateY(-2px);
+  1425→  box-shadow:
+  1426→    0 7px 0 #0e7490,
+  1427→    0 14px 28px -6px rgba(217, 70, 239, 0.6),
+  1428→    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  1429→}
+  1430→.mission-jugar-btn:active:not(:disabled) {
+  1431→  transform: translateY(3px);
+  1432→  box-shadow:
+  1433→    0 2px 0 #0e7490,
+  1434→    0 5px 10px -4px rgba(217, 70, 239, 0.5),
+  1435→    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  1436→}
+  1437→.mission-jugar-btn:disabled {
+  1438→  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  1439→  border-color: rgba(255, 255, 255, 0.2);
+  1440→  box-shadow: 0 3px 0 #1e293b, inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  1441→  cursor: not-allowed;
+  1442→  opacity: 0.85;
+  1443→}
+  1444→

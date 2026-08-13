@@ -198,3 +198,48 @@ Stage Summary:
   - Flujo verificado: dashboard → secciones → estudiantes → asistencia (guardado en DB confirmado) → reportes
 - Servicios: FE 3000 (200), BE 3001 (200), Gateway 81 (200), Watchdog activo
 - Screenshots: maestro-dashboard.png, maestro-asistencia.png, maestro-reportes.png, maestro-dashboard-final.png
+
+---
+Task ID: PWA-1
+Agent: main (Arquitecto)
+Task: Convertir Mundilex en PWA (Progressive Web App) instalable con soporte offline — arquitectura PWA completa
+
+Work Log:
+- Leí worklog.md previo (Módulo de Maestro completado en sesiones anteriores) para entender contexto: app Next.js 16 con tema "espacio profundo" (fondo violeta/índigo #07061f, búho naranja, estrellas doradas), stack FE 3000 + BE NestJS 3001 + gateway Caddy 81.
+- Inspeccioné layout.tsx existente (fondo espacial con runas/estrellas, footer sticky), package.json (sharp disponible), public/ (logo.svg búho 100x100), next.config.ts (standalone, sin headers).
+- Fase 1 — Iconos PWA: Creé `scripts/gen-pwa-icons.mjs` que usa sharp para componer el búho SVG sobre un fondo degradado espacial (radial violeta→índigo→negro + brillo violeta + 26 estrellas doradas aleatorias). Generé: `public/pwa/icon-192.png`, `icon-512.png`, `icon-512-maskable.png` (con padding 24% + anillo amber sutil para safe-zone maskable), `apple-touch-icon.png` (180x180 fondo sólido), `public/favicon-32.png`.
+- Fase 2 — Manifest: Creé `public/manifest.webmanifest` con name/short_name/description, start_url `/?source=pwa`, scope `/`, display standalone (+ display_override), background_color y theme_color `#07061f`, lang `es-NI`, categories education/kids/games, 4 iconos (any+maskable en 192 y 512), 3 shortcuts (Matemáticas, Lenguaje, Medallas), edge_side_panel.
+- Fase 3 — Service Worker: Creé `public/sw.js` (~180 líneas) con estrategias diferenciadas:
+  - Install: precachea app shell (/, manifest, iconos, logo) con skipWaiting.
+  - Activate: limpia caches viejos (versión `mundilex-sw-v1`), clients.claim.
+  - Fetch router: HTML navegación → network-first con fallback a cached "/" + página offline mínima (HTML inline con tema espacial, botón reintentar); API `/api/*` → network-first con cache corto 30s (expira); Next.js chunks `/_next/static/*` → stale-while-revalidate; otros estáticos (img/font/svg) → cache-first con placeholder SVG si offline.
+  - Página offline inline con CSS embebido (luna 🌙, mensaje "El Cristal del Saber descansó", botón reintentar).
+- Fase 4 — Componentes React:
+  - `src/components/PWARegister.tsx`: registra `/sw.js` tras `load`, escucha `updatefound`/`statechange` para detectar SW nuevo, postMessage SKIP_WAITING, recarga en `controllerchange`.
+  - Delegué a frontend-styling-expert (Task 7-PWA-UI): `OfflineIndicator.tsx` (useSyncExternalStore sobre eventos online/offline, banner glassmorphism violeta con borde amber, icono WifiOff, `fixed bottom-4`, descartable) y `InstallPrompt.tsx` (escucha beforeinstallprompt con interfaz local tipada, guarda evento en ref, timeout 3s si no dispara, detecta PWA ya instalada via matchMedia standalone, respeta dismiss 7 días en localStorage, tarjeta `fixed bottom-4 right-4` con gradiente amber→orange→rose, botones Instalar/Ahora no, emite CustomEvent mundilex:installed).
+- Fase 5 — Layout: Edité `src/app/layout.tsx`: importé los 3 componentes, agregué `manifest`, `appleWebApp` (capable, statusBarStyle black-translucent, title), `formatDetection`, `icons` (32/192/512 + apple 180) al Metadata; viewport con `maximumScale: 5` + `viewportFit: cover`; en `<head>` agregué meta tags iOS/MS (mobile-web-app-capable, apple-mobile-web-app-*, msapplication-TileColor, msapplication-tap-highlight), apple-touch-icon, mask-icon, favicon links, manifest link; inserté `<PWARegister/>`, `<OfflineIndicator/>`, `<InstallPrompt/>` entre main y footer.
+- Fase 6 — Headers: Reescribí `next.config.ts` agregando `async headers()` con 3 reglas: `/sw.js` → Cache-Control no-cache + Service-Worker-Allowed `/`; `/manifest.webmanifest` → Content-Type `application/manifest+json` + no-cache; `/pwa/*` → Cache-Control immutable 1 año.
+- Verificación con Agent Browser (vía gateway :81):
+  - `open http://localhost:81/` → title "Mundilex — Aprende jugando", sin errores de consola.
+  - Manifest linkeado: `http://localhost:81/manifest.webmanifest` ✓
+  - Apple meta: `apple-mobile-web-app-capable=yes`, `theme-color=#07061f`, apple-touch-icon → `/pwa/apple-touch-icon.png` ✓
+  - Service Worker registrado y **activo**: scope `http://localhost:81/`, `active=true` ✓
+  - curl headers: sw.js → `Cache-Control: no-cache` + `Service-Worker-Allowed: /` + `application/javascript`; manifest → `application/manifest+json`; iconos → `max-age=31536000 immutable` ✓
+  - Login MaestroDemo vía gateway → dashboard carga con "Panel del maestro/a", Herramientas de gestión (Mis Secciones, Tareas, Asistencia, Reportes, Banco de Desafíos, Contenido MINED), Estudiantes activos, Mis asignaturas ✓
+  - InstallPrompt visible (botones "Instalar" + "Ahora no") en esquina inferior derecha ✓
+  - Click "Ahora no" → prompt oculto + `mundilex_install_dismissed` guardado en localStorage con timestamp ✓
+  - **Prueba offline**: `set offline on` + `reload` → title sigue "Mundilex", URL sigue `:81/`, VLM confirma screenshot muestra el **dashboard autenticado completo** (no login, no error) → el SW sirvió el shell cacheado y la sesión persistió offline ✓
+  - 0 errores de consola, 0 errores de página en todo el flujo.
+- Lint: solo warning pre-existente `no-page-custom-font` en layout.tsx (Google Fonts link, ya estaba antes de mis cambios). Typecheck: 0 errores en archivos PWA.
+
+Stage Summary:
+- Mundilex es ahora una **PWA instalable** completa:
+  - 5 iconos generados (192, 512, 512-maskable, 180 apple-touch, 32 favicon) con fondo espacial + búho.
+  - `manifest.webmanifest` con shortcuts, display standalone, theme color.
+  - `sw.js` con 4 estrategias de cache (network-first HTML/API, SWR chunks, cache-first assets) + página offline inline.
+  - 3 componentes React: PWARegister (registro + auto-update), OfflineIndicator (banner), InstallPrompt (prompt nativo con dismiss 7 días).
+  - Layout con manifest + 10 meta tags iOS/MS + componentes insertados.
+  - next.config.ts con headers Cache-Control/Content-Type/Service-Worker-Allowed.
+- Verificado end-to-end vía gateway: SW activo, login funcional, dashboard carga, offline sirve shell cacheado, install prompt funciona.
+- Servicios: FE 3000 (200), BE 3001 (corriendo, /api/usuarios/demo devuelve 500 pre-existente pero frontend tiene fallback), Gateway 81 (200).
+- Screenshots: pwa-install-prompt.png, pwa-dashboard-gateway.png, pwa-offline-gateway.png (dashboard servido offline).
