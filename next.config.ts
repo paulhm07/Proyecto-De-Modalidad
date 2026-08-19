@@ -9,11 +9,10 @@ const nextConfig: NextConfig = {
   // Permitir peticiones cross-origin desde el gateway del sandbox
   allowedDevOrigins: ["*"],
   // Evitar que el proceso se cuelgue por timeouts de turbopack
-  experimental: {
-    turbopack: {
-      resolveAlias: {
-        canvas: "",
-      },
+  // En Next.js 16, turbopack config va al nivel superior (no bajo experimental)
+  turbopack: {
+    resolveAlias: {
+      canvas: "",
     },
   },
   // Headers para archivos PWA críticos:
