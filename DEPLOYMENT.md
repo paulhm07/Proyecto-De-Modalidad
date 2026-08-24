@@ -6,17 +6,34 @@ Esta guía explica las 3 formas más recomendadas de desplegar la aplicación:
 
 ## 🟢 Opción 1: Despliegue en la Nube (Vercel + Render / Railway)
 
-### 1. Desplegar el Backend (Render o Railway)
+### 1. Base de Datos PostgreSQL
+Puedes usar una base de datos PostgreSQL gratuita o gestionada en:
+* **[Supabase](https://supabase.com/)** (Recomendado - Free Tier)
+* **[Neon.tech](https://neon.tech/)** (Serverless Postgres)
+* **[Railway](https://railway.app/)** / **[Render PostgreSQL](https://render.com/)**
+
+Copia la cadena de conexión proporcionada (ejemplo: `postgresql://postgres:password@db.supabase.co:5432/postgres?schema=public`).
+
+### 2. Desplegar el Backend (Render o Railway)
 1. Conecta tu repositorio de GitHub a **[Render](https://render.com/)** o **[Railway](https://railway.app/)**.
-2. Configuración en Render:
+2. Configuración en Render / Railway:
    - **Root Directory:** `Proyecto-De-Modalidad/backend`
-   - **Build Command:** `npm install && npx prisma generate && npm run build`
+   - **Build Command:** `npm install && npx prisma generate && npx prisma db push && npm run build`
    - **Start Command:** `npm run start:prod`
    - **Environment Variables:**
      - `PORT`: `3001`
-     - `DATABASE_URL`: `file:./prisma/educaplay.db`
+     - `DATABASE_URL`: `postgresql://tu_usuario:tu_password@tu_host:5432/tu_db?schema=public`
      - `FRONTEND_URL`: URL de tu frontend en Vercel (ej. `https://mundilex.vercel.app`)
-3. Render te proporcionará una URL pública para el backend (ejemplo: `https://mundilex-backend.onrender.com`).
+3. **(Opcional) Migrar datos existentes de SQLite a PostgreSQL:**
+   Si deseas pasar los datos del archivo local `educaplay.db` a tu nueva base de datos PostgreSQL en la nube, ejecuta en tu terminal local:
+   ```bash
+   cd Proyecto-De-Modalidad/backend
+   $env:DATABASE_URL="tu_url_de_postgresql_en_la_nube" # En PowerShell
+   npm run db:push
+   npm run db:migrate-sqlite
+   ```
+4. Render te proporcionará una URL pública para el backend (ejemplo: `https://mundilex-backend.onrender.com`).
+
 
 ---
 

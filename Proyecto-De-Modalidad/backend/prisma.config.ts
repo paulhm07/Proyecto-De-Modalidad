@@ -6,6 +6,6 @@ export default defineConfig({
     path: 'prisma/migrations',
   },
   datasource: {
-    url: process.env.DATABASE_URL ?? 'file:./prisma/educaplay.db',
+    url: process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/mundilex?schema=public',
   },
 });

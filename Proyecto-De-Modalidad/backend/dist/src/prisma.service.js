@@ -12,32 +12,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
-const adapter_better_sqlite3_1 = require("@prisma/adapter-better-sqlite3");
-const node_path_1 = require("node:path");
-const node_fs_1 = require("node:fs");
-function resolveDbUrl() {
-    const raw = process.env.DATABASE_URL ?? 'file:./prisma/educaplay.db';
-    const stripped = raw.startsWith('file:') ? raw.slice('file:'.length) : raw;
-    const candidates = [];
-    if (stripped.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(stripped)) {
-        candidates.push(stripped);
-    }
-    candidates.push((0, node_path_1.resolve)(process.cwd(), stripped));
-    candidates.push((0, node_path_1.resolve)(__dirname, '../../prisma/educaplay.db'));
-    candidates.push((0, node_path_1.resolve)(__dirname, '../prisma/educaplay.db'));
-    for (const c of candidates) {
-        if ((0, node_fs_1.existsSync)(c))
-            return c;
-    }
-    for (const c of candidates) {
-        if ((0, node_fs_1.existsSync)((0, node_path_1.dirname)(c)))
-            return c;
-    }
-    return candidates[0] || (0, node_path_1.resolve)(process.cwd(), 'prisma/educaplay.db');
-}
+const adapter_pg_1 = require("@prisma/adapter-pg");
+const pg_1 = require("pg");
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     constructor() {
-        const adapter = new adapter_better_sqlite3_1.PrismaBetterSqlite3({ url: resolveDbUrl() });
+        const connectionString = process.env.DATABASE_URL ||
+            'postgresql://postgres:postgres@localhost:5432/mundilex?schema=public';
+        const pool = new pg_1.Pool({ connectionString });
+        const adapter = new adapter_pg_1.PrismaPg(pool);
         super({ adapter });
     }
     async onModuleInit() {
