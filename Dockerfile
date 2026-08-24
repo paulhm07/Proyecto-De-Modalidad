@@ -8,6 +8,7 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 RUN npx prisma generate
+ENV DOCKER_BUILD=1
 RUN npm run build
 
 # Etapa de producción
