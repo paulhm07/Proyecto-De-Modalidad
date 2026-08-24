@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ./Proyecto-De-Modalidad/backend
+      dockerfile: Dockerfile
+    container_name: mundilex-backend
+    restart: always
+    environment:
+      - PORT=3001
+      - DATABASE_URL=file:/app/prisma/educaplay.db
+    ports:
+      - "3001:3001"
+    volumes:
+      - backend-db:/app/prisma
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mundilex-frontend
+    restart: always
+    environment:
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  backend-db:

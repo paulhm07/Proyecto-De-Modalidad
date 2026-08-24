@@ -19,11 +19,12 @@ function resolveDbUrl() {
     const raw = process.env.DATABASE_URL ?? 'file:./prisma/educaplay.db';
     const stripped = raw.startsWith('file:') ? raw.slice('file:'.length) : raw;
     const candidates = [];
-    if (stripped.startsWith('/'))
+    if (stripped.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(stripped)) {
         candidates.push(stripped);
+    }
     candidates.push((0, node_path_1.resolve)(process.cwd(), stripped));
     candidates.push((0, node_path_1.resolve)(__dirname, '../../prisma/educaplay.db'));
-    candidates.push('/home/z/my-project/Proyecto-De-Modalidad/backend/prisma/educaplay.db');
+    candidates.push((0, node_path_1.resolve)(__dirname, '../prisma/educaplay.db'));
     for (const c of candidates) {
         if ((0, node_fs_1.existsSync)(c))
             return c;
@@ -32,7 +33,7 @@ function resolveDbUrl() {
         if ((0, node_fs_1.existsSync)((0, node_path_1.dirname)(c)))
             return c;
     }
-    return candidates[candidates.length - 1];
+    return candidates[0] || (0, node_path_1.resolve)(process.cwd(), 'prisma/educaplay.db');
 }
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     constructor() {
