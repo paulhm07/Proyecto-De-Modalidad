@@ -5,8 +5,12 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Habilitar CORS para el frontend en Next.js
-  app.enableCors();
+  // Habilitar CORS para peticiones desde Vercel
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
   // Establecer prefijo global para endpoints
   app.setGlobalPrefix('api');
